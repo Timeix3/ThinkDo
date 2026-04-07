@@ -3,6 +3,16 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
-
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID:Ov23liZsFQoEIr1xbtWb}
+            client-secret: ${GITHUB_CLIENT_SECRET:b532209599f65f7ac4de1cda04e5e104321d1701}
+            scope: read:user
 server:
   port: 8080
+thinkdo:
+  api:
+    base-url: ${API_BASE_URL:http://localhost:8081}
