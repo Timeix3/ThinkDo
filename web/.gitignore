@@ -1,0 +1,65 @@
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+# .mvn/
+# mvnw
+# mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Spring Boot
+application-local.yml
+application-dev.yml
+application-*.properties
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Frontend
+node_modules/
+package-lock.json
+yarn.lock
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Secrets
+*.key
+*.pem
+*.crt
+.secrets/
