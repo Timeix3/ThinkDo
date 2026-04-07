@@ -1,0 +1,25 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Environment
+.env.local
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
