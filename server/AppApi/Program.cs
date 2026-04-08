@@ -18,7 +18,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "App API",
         Version = "v1",
-        Description = "Основной API приложения"
+        Description = "API приложения"
     });
 });
 
@@ -52,7 +52,6 @@ app.UseCors("AllowFrontend");
 app.UseAuthorization();
 app.MapControllers();
 
-// Health check endpoint
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "healthy",

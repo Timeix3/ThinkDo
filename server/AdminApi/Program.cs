@@ -25,7 +25,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Admin API",
         Version = "v1",
-        Description = "Административный API для управления задачами"
+        Description = "Админка API"
     });
 
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";

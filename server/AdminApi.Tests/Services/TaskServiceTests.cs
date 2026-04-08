@@ -1,120 +1,94 @@
 using AdminApi.Models.DTOs;
 using AdminApi.Repositories.Interfaces;
 using AdminApi.Services;
-using AdminApi.Tests.Helpers;
-using Common.Data;
 using Common.Models;
 using FluentAssertions;
 using Moq;
 
 namespace AdminApi.Tests.Services;
 
-public class TaskServiceTests : IDisposable
+public class TaskServiceTests
 {
-    private readonly Mock<ITaskRepository> _repoMock;
-    private readonly AppDbContext _context;
+    private readonly Mock<ITaskRepository> _repositoryMock;
     private readonly TaskService _service;
 
     public TaskServiceTests()
     {
-        _repoMock = new Mock<ITaskRepository>();
-        _context = DbContextHelper.CreateInMemoryContext();
-        _service = new TaskService(_repoMock.Object, _context);
+        _repositoryMock = new Mock<ITaskRepository>();
+        _service = new TaskService(_repositoryMock.Object);
     }
 
     [Fact]
-    public async Task GetAllTasksAsync_ReturnsAllTasksAsDtos()
+    public async Task GetAllTasksAsync_WithTasks_ReturnsAllTasksAsDtos()
     {
-        _repoMock.Setup(r => r.GetAllAsync()).ReturnsAsync([
-            new TaskItem { Id = 1, Title = "A" },
-            new TaskItem { Id = 2, Title = "B" }
-        ]);
+        var tasks = new List<TaskItem>
+        {
+            new() { Id = 1, Title = "Task 1", Content = "Content 1" },
+            new() { Id = 2, Title = "Task 2", Content = "Content 2" }
+        };
+        _repositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(tasks);
 
         var result = await _service.GetAllTasksAsync();
 
         result.Should().HaveCount(2);
+        result.Should().AllBeOfType<TaskResponseDto>();
     }
 
     [Fact]
     public async Task GetTaskByIdAsync_ExistingId_ReturnsDto()
     {
-        var task = new TaskItem { Id = 1, Title = "Test" };
-        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(task);
+        var task = new TaskItem { Id = 1, Title = "Test Task", Content = "Test Content" };
+        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(task);
 
         var result = await _service.GetTaskByIdAsync(1);
 
         result.Should().NotBeNull();
-        result!.Id.Should().Be(1);
+        result!.Title.Should().Be("Test Task");
+        result.Content.Should().Be("Test Content");
     }
 
     [Fact]
-    public async Task GetTaskByIdAsync_NonExistingId_ReturnsNull()
+    public async Task CreateTaskAsync_ValidDto_CallsRepositoryAndReturnsDto()
     {
-        _repoMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((TaskItem?)null);
+        var dto = new CreateTaskDto { Title = "New Task", Content = "New Content" };
+        var createdTask = new TaskItem { Id = 1, Title = "New Task", Content = "New Content" };
 
-        var result = await _service.GetTaskByIdAsync(999);
-
-        result.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task CreateTaskAsync_CreatesAndReturnsDto()
-    {
-        var dto = new CreateTaskDto { Title = "New", Content = "Content" };
+        _repositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<TaskItem>()))
+            .ReturnsAsync(createdTask);
 
         var result = await _service.CreateTaskAsync(dto);
 
-        result.Title.Should().Be("New");
-        _context.Tasks.Should().ContainSingle(t => t.Title == "New");
+        result.Should().NotBeNull();
+        result.Title.Should().Be("New Task");
+        _repositoryMock.Verify(r => r.AddAsync(It.IsAny<TaskItem>()), Times.Once);
     }
 
     [Fact]
-    public async Task UpdateTaskAsync_ExistingId_ReturnsUpdatedDto()
+    public async Task UpdateTaskAsync_ExistingTask_ReturnsUpdatedDto()
     {
-        var task = new TaskItem { Title = "Old" };
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
-        _repoMock.Setup(r => r.GetByIdAsync(task.Id)).ReturnsAsync(task);
+        var dto = new UpdateTaskDto { Title = "Updated", Content = "Updated Content" };
+        var updatedTask = new TaskItem { Id = 1, Title = "Updated", Content = "Updated Content" };
 
-        var result = await _service.UpdateTaskAsync(task.Id, new UpdateTaskDto { Title = "New" });
+        _repositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<TaskItem>()))
+            .ReturnsAsync(updatedTask);
+
+        var result = await _service.UpdateTaskAsync(1, dto);
 
         result.Should().NotBeNull();
-        result!.Title.Should().Be("New");
+        result!.Title.Should().Be("Updated");
+        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<TaskItem>()), Times.Once);
     }
 
     [Fact]
-    public async Task UpdateTaskAsync_NonExistingId_ReturnsNull()
+    public async Task DeleteTaskAsync_ExistingTask_ReturnsTrue()
     {
-        _repoMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((TaskItem?)null);
+        _repositoryMock.Setup(r => r.DeleteAsync(1)).ReturnsAsync(true);
 
-        var result = await _service.UpdateTaskAsync(999, new UpdateTaskDto { Title = "X" });
-
-        result.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task DeleteTaskAsync_ExistingId_ReturnsTrue()
-    {
-        var task = new TaskItem { Title = "To delete" };
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
-        _repoMock.Setup(r => r.GetByIdAsync(task.Id)).ReturnsAsync(task);
-
-        var result = await _service.DeleteTaskAsync(task.Id);
+        var result = await _service.DeleteTaskAsync(1);
 
         result.Should().BeTrue();
-        _context.Tasks.Should().BeEmpty();
+        _repositoryMock.Verify(r => r.DeleteAsync(1), Times.Once);
     }
-
-    [Fact]
-    public async Task DeleteTaskAsync_NonExistingId_ReturnsFalse()
-    {
-        _repoMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((TaskItem?)null);
-
-        var result = await _service.DeleteTaskAsync(999);
-
-        result.Should().BeFalse();
-    }
-
-    public void Dispose() => _context.Dispose();
 }

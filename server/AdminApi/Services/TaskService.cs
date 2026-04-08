@@ -1,31 +1,28 @@
 using AdminApi.Models.DTOs;
 using AdminApi.Repositories.Interfaces;
 using AdminApi.Services.Interfaces;
-using Common.Data;
 using Common.Models;
 
 namespace AdminApi.Services;
 
 public class TaskService : ITaskService
 {
-    private readonly ITaskRepository _taskRepository;
-    private readonly AppDbContext _context;
+    private readonly ITaskRepository _repository;
 
-    public TaskService(ITaskRepository taskRepository, AppDbContext context)
+    public TaskService(ITaskRepository repository)
     {
-        _taskRepository = taskRepository;
-        _context = context;
+        _repository = repository;
     }
 
     public async Task<IEnumerable<TaskResponseDto>> GetAllTasksAsync()
     {
-        var tasks = await _taskRepository.GetAllAsync();
+        var tasks = await _repository.GetAllAsync();
         return tasks.Select(MapToDto);
     }
 
     public async Task<TaskResponseDto?> GetTaskByIdAsync(int id)
     {
-        var task = await _taskRepository.GetByIdAsync(id);
+        var task = await _repository.GetByIdAsync(id);
         return task is null ? null : MapToDto(task);
     }
 
@@ -37,40 +34,26 @@ public class TaskService : ITaskService
             Content = dto.Content,
         };
 
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
-
-        return MapToDto(task);
+        var created = await _repository.AddAsync(task);
+        return MapToDto(created);
     }
 
     public async Task<TaskResponseDto?> UpdateTaskAsync(int id, UpdateTaskDto dto)
     {
-        // Читаем через репозиторий
-        var task = await _taskRepository.GetByIdAsync(id);
+        var task = new TaskItem
+        {
+            Id = id,
+            Title = dto.Title,
+            Content = dto.Content,
+        };
 
-        if (task is null)
-            return null;
-
-        // Мутация — в сервисе
-        task.Title = dto.Title;
-        task.Content = dto.Content;
-
-        await _context.SaveChangesAsync();
-
-        return MapToDto(task);
+        var updated = await _repository.UpdateAsync(task);
+        return updated is null ? null : MapToDto(updated);
     }
 
     public async Task<bool> DeleteTaskAsync(int id)
     {
-        var task = await _taskRepository.GetByIdAsync(id);
-
-        if (task is null)
-            return false;
-
-        _context.Tasks.Remove(task);
-        await _context.SaveChangesAsync();
-
-        return true;
+        return await _repository.DeleteAsync(id);
     }
 
     private static TaskResponseDto MapToDto(TaskItem task) => new()
