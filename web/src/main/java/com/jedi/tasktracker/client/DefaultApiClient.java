@@ -2,9 +2,12 @@ package com.jedi.tasktracker.client;
 
 import com.jedi.tasktracker.client.dto.TaskDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class DefaultApiClient implements ApiClient {
@@ -13,17 +16,28 @@ public class DefaultApiClient implements ApiClient {
 
     @Override
     public List<TaskDto> getTasks() {
-        throw new UnsupportedOperationException("not implemented");
+        return restClient.get()
+                .uri("/api/admin/tasks")
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {});
     }
 
     @Override
     public void createTask(String title, String description) {
-        throw new UnsupportedOperationException("not implemented");
+        restClient.post()
+                .uri("/api/admin/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("title", title, "content", description != null ? description : ""))
+                .retrieve()
+                .toBodilessEntity();
     }
 
     @Override
     public void deleteTask(Long id) {
-        throw new UnsupportedOperationException("not implemented");
+        restClient.delete()
+                .uri("/api/admin/tasks/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     @Override

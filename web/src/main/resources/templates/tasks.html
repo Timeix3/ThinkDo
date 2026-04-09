@@ -64,37 +64,29 @@
             </div>
         </div>
 
-        <!-- Flash сообщение (статическая демонстрация) -->
-        <div class="mx-6 mt-4">
-            <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded text-sm text-green-700">
-                📌 Демо-режим: статический макет. Данные будут приходить из REST API (C#).
-            </div>
-        </div>
-
         <!-- Форма создания задачи -->
         <div class="p-6 border-b border-gray-100">
             <h2 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
                 <span class="text-xl">➕</span> Новая задача
             </h2>
-            <form th:action="@{/api/tasks}" th:method="post" class="space-y-3">
+            <form th:action="@{/tasks}" method="post" class="space-y-3">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 <div>
                     <input type="text"
-                           th:name="title"
+                           name="title"
                            placeholder="Название задачи..."
-                           class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
-                           value="Пример задачи для демо">
+                           required
+                           class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all">
                 </div>
                 <div>
-                    <textarea th:name="description"
+                    <textarea name="description"
                               rows="2"
                               placeholder="Описание (необязательно)..."
-                              class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
-                    >Это пример описания</textarea>
+                              class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"></textarea>
                 </div>
                 <div>
                     <button type="submit"
-                            disabled
-                            class="bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="bg-indigo-600 text-white px-5 py-2 rounded-xl hover:bg-indigo-700 transition-all">
                         ➕ Добавить задачу
                     </button>
                 </div>
@@ -107,74 +99,36 @@
                 <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                     <span class="text-xl">📋</span> Инбокс задач
                 </h2>
-                <span class="text-sm bg-gray-100 px-3 py-1 rounded-full text-gray-600">3 задачи</span>
+                <span class="text-sm bg-gray-100 px-3 py-1 rounded-full text-gray-600"
+                      th:text="${tasks.size() + ' задач'}">0 задач</span>
+            </div>
+
+            <!-- Пустой список -->
+            <div th:if="${tasks.isEmpty()}" class="text-center py-10 text-gray-400">
+                <div class="text-4xl mb-3">📭</div>
+                <p class="text-sm">Список задач пуст. Добавьте первую задачу!</p>
             </div>
 
             <div class="space-y-2">
-                <!-- Задача 1 -->
-                <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all">
+                <div th:each="task : ${tasks}"
+                     class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all">
                     <div class="flex items-start gap-3">
                         <div class="mt-0.5">
                             <div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
                         </div>
                         <div class="flex-1">
-                            <h3 class="font-medium text-gray-800">Изучить архитектуру SSR + REST API</h3>
-                            <p class="text-sm text-gray-500 mt-1">Spring MVC получает JSON из C# API и рендерит HTML
-                                через Thymeleaf</p>
-                            <div class="flex gap-3 mt-2 text-xs text-gray-400">
-                                <span>🕐 07.04.2026</span>
-                                <span>🏷️ высокий</span>
-                            </div>
+                            <h3 class="font-medium text-gray-800" th:text="${task.title}">Название</h3>
+                            <p class="text-sm text-gray-500 mt-1"
+                               th:text="${task.content}"
+                               th:if="${task.content != null and !task.content.isEmpty()}"></p>
                         </div>
                         <div class="flex gap-1">
-                            <button disabled class="text-gray-400 hover:text-red-500 p-1 disabled:opacity-50">🗑️
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Задача 2 -->
-                <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all">
-                    <div class="flex items-start gap-3">
-                        <div class="mt-0.5">
-                            <div class="w-5 h-5 rounded-full bg-green-500 border-green-500 flex items-center justify-center">
-                                <span class="text-white text-xs">✓</span>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="font-medium line-through text-gray-400">Согласовать API контракт с C#
-                                командой</h3>
-                            <p class="text-sm text-gray-400 mt-1">GET /tasks, POST /tasks, PUT /tasks/{id}, DELETE
-                                /tasks/{id}</p>
-                            <div class="flex gap-3 mt-2 text-xs text-gray-400">
-                                <span>🕐 06.04.2026</span>
-                                <span>🏷️ команда</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-1">
-                            <button disabled class="text-gray-400 hover:text-red-500 p-1 disabled:opacity-50">🗑️
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Задача 3 -->
-                <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all">
-                    <div class="flex items-start gap-3">
-                        <div class="mt-0.5">
-                            <div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="font-medium text-gray-800">Провести еженедельное ревью</h3>
-                            <p class="text-sm text-gray-500 mt-1">Декомпозировать проекты и синхронизировать векторы</p>
-                            <div class="flex gap-3 mt-2 text-xs text-gray-400">
-                                <span>🕐 05.04.2026</span>
-                                <span>🏷️ ревью</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-1">
-                            <button disabled class="text-gray-400 hover:text-red-500 p-1 disabled:opacity-50">🗑️
-                            </button>
+                            <form th:action="@{/tasks/{id}/delete(id=${task.id})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit"
+                                        class="text-gray-400 hover:text-red-500 p-1 transition-all"
+                                        title="Удалить">🗑️</button>
+                            </form>
                         </div>
                     </div>
                 </div>
