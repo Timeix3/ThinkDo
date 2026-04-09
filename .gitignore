@@ -13,6 +13,7 @@ obj/
 
 # VS Code
 .vscode/
+.vs/
 
 # Environment
 .env.local

@@ -1,0 +1,82 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  admin-api:
+    container_name: admin-api
+    build:
+      context: ./server
+      dockerfile: AdminApi/Dockerfile
+    env_file:
+      - .env
+    environment:
+      ConnectionStrings__DefaultConnection: ${CONNECTION_STRING}
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  app-api:
+    container_name: app-api
+    build:
+      context: ./server
+      dockerfile: AppApi/Dockerfile
+    env_file:
+      - .env
+    environment:
+      ConnectionStrings__DefaultConnection: ${CONNECTION_STRING}
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8081
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  web:
+    container_name: web
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ADMIN_API_BASE_URL: http://admin-api:8000
+      APP_API_BASE_URL: http://app-api:8081
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - admin-api
+      - app-api
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
