@@ -33,15 +33,20 @@ public class DefaultApiClient implements ApiClient {
     }
 
     @Override
-    public void deleteTask(Long id) {
-        restClient.delete()
+    public void updateTask(Long id, String title, String content) {
+        restClient.put()
                 .uri("/api/admin/tasks/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("title", title, "content", content != null ? content : ""))
                 .retrieve()
                 .toBodilessEntity();
     }
 
     @Override
-    public void completeTask(Long id) {
-        throw new UnsupportedOperationException("not implemented");
+    public void deleteTask(Long id) {
+        restClient.delete()
+                .uri("/api/admin/tasks/{id}", id)
+                .retrieve()
+                .toBodilessEntity();
     }
 }

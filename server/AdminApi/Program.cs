@@ -4,6 +4,8 @@ using AdminApi.Services;
 using AdminApi.Services.Interfaces;
 using Common.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,21 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+
+// Configure HttpClient for GitHub API calls
+builder.Services.AddHttpClient("GitHub", client =>
+{
+    client.BaseAddress = new Uri("https://api.github.com/");
+    client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+    client.DefaultRequestHeaders.Add("User-Agent", "AdminApi-Resource-Server");
+});
+
+// Configure GitHub OAuth token validation for Resource Server
+// GitHub tokens are opaque tokens, not JWTs, so we validate them via GitHub API
+builder.Services.AddAuthentication("GitHub")
+    .AddScheme<AuthenticationSchemeOptions, GitHubAuthenticationHandler>("GitHub", null);
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
@@ -32,8 +49,33 @@ builder.Services.AddSwaggerGen(options =>
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
         options.IncludeXmlComments(xmlPath);
-});
 
+    // Configure Bearer token authentication for Swagger UI
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "OAuth2 Access Token",
+        In = ParameterLocation.Header,
+        Description = "Введите GitHub OAuth access token.\n\nПример: gho_xxxxxxxxxxxxxxxxxxxx"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 builder.Services.AddCors(options =>
 {
@@ -41,8 +83,6 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:5173",
                 "http://localhost:8080"
             )
             .AllowAnyHeader()
@@ -82,6 +122,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
