@@ -1,12 +1,16 @@
 using AdminApi.Models.DTOs;
 using AdminApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+
 
 namespace AdminApi.Controllers;
 
 [ApiController]
 [Route("api/admin/tasks")]
 [Produces("application/json")]
+[Authorize(AuthenticationSchemes = "GitHub")]
 public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
@@ -25,6 +29,14 @@ public class TasksController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll()
     {
+        // Извлечение ID пользователя из токена
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+
+        // Временное логирование
+        _logger.LogInformation("Authenticated user: ID={UserId}, Name={UserName}, Time={Time}",
+            userId, userName, DateTime.UtcNow);
+
         _logger.LogInformation("Getting all tasks");
         var tasks = await _taskService.GetAllTasksAsync();
         return Ok(tasks);
