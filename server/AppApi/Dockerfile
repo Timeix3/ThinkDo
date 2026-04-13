@@ -13,8 +13,10 @@ RUN dotnet publish AppApi/AppApi.csproj \
     -o /app/publish \
     --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
 WORKDIR /app
+
+RUN apk add --no-cache curl
 
 COPY --from=build /app/publish .
 

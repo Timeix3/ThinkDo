@@ -1,7 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-
 COPY Common/Common.csproj Common/
 COPY AdminApi/AdminApi.csproj AdminApi/
 RUN dotnet restore AdminApi/AdminApi.csproj
@@ -14,8 +13,10 @@ RUN dotnet publish AdminApi/AdminApi.csproj \
     -o /app/publish \
     --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
 WORKDIR /app
+
+RUN apk add --no-cache curl
 
 COPY --from=build /app/publish .
 
