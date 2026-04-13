@@ -66,8 +66,7 @@ services:
     env_file:
       - .env
     environment:
-      ADMIN_API_BASE_URL: http://admin-api:8000
-      APP_API_BASE_URL: http://app-api:8081
+      API_BASE_URL: http://admin-api:8000
     ports:
       - "8080:8080"
     depends_on:
