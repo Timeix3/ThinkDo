@@ -10,7 +10,7 @@ public interface ApiClient {
 
     void createTask(String title, String description);
 
-    void deleteTask(Long id);
+    void updateTask(Long id, String title, String content);
 
-    void completeTask(Long id);
+    void deleteTask(Long id);
 }
