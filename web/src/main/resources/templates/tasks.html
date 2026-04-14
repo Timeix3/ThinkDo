@@ -226,11 +226,10 @@
 
                 <!-- Авторизован -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
-                    <img sec:authentication="principal.attributes['avatar_url']"
-                        th:src="${#authentication != null ? #authentication.principal.attributes['avatar_url'] : ''}"
+                    <img th:src="${#authentication.principal.attributes['avatar_url']}"
                         alt="avatar" class="w-8 h-8 rounded-full border-2 border-white/50">
                     <span class="text-sm opacity-90">
-                        Привет, <strong sec:authentication="principal.attributes['name']"></strong>!
+                        Привет, <strong th:text="${#authentication.principal.attributes['name']}"></strong>!
                     </span>
                     <form th:action="@{/logout}" method="post" id="logoutForm">
                         <!-- Кнопка с вызовом функции очистки данных -->
