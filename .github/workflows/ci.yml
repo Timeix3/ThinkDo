@@ -1,18 +1,22 @@
-name: Backend CI
+name: CI Pipeline
 
 # ТРИГГЕРЫ:
 on:
   push:
-    branches: [ "main" ] # При пуше в основную ветку
-    paths:
-      - 'server/**'      # Запускать только если изменились файлы в папке бэкенда
-  pull_request:
-    branches: [ "main" ] # При создании PR в основную ветку
+    branches: [ "main" ]
     paths:
       - 'server/**'
+      - 'web/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'server/**'
+      - 'web/**'
 
 jobs:
-  build-and-test:
+  # СБОРКА БЭКЕНДА
+  build-backend:
+    name: Backend Check (.NET 8)
     runs-on: ubuntu-latest
 
     steps:
@@ -47,3 +51,32 @@ jobs:
       # TEST:
       - name: Run tests
         run: dotnet test server/server.sln --configuration Release --no-build --verbosity normal
+
+# СБОРКА ФРОНТЕНДА
+  build-frontend:
+    name: Frontend Check (Java 17)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Сборка через Maven
+      - name: Build with Maven
+        if: hashFiles('web/pom.xml') != ''
+        working-directory: ./web
+        run: ./mvnw clean package
+
+      # Сборка через Gradle
+      - name: Build with Gradle
+        if: hashFiles('web/build.gradle') != ''
+        working-directory: ./web
+        run: |
+          chmod +x gradlew
+          ./gradlew build
