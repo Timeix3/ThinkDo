@@ -20,6 +20,12 @@ public class TaskServiceTests
     }
 
     [Fact]
+    public void IntentionalFailureTest() 
+    {
+        Assert.Fail("Этот тест специально завален для проверки");
+    }
+
+    [Fact]
     public async Task GetAllTasksAsync_WithTasks_ReturnsAllTasksAsDtos()
     {
         // Arrange
@@ -46,7 +52,7 @@ public class TaskServiceTests
 
         var result = await _service.GetAllTasksAsync(TestUserId);
 
-        result.Should().HaveCount(2);
+        result.Should().HaveCount(3); //испортил для теста
         result.Should().AllBeOfType<TaskResponseDto>();
         _repositoryMock.Verify(r => r.GetAllAsync(TestUserId), Times.Once);
     }

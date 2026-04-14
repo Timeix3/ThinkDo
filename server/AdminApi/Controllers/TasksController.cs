@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 
 namespace AdminApi.Controllers;
-//Тест бэка ci
+
 [ApiController]
 [Route("api/admin/tasks")]
 [Produces("application/json")]
