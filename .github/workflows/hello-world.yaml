@@ -1,7 +1,0 @@
-name: Hello World Pipeline
-on: [push]
-jobs:
-  hi:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Hello, World!"
