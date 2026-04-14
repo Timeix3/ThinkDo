@@ -33,6 +33,25 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Content)
                 .HasColumnName("content")
                 .HasMaxLength(2000);
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .HasMaxLength(450)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at");
+
+            entity.HasIndex(e => e.UserId)
+                .HasDatabaseName("ix_tasks_user_id");
+
+            entity.HasIndex(e => new { e.UserId, e.Id })
+                .HasDatabaseName("ix_tasks_user_id_id");
         });
     }
 }
