@@ -13,7 +13,7 @@ namespace AdminApi.Controllers;
 [Authorize(AuthenticationSchemes = "GitHub")]
 public class TasksController : ControllerBase
 {
-    private readonly ITaskService _taskService;
+    private readonly ITaskService _taskService
     private readonly ILogger<TasksController> _logger;
 
     public TasksController(ITaskService taskService, ILogger<TasksController> logger)

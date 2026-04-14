@@ -3,7 +3,8 @@ name: CI Pipeline
 # ТРИГГЕРЫ:
 on:
   push:
-    branches: [ "main" ]
+    #branches: [ "main" ]
+    branches: [ "**" ] # для теста
     paths:
       - 'server/**'
       - 'web/**'
