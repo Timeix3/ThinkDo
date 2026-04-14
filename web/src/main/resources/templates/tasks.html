@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      lang="ru">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,182 +9,345 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .nav-pill { background: rgba(255,255,255,0.2); border-radius: 2rem; padding: 0.5rem 1rem; backdrop-filter: blur(4px); }
-        .kanban-col { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 1.5rem; padding: 1rem; min-height: 300px; display: flex; flex-direction: column; }
-        .task-card { background: white; border-radius: 1rem; padding: 0.75rem; margin-bottom: 0.75rem; color: #1e293b; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
-        .task-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-        .fab { position: fixed; bottom: 2rem; right: 2rem; background: #f97316; width: 56px; height: 56px; border-radius: 28px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s, background 0.2s; z-index: 40; }
-        .fab:hover { transform: scale(1.1); background: #ea6c00; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
-        .modal-box { background: white; border-radius: 1.5rem; padding: 1.75rem; width: 100%; max-width: 440px; }
-        input[type="text"], textarea { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 0.75rem; padding: 0.6rem 0.85rem; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
-        input[type="text"]:focus, textarea:focus { border-color: #667eea; }
-        .btn-primary { background: #667eea; color: white; border-radius: 0.75rem; padding: 0.6rem 1.25rem; font-weight: 600; transition: background 0.2s; cursor: pointer; }
-        .btn-primary:hover { background: #5a6fd6; }
-        .btn-danger { background: #ef4444; color: white; border-radius: 0.75rem; padding: 0.6rem 1.25rem; font-weight: 600; transition: background 0.2s; cursor: pointer; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-ghost { background: #f1f5f9; color: #64748b; border-radius: 0.75rem; padding: 0.6rem 1.25rem; font-weight: 600; transition: background 0.2s; cursor: pointer; }
-        .btn-ghost:hover { background: #e2e8f0; }
-        .btn-success { background: #22c55e; color: white; border-radius: 0.75rem; padding: 0.6rem 1.25rem; font-weight: 600; transition: background 0.2s; cursor: pointer; }
-        .btn-success:hover { background: #16a34a; }
-        .nav-disabled { opacity: 0.45; cursor: not-allowed; }
-        .active-page { background: rgba(255,255,255,0.35) !important; }
-        @keyframes slideOutLeft {
-            0%   { transform: translateX(0); opacity: 1; max-height: 200px; margin-bottom: 0.75rem; }
-            60%  { transform: translateX(-120%); opacity: 0; max-height: 200px; margin-bottom: 0.75rem; }
-            100% { transform: translateX(-120%); opacity: 0; max-height: 0; margin-bottom: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        .task-completing { animation: slideOutLeft 0.4s ease-in forwards; overflow: hidden; }
+
+        .nav-pill {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .kanban-col {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #f97316;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            z-index: 40;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            background: #ea6c00;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            width: 100%;
+            max-width: 440px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.25rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd6;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.25rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-ghost {
+            background: #f1f5f9;
+            color: #64748b;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.25rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-ghost:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-success {
+            background: #22c55e;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.25rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        .nav-disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .active-page {
+            background: rgba(255, 255, 255, 0.35) !important;
+        }
+
+        @keyframes slideOutLeft {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+                max-height: 200px;
+                margin-bottom: 0.75rem;
+            }
+
+            60% {
+                transform: translateX(-120%);
+                opacity: 0;
+                max-height: 200px;
+                margin-bottom: 0.75rem;
+            }
+
+            100% {
+                transform: translateX(-120%);
+                opacity: 0;
+                max-height: 0;
+                margin-bottom: 0;
+                padding: 0;
+            }
+        }
+
+        .task-completing {
+            animation: slideOutLeft 0.4s ease-in forwards;
+            overflow: hidden;
+        }
     </style>
 </head>
+
 <body class="p-5">
-<div class="max-w-6xl mx-auto">
+    <div class="max-w-6xl mx-auto">
 
-    <!-- Верхняя панель -->
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4 text-white">
-        <div class="flex items-center gap-2">
-            <i class="fas fa-brain text-2xl"></i>
-            <span class="text-xl font-bold">Обезьяна и Умник</span>
-        </div>
-        <div class="flex items-center gap-3">
-
-            <!-- Не авторизован -->
-            <div sec:authorize="isAnonymous()">
-                <a href="/oauth2/authorization/github"
-                   class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                    </svg>
-                    Войти через GitHub
-                </a>
+        <!-- Верхняя панель -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 text-white">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-brain text-2xl"></i>
+                <span class="text-xl font-bold">Обезьяна и Умник</span>
             </div>
+            <div class="flex items-center gap-3">
 
-            <!-- Авторизован -->
-            <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
-                <img sec:authentication="principal.attributes['avatar_url']"
-                     th:src="${#authentication != null ? #authentication.principal.attributes['avatar_url'] : ''}"
-                     alt="avatar"
-                     class="w-8 h-8 rounded-full border-2 border-white/50">
-                <span class="text-sm opacity-90">
-                    Привет, <strong sec:authentication="principal.attributes['name']"></strong>!
-                </span>
-                <form th:action="@{/logout}" method="post">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                    <button type="submit"
+                <!-- Не авторизован -->
+                <div sec:authorize="isAnonymous()">
+                    <a href="/oauth2/authorization/github"
+                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                        </svg>
+                        Войти через GitHub
+                    </a>
+                </div>
+
+                <!-- Авторизован -->
+                <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
+                    <img sec:authentication="principal.attributes['avatar_url']"
+                        th:src="${#authentication != null ? #authentication.principal.attributes['avatar_url'] : ''}"
+                        alt="avatar" class="w-8 h-8 rounded-full border-2 border-white/50">
+                    <span class="text-sm opacity-90">
+                        Привет, <strong sec:authentication="principal.attributes['name']"></strong>!
+                    </span>
+                    <form th:action="@{/logout}" method="post" id="logoutForm">
+                        <!-- Кнопка с вызовом функции очистки данных -->
+                        <button type="submit" onclick="clearAllData()"
                             class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
-                        <i class="fas fa-sign-out-alt text-xs"></i> Выйти
-                    </button>
-                </form>
-            </div>
+                            <i class="fas fa-sign-out-alt text-xs"></i> Выйти
+                        </button>
+                    </form>
+                </div>
 
+            </div>
+        </div>
+
+        <!-- Навигация по центру -->
+        <div class="flex justify-center mb-6">
+            <div class="nav-pill flex gap-2 text-white">
+                <button class="px-3 py-1 rounded-full active-page">🗂 Доска</button>
+                <button disabled class="px-3 py-1 rounded-full nav-disabled">📥 Инбокс</button>
+                <button disabled class="px-3 py-1 rounded-full nav-disabled">📁 Проекты</button>
+                <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
+            </div>
+        </div>
+
+        <!-- Доска: 3 колонки -->
+        <div class="grid md:grid-cols-3 gap-5">
+            <div class="kanban-col">
+                <h2 class="text-white font-bold text-lg mb-3">⚡ На сегодня</h2>
+                <div id="colToday"></div>
+            </div>
+            <div class="kanban-col">
+                <h2 class="text-white font-bold text-lg mb-3">🔧 В работе / Бэклог</h2>
+                <div id="colBacklog">
+                    <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>
+                </div>
+            </div>
+            <div class="kanban-col">
+                <h2 class="text-white font-bold text-lg mb-3">🚧 Заблокировано</h2>
+                <div id="colBlocked">
+                    <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">—</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FAB -->
+    <div class="fab" id="fabAddTask"><i class="fas fa-plus"></i></div>
+
+    <!-- Модалка: Создание задачи -->
+    <div id="createModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">➕ Новая задача</h2>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
+                    <input type="text" id="createTitle" placeholder="Что нужно сделать?" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Контент</label>
+                    <textarea id="createDesc" rows="3" placeholder="Подробности..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-ghost" id="createCancel">Отмена</button>
+                <button class="btn-primary" id="createSave">Создать задачу</button>
+            </div>
         </div>
     </div>
 
-    <!-- Навигация по центру -->
-    <div class="flex justify-center mb-6">
-        <div class="nav-pill flex gap-2 text-white">
-            <button class="px-3 py-1 rounded-full active-page">🗂 Доска</button>
-            <button disabled class="px-3 py-1 rounded-full nav-disabled">📥 Инбокс</button>
-            <button disabled class="px-3 py-1 rounded-full nav-disabled">📁 Проекты</button>
-            <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
-        </div>
-    </div>
-
-    <!-- Доска: 3 колонки -->
-    <div class="grid md:grid-cols-3 gap-5">
-        <div class="kanban-col">
-            <h2 class="text-white font-bold text-lg mb-3">⚡ На сегодня</h2>
-            <div id="colToday"></div>
-        </div>
-        <div class="kanban-col">
-            <h2 class="text-white font-bold text-lg mb-3">🔧 В работе / Бэклог</h2>
-            <div id="colBacklog">
-                <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>
+    <!-- Модалка: Редактирование задачи -->
+    <div id="editModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать задачу</h2>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
+                    <input type="text" id="editTitle" placeholder="Название задачи" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Контент</label>
+                    <textarea id="editDesc" rows="3" placeholder="Подробности..."></textarea>
+                </div>
             </div>
-        </div>
-        <div class="kanban-col">
-            <h2 class="text-white font-bold text-lg mb-3">🚧 Заблокировано</h2>
-            <div id="colBlocked">
-                <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">—</div>
+            <div class="flex justify-between mt-5">
+                <button class="btn-success" id="editComplete">✓ Выполнено</button>
+                <div class="flex gap-2">
+                    <button class="btn-ghost" id="editCancel">Отмена</button>
+                    <button class="btn-primary" id="editSave">Сохранить</button>
+                </div>
             </div>
         </div>
     </div>
 
-</div>
+    <script>
+        const API_URL = '/api/tasks';
 
-<!-- FAB -->
-<div class="fab" id="fabAddTask"><i class="fas fa-plus"></i></div>
+        let editingTaskId = null;
 
-<!-- Модалка: Создание задачи -->
-<div id="createModal" class="modal-overlay hidden">
-    <div class="modal-box">
-        <h2 class="text-lg font-bold text-slate-800 mb-4">➕ Новая задача</h2>
-        <div class="flex flex-col gap-3">
-            <div>
-                <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
-                <input type="text" id="createTitle" placeholder="Что нужно сделать?"/>
-            </div>
-            <div>
-                <label class="text-sm font-medium text-slate-600 mb-1 block">Контент</label>
-                <textarea id="createDesc" rows="3" placeholder="Подробности..."></textarea>
-            </div>
-        </div>
-        <div class="flex justify-end gap-2 mt-5">
-            <button class="btn-ghost" id="createCancel">Отмена</button>
-            <button class="btn-primary" id="createSave">Создать задачу</button>
-        </div>
-    </div>
-</div>
-
-<!-- Модалка: Редактирование задачи -->
-<div id="editModal" class="modal-overlay hidden">
-    <div class="modal-box">
-        <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать задачу</h2>
-        <div class="flex flex-col gap-3">
-            <div>
-                <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
-                <input type="text" id="editTitle" placeholder="Название задачи"/>
-            </div>
-            <div>
-                <label class="text-sm font-medium text-slate-600 mb-1 block">Контент</label>
-                <textarea id="editDesc" rows="3" placeholder="Подробности..."></textarea>
-            </div>
-        </div>
-        <div class="flex justify-between mt-5">
-            <button class="btn-success" id="editComplete">✓ Выполнено</button>
-            <div class="flex gap-2">
-                <button class="btn-ghost" id="editCancel">Отмена</button>
-                <button class="btn-primary" id="editSave">Сохранить</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const API_URL = '/api/tasks';
-
-    let editingTaskId = null;
-
-    // ── Helpers ────────────────────────────────────────────
-    function escHtml(str) {
-        return String(str ?? '')
-            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function emptyPlaceholder() {
-        return '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>';
-    }
-
-    // ── Render ─────────────────────────────────────────────
-    function renderBoard(tasks) {
-        const col = document.getElementById('colToday');
-        if (!tasks.length) {
-            col.innerHTML = emptyPlaceholder();
-            return;
+        // ── Helpers ────────────────────────────────────────────
+        function escHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
-        col.innerHTML = tasks.map(t => `
+
+        function emptyPlaceholder() {
+            return '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>';
+        }
+
+        // ── Render ─────────────────────────────────────────────
+        function renderBoard(tasks) {
+            const col = document.getElementById('colToday');
+            if (!tasks.length) {
+                col.innerHTML = emptyPlaceholder();
+                return;
+            }
+            col.innerHTML = tasks.map(t => `
             <div class="task-card" data-id="${t.id}">
                 <div class="flex items-start justify-between gap-2">
                     <div class="flex-1 min-w-0">
@@ -197,105 +359,142 @@
             </div>
         `).join('');
 
-        col.querySelectorAll('.task-card').forEach(card => {
-            card.addEventListener('click', () => openEditModal(card.dataset.id, tasks));
-        });
-    }
-
-    // ── Load tasks ─────────────────────────────────────────
-    async function loadTasks() {
-        try {
-            const res = await fetch(API_URL);
-            const tasks = await res.json();
-            renderBoard(tasks);
-        } catch (e) {
-            document.getElementById('colToday').innerHTML =
-                '<div class="task-card text-red-400 text-sm cursor-default">⚠️ Бэкенд недоступен</div>';
+            col.querySelectorAll('.task-card').forEach(card => {
+                card.addEventListener('click', () => openEditModal(card.dataset.id, tasks));
+            });
         }
-    }
 
-    // ── Create ─────────────────────────────────────────────
-    function openCreateModal() {
-        document.getElementById('createTitle').value = '';
-        document.getElementById('createDesc').value = '';
-        document.getElementById('createModal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('createTitle').focus(), 50);
-    }
+        // ── Load tasks ─────────────────────────────────────────
+        async function loadTasks() {
+            try {
+                const res = await fetch(API_URL);
+                const tasks = await res.json();
+                renderBoard(tasks);
+            } catch (e) {
+                document.getElementById('colToday').innerHTML =
+                    '<div class="task-card text-red-400 text-sm cursor-default">⚠️ Бэкенд недоступен</div>';
+            }
+        }
 
-    function closeCreateModal() {
-        document.getElementById('createModal').classList.add('hidden');
-    }
+        // ── Create ─────────────────────────────────────────────
+        function openCreateModal() {
+            document.getElementById('createTitle').value = '';
+            document.getElementById('createDesc').value = '';
+            document.getElementById('createModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('createTitle').focus(), 50);
+        }
 
-    document.getElementById('fabAddTask').addEventListener('click', openCreateModal);
-    document.getElementById('createCancel').addEventListener('click', closeCreateModal);
-    document.getElementById('createModal').addEventListener('click', e => {
-        if (e.target === e.currentTarget) closeCreateModal();
-    });
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.add('hidden');
+        }
 
-    document.getElementById('createSave').addEventListener('click', async () => {
-        const title = document.getElementById('createTitle').value.trim();
-        if (!title) { document.getElementById('createTitle').focus(); return; }
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content: document.getElementById('createDesc').value.trim() })
+        document.getElementById('fabAddTask').addEventListener('click', openCreateModal);
+        document.getElementById('createCancel').addEventListener('click', closeCreateModal);
+        document.getElementById('createModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeCreateModal();
         });
-        closeCreateModal();
-        loadTasks();
-    });
 
-    // ── Edit ───────────────────────────────────────────────
-    function openEditModal(taskId, tasks) {
-        const task = tasks.find(t => String(t.id) === String(taskId));
-        if (!task) return;
-        editingTaskId = task.id;
-        document.getElementById('editTitle').value = task.title;
-        document.getElementById('editDesc').value = task.content ?? '';
-        document.getElementById('editModal').classList.remove('hidden');
-        setTimeout(() => document.getElementById('editTitle').focus(), 50);
-    }
-
-    function closeEditModal() {
-        document.getElementById('editModal').classList.add('hidden');
-        editingTaskId = null;
-    }
-
-    document.getElementById('editCancel').addEventListener('click', closeEditModal);
-    document.getElementById('editModal').addEventListener('click', e => {
-        if (e.target === e.currentTarget) closeEditModal();
-    });
-
-    document.getElementById('editSave').addEventListener('click', async () => {
-        const title = document.getElementById('editTitle').value.trim();
-        if (!title) { document.getElementById('editTitle').focus(); return; }
-        await fetch(`${API_URL}/${editingTaskId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, content: document.getElementById('editDesc').value.trim() })
+        document.getElementById('createSave').addEventListener('click', async () => {
+            const title = document.getElementById('createTitle').value.trim();
+            if (!title) { document.getElementById('createTitle').focus(); return; }
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content: document.getElementById('createDesc').value.trim() })
+            });
+            closeCreateModal();
+            loadTasks();
         });
-        closeEditModal();
-        loadTasks();
-    });
 
-    // ── Complete (удаление с анимацией) ────────────────────
-    document.getElementById('editComplete').addEventListener('click', async () => {
-        const idToRemove = editingTaskId;
-        const card = document.querySelector(`.task-card[data-id="${idToRemove}"]`);
-        closeEditModal();
-        if (card) {
-            card.classList.add('task-completing');
-            card.addEventListener('animationend', async () => {
+        // ── Edit ───────────────────────────────────────────────
+        function openEditModal(taskId, tasks) {
+            const task = tasks.find(t => String(t.id) === String(taskId));
+            if (!task) return;
+            editingTaskId = task.id;
+            document.getElementById('editTitle').value = task.title;
+            document.getElementById('editDesc').value = task.content ?? '';
+            document.getElementById('editModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('editTitle').focus(), 50);
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            editingTaskId = null;
+        }
+
+        document.getElementById('editCancel').addEventListener('click', closeEditModal);
+        document.getElementById('editModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeEditModal();
+        });
+
+        document.getElementById('editSave').addEventListener('click', async () => {
+            const title = document.getElementById('editTitle').value.trim();
+            if (!title) { document.getElementById('editTitle').focus(); return; }
+            await fetch(`${API_URL}/${editingTaskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content: document.getElementById('editDesc').value.trim() })
+            });
+            closeEditModal();
+            loadTasks();
+        });
+
+        // ── Complete (удаление с анимацией) ────────────────────
+        document.getElementById('editComplete').addEventListener('click', async () => {
+            const idToRemove = editingTaskId;
+            const card = document.querySelector(`.task-card[data-id="${idToRemove}"]`);
+            closeEditModal();
+            if (card) {
+                card.classList.add('task-completing');
+                card.addEventListener('animationend', async () => {
+                    await fetch(`${API_URL}/${idToRemove}`, { method: 'DELETE' });
+                    loadTasks();
+                }, { once: true });
+            } else {
                 await fetch(`${API_URL}/${idToRemove}`, { method: 'DELETE' });
                 loadTasks();
-            }, { once: true });
-        } else {
-            await fetch(`${API_URL}/${idToRemove}`, { method: 'DELETE' });
-            loadTasks();
-        }
-    });
+            }
+        });
 
-    // ── Init ───────────────────────────────────────────────
-    loadTasks();
-</script>
+        // ── Init ───────────────────────────────────────────────
+        loadTasks();
+    </script>
+
+    <script>
+        function clearAllData() {
+            // Очищаем localStorage (там может храниться токен)
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch (e) { }
+
+            // Очищаем все куки (там может быть JSESSIONID и OAuth2 данные)
+            document.cookie.split(";").forEach(function (cookie) {
+                var name = cookie.split("=")[0].trim();
+                if (name) {
+                    // Удаляем куку для текущего пути
+                    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+                    // Удаляем куку для корневого пути
+                    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+                }
+            });
+            // Очистка IndexedDB (где GitHub иногда хранит токены)
+            if (window.indexedDB) {
+                indexedDB.databases().then(dbs => {
+                    dbs.forEach(db => {
+                        if (db.name) indexedDB.deleteDatabase(db.name);
+                    });
+                }).catch(() => { });
+            }
+
+            // Очистка кэша браузера
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+        }
+    </script>
 </body>
+
 </html>

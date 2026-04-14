@@ -11,8 +11,10 @@ spring:
             client-id: ${GITHUB_CLIENT_ID:Ov23liZsFQoEIr1xbtWb}
             client-secret: ${GITHUB_CLIENT_SECRET:b532209599f65f7ac4de1cda04e5e104321d1701}
             scope: read:user
+            redirect-uri: "http://localhost:8080/login/oauth2/code/github"
 server:
   port: 8080
+  forward-headers-strategy: framework
 thinkdo:
   api:
     base-url: ${API_BASE_URL:http://localhost:5288}
