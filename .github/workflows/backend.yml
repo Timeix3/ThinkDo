@@ -3,8 +3,7 @@ name: Backend CI
 # ТРИГГЕРЫ:
 on:
   push:
-    #branches: [ "main" ] # При пуше в основную ветку
-    branches: [ "**" ] # Для теста
+    branches: [ "main" ] # При пуше в основную ветку
     paths:
       - 'server/**'      # Запускать только если изменились файлы в папке бэкенда
   pull_request:
