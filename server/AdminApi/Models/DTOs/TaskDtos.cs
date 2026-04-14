@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace AdminApi.Models.DTOs;
+//Тест бэка ci
 
 /// <summary>
 /// DTO для создания задачи

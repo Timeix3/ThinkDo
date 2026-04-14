@@ -1,0 +1,50 @@
+name: Backend CI
+
+# ТРИГГЕРЫ:
+on:
+  push:
+    #branches: [ "main" ] # При пуше в основную ветку
+    branches: [ "**" ] # Для теста
+    paths:
+      - 'server/**'      # Запускать только если изменились файлы в папке бэкенда
+  pull_request:
+    branches: [ "main" ] # При создании PR в основную ветку
+    paths:
+      - 'server/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # КЛОНИРОВАНИЕ:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ОКРУЖЕНИЕ:
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # КЕШИРОВАНИЕ: (Сохраняем NuGet-пакеты, чтобы следующая сборка была быстрее)
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('server/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      # RESTORE:
+      - name: Restore dependencies
+        run: dotnet restore server/server.sln
+
+      # BUILD:
+      # Если Common не соберется, API тоже упадут
+      - name: Build projects
+        run: dotnet build server/server.sln --configuration Release --no-restore
+
+      # TEST:
+      - name: Run tests
+        run: dotnet test server/server.sln --configuration Release --no-build --verbosity normal
