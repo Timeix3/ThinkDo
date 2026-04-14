@@ -28,6 +28,6 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login")
                 );
 
-        return http.build();
+        return http.build()
     }
 }
