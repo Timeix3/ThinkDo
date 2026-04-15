@@ -26,7 +26,7 @@ public class GitHubAuthenticationHandler : AuthenticationHandler<AuthenticationS
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var authHeader = Request.Headers.Authorization.FirstOrDefault();
-        
+
         if (string.IsNullOrEmpty(authHeader))
         {
             return AuthenticateResult.NoResult();
@@ -49,9 +49,9 @@ public class GitHubAuthenticationHandler : AuthenticationHandler<AuthenticationS
             // Validate token by calling GitHub's user API
             var httpClient = _httpClientFactory.CreateClient("GitHub");
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", token);
-            
+
             var response = await httpClient.GetAsync("https://api.github.com/user");
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("GitHub token validation failed. Status: {StatusCode}", response.StatusCode);
@@ -94,16 +94,16 @@ public class GitHubUserResponse
 {
     [JsonPropertyName("id")]
     public long Id { get; set; }
-    
+
     [JsonPropertyName("login")]
     public string Login { get; set; } = string.Empty;
-    
+
     [JsonPropertyName("avatar_url")]
     public string? AvatarUrl { get; set; }
-    
+
     [JsonPropertyName("email")]
     public string? Email { get; set; }
-    
+
     [JsonPropertyName("name")]
     public string? Name { get; set; }
 }

@@ -81,6 +81,14 @@ server:
 Ctrl + C
 ```
 
+## 🧹 Форматирование кода (Frontend)
+Мы используем плагин **Spotless** (стандарт Google Java Format). Чтобы сборка не упала в GitHub Actions, перед пушем выполните команду:
+
+```bash
+cd web
+./mvnw spotless:apply
+```
+
 ## 📁 Структура проекта
 
 ```text

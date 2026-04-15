@@ -40,7 +40,7 @@ public class TaskRepository : ITaskRepository
     {
         var existing = await _context.Tasks
             .FirstOrDefaultAsync(t => t.Id == task.Id && t.UserId == userId);
-        
+
         if (existing is null)
             return null;
 
@@ -56,7 +56,7 @@ public class TaskRepository : ITaskRepository
     {
         var task = await _context.Tasks
             .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
-        
+
         if (task is null)
             return false;
 

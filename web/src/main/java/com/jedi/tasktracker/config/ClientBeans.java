@@ -13,21 +13,20 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class ClientBeans {
 
-    @Bean
-    public DefaultApiClient apiClient(
-            @Value("${thinkdo.api.base-url:http://localhost:8081}")
-            String apiBaseUrl,
-            ClientRegistrationRepository clientRegistrationRepository,
-            OAuth2AuthorizedClientRepository authorizedClientRepository) {
-        OAuthClientHttpRequestInterceptor oAuthClientHttpRequestInterceptor =
-                new OAuthClientHttpRequestInterceptor(
-                        new DefaultOAuth2AuthorizedClientManager(clientRegistrationRepository,
-                                authorizedClientRepository), "github");
+  @Bean
+  public DefaultApiClient apiClient(
+      @Value("${thinkdo.api.base-url:http://localhost:8081}") String apiBaseUrl,
+      ClientRegistrationRepository clientRegistrationRepository,
+      OAuth2AuthorizedClientRepository authorizedClientRepository) {
+    OAuthClientHttpRequestInterceptor oAuthClientHttpRequestInterceptor =
+        new OAuthClientHttpRequestInterceptor(
+            new DefaultOAuth2AuthorizedClientManager(
+                clientRegistrationRepository, authorizedClientRepository),
+            "github");
 
-        var restClientBuilder = RestClient.builder()
-                .requestInterceptor(oAuthClientHttpRequestInterceptor);
+    var restClientBuilder =
+        RestClient.builder().requestInterceptor(oAuthClientHttpRequestInterceptor);
 
-        return new DefaultApiClient(restClientBuilder.baseUrl(apiBaseUrl)
-                .build());
-    }
+    return new DefaultApiClient(restClientBuilder.baseUrl(apiBaseUrl).build());
+  }
 }

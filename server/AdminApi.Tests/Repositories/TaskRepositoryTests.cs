@@ -37,11 +37,11 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task GetAllAsync_NoTasksForUser_ReturnsEmptyList()
     {
-        _context.Tasks.Add(new TaskItem 
-        { 
-            Title = "Other User Task", 
-            Content = "Content", 
-            UserId = OtherUserId 
+        _context.Tasks.Add(new TaskItem
+        {
+            Title = "Other User Task",
+            Content = "Content",
+            UserId = OtherUserId
         });
         await _context.SaveChangesAsync();
 
@@ -53,11 +53,11 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdAsync_ExistingTaskAndCorrectUser_ReturnsTask()
     {
-        var task = new TaskItem 
-        { 
-            Title = "Test Task", 
-            Content = "Test Content", 
-            UserId = TestUserId 
+        var task = new TaskItem
+        {
+            Title = "Test Task",
+            Content = "Test Content",
+            UserId = TestUserId
         };
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
@@ -72,11 +72,11 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task GetByIdAsync_ExistingTaskButWrongUser_ReturnsNull()
     {
-        var task = new TaskItem 
-        { 
-            Title = "Test Task", 
-            Content = "Test Content", 
-            UserId = OtherUserId 
+        var task = new TaskItem
+        {
+            Title = "Test Task",
+            Content = "Test Content",
+            UserId = OtherUserId
         };
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
@@ -89,11 +89,11 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task AddAsync_ValidTask_AddsTaskToDatabase()
     {
-        var task = new TaskItem 
-        { 
-            Title = "New Task", 
-            Content = "New Content", 
-            UserId = TestUserId 
+        var task = new TaskItem
+        {
+            Title = "New Task",
+            Content = "New Content",
+            UserId = TestUserId
         };
 
         var result = await _repository.AddAsync(task);
@@ -111,11 +111,11 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task UpdateAsync_ExistingTaskAndCorrectUser_UpdatesTask()
     {
-        var task = new TaskItem 
-        { 
-            Title = "Original", 
-            Content = "Original Content", 
-            UserId = TestUserId 
+        var task = new TaskItem
+        {
+            Title = "Original",
+            Content = "Original Content",
+            UserId = TestUserId
         };
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
@@ -140,11 +140,11 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task UpdateAsync_ExistingTaskButWrongUser_ReturnsNull()
     {
-        var task = new TaskItem 
-        { 
-            Title = "Original", 
-            Content = "Original Content", 
-            UserId = OtherUserId 
+        var task = new TaskItem
+        {
+            Title = "Original",
+            Content = "Original Content",
+            UserId = OtherUserId
         };
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
@@ -165,10 +165,10 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task DeleteAsync_ExistingTaskAndCorrectUser_DeletesTaskAndReturnsTrue()
     {
-        var task = new TaskItem 
-        { 
-            Title = "Task to Delete", 
-            UserId = TestUserId 
+        var task = new TaskItem
+        {
+            Title = "Task to Delete",
+            UserId = TestUserId
         };
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
@@ -184,10 +184,10 @@ public class TaskRepositoryTests : IDisposable
     [Fact]
     public async Task DeleteAsync_ExistingTaskButWrongUser_ReturnsFalse()
     {
-        var task = new TaskItem 
-        { 
-            Title = "Task to Delete", 
-            UserId = OtherUserId 
+        var task = new TaskItem
+        {
+            Title = "Task to Delete",
+            UserId = OtherUserId
         };
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
@@ -205,23 +205,23 @@ public class TaskRepositoryTests : IDisposable
     {
         var now = DateTime.UtcNow;
         _context.Tasks.AddRange(
-            new TaskItem 
-            { 
-                Title = "First", 
-                UserId = TestUserId, 
-                CreatedAt = now.AddHours(-2) 
+            new TaskItem
+            {
+                Title = "First",
+                UserId = TestUserId,
+                CreatedAt = now.AddHours(-2)
             },
-            new TaskItem 
-            { 
-                Title = "Second", 
-                UserId = TestUserId, 
-                CreatedAt = now.AddHours(-1) 
+            new TaskItem
+            {
+                Title = "Second",
+                UserId = TestUserId,
+                CreatedAt = now.AddHours(-1)
             },
-            new TaskItem 
-            { 
-                Title = "Third", 
-                UserId = TestUserId, 
-                CreatedAt = now 
+            new TaskItem
+            {
+                Title = "Third",
+                UserId = TestUserId,
+                CreatedAt = now
             }
         );
         await _context.SaveChangesAsync();
