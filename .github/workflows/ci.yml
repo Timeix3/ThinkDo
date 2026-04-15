@@ -43,6 +43,10 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore server/server.sln
 
+      # ЛИНТИНГ
+      - name: Dotnet Format Check
+        run: dotnet format server/server.sln --verify-no-changes --verbosity normal
+
       # BUILD:
       # Если Common не соберется, API тоже упадут
       - name: Build projects
@@ -67,16 +71,24 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Сборка через Maven
-      - name: Build with Maven
+      # ЛИНТИНГ Spotless (Google Style)
+      - name: Java Lint (Maven)
+        if: hashFiles('web/pom.xml') != ''
+        working-directory: ./web
+        run: ./mvnw spotless:check
+
+      - name: Java Lint (Gradle)
+        if: hashFiles('web/build.gradle') != ''
+        working-directory: ./web
+        run: ./gradlew spotlessCheck
+
+        # СБОРКА И ТЕСТЫ
+      - name: Build & Test (Maven)
         if: hashFiles('web/pom.xml') != ''
         working-directory: ./web
         run: ./mvnw clean package
 
-      # Сборка через Gradle
-      - name: Build with Gradle
+      - name: Build & Test (Gradle)
         if: hashFiles('web/build.gradle') != ''
         working-directory: ./web
-        run: |
-          chmod +x gradlew
-          ./gradlew build
+        run: ./gradlew build
