@@ -13,6 +13,7 @@ spring:
             scope: read:user
 server:
   port: 8080
+  forward-headers-strategy: framework
 thinkdo:
   api:
     base-url: ${API_BASE_URL:http://localhost:5288}
