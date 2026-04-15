@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Список задач</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>Список задач (Умник)</h1>
+    <a href="/tasks/new" class="btn">+ Добавить задачу</a>
+
+    <div th:if="${tasks.empty}">
+        <p>Нет задач. Создайте первую!</p>
+    </div>
+
+    <table th:unless="${tasks.empty}" class="task-table">
+        <thead>
+        <tr><th>Название</th><th>Статус</th><th>Проект</th><th>Дата создания</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="task : ${tasks}">
+            <td th:text="${task.title}"></td>
+            <td><span class="status-badge" th:classappend="${task.status}" th:text="${task.status}"></span></td>
+            <td th:text="${task.projectName != null ? task.projectName : '—'}"></td>
+            <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
