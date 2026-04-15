@@ -198,6 +198,22 @@
             animation: slideOutLeft 0.4s ease-in forwards;
             overflow: hidden;
         }
+
+        .task-table-container {
+            overflow-x: auto;
+        }
+
+        .task-table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .task-table-container th,
+        .task-table-container td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 
@@ -226,8 +242,8 @@
 
                 <!-- Авторизован -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
-                    <img th:src="${#authentication.principal.attributes['avatar_url']}"
-                        alt="avatar" class="w-8 h-8 rounded-full border-2 border-white/50">
+                    <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
+                        class="w-8 h-8 rounded-full border-2 border-white/50">
                     <span class="text-sm opacity-90">
                         Привет, <strong th:text="${#authentication.principal.attributes['name']}"></strong>!
                     </span>
@@ -246,30 +262,46 @@
         <!-- Навигация по центру -->
         <div class="flex justify-center mb-6">
             <div class="nav-pill flex gap-2 text-white">
-                <button class="px-3 py-1 rounded-full active-page">🗂 Доска</button>
-                <button disabled class="px-3 py-1 rounded-full nav-disabled">📥 Инбокс</button>
+                <button data-page="dashboard" class="px-3 py-1 rounded-full active-page">📅 Доска</button>
+                <button data-page="tasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
+                <button data-page="inbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button disabled class="px-3 py-1 rounded-full nav-disabled">📁 Проекты</button>
                 <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
             </div>
         </div>
 
         <!-- Доска: 3 колонки -->
-        <div class="grid md:grid-cols-3 gap-5">
-            <div class="kanban-col">
-                <h2 class="text-white font-bold text-lg mb-3">⚡ На сегодня</h2>
-                <div id="colToday"></div>
-            </div>
-            <div class="kanban-col">
-                <h2 class="text-white font-bold text-lg mb-3">🔧 В работе / Бэклог</h2>
-                <div id="colBacklog">
-                    <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>
+        <!-- Страница: Доска (бывшая) -->
+        <div id="pageDashboard">
+            <div class="grid md:grid-cols-3 gap-5" id="kanbanBoard">
+                <div class="kanban-col">
+                    <h2 class="text-white font-bold text-lg mb-3">⚡ На сегодня</h2>
+                    <div id="colToday"></div>
+                </div>
+                <div class="kanban-col">
+                    <h2 class="text-white font-bold text-lg mb-3">🔧 В работе / Бэклог</h2>
+                    <div id="colBacklog"></div>
+                </div>
+                <div class="kanban-col">
+                    <h2 class="text-white font-bold text-lg mb-3">🚧 Заблокировано</h2>
+                    <div id="colBlocked"></div>
                 </div>
             </div>
+        </div>
+
+        <!-- Страница: Задачи (таблица) -->
+        <div id="pageTasks" class="hidden">
+            <div class="kanban-col" style="min-height: auto;">
+                <h2 class="text-white font-bold text-lg mb-3">📝 Список задач</h2>
+                <div id="taskTableContainer"></div>
+            </div>
+        </div>
+
+        <!-- Страница: Инбокс (пока заглушка) -->
+        <div id="pageInbox" class="hidden">
             <div class="kanban-col">
-                <h2 class="text-white font-bold text-lg mb-3">🚧 Заблокировано</h2>
-                <div id="colBlocked">
-                    <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">—</div>
-                </div>
+                <h2 class="text-white font-bold text-lg mb-3">📥 Инбокс</h2>
+                <div class="text-white/50 text-center py-8">В разработке</div>
             </div>
         </div>
 
@@ -324,139 +356,161 @@
     </div>
 
     <script>
-        const API_URL = '/api/tasks';
+        // ── Состояние ──────────────────────────────────────────
+        let tasks = [];          // массив задач
+        let taskCounter = 0;
+        let currentPage = 'dashboard';
 
-        let editingTaskId = null;
+        // ── Мок-данные для демонстрации (можно удалить позже) ──
+        function initMockTasks() {
+            if (tasks.length === 0) {
+                tasks.push({
+                    id: 'task_1',
+                    title: 'Сделать страницу списка задач',
+                    status: 'available',
+                    project: null,
+                    createdAt: Date.now() - 86400000
+                });
+                tasks.push({
+                    id: 'task_2',
+                    title: 'Обсудить API с бэкендом',
+                    status: 'blocked',
+                    project: null,
+                    createdAt: Date.now() - 3600000
+                });
+                taskCounter = 2;
+            }
+        }
+        initMockTasks();
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
-            return String(str ?? '')
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        function emptyPlaceholder() {
-            return '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>';
+        function formatDate(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
         }
 
-        // ── Render ─────────────────────────────────────────────
-        function renderBoard(tasks) {
-            const col = document.getElementById('colToday');
-            if (!tasks.length) {
-                col.innerHTML = emptyPlaceholder();
+        function getStatusBadge(status) {
+            const map = {
+                'available': { text: 'Доступна', class: 'bg-green-500/20 text-green-300 border-green-500/50' },
+                'blocked': { text: 'Заблокирована', class: 'bg-red-500/20 text-red-300 border-red-500/50' },
+                'completed': { text: 'Выполнена', class: 'bg-blue-500/20 text-blue-300 border-blue-500/50' },
+                'cancelled': { text: 'Отменена', class: 'bg-gray-500/20 text-gray-300 border-gray-500/50' }
+            };
+            const s = map[status] || map.available;
+            return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${s.class}">${s.text}</span>`;
+        }
+
+        // ── Переключение страниц ─────────────────────────────────
+        function switchPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.nav-pill button').forEach(btn => {
+                btn.classList.remove('active-page');
+                if (btn.dataset.page === page) btn.classList.add('active-page');
+            });
+            document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
+            document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
+            document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
+            if (page === 'tasks') renderTaskTable();
+            // Для доски пока ничего не рендерим, можно оставить заглушку
+        }
+
+        // ── Рендер таблицы задач ─────────────────────────────────
+        function renderTaskTable() {
+            const container = document.getElementById('taskTableContainer');
+            const sorted = [...tasks].sort((a, b) => b.createdAt - a.createdAt);
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="text-white/50 text-center py-8">Нет задач. Нажмите + чтобы создать.</div>';
                 return;
             }
-            col.innerHTML = tasks.map(t => `
-            <div class="task-card" data-id="${t.id}">
-                <div class="flex items-start justify-between gap-2">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                        ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
-                    </div>
-                    <i class="fas fa-pencil-alt text-slate-300 text-xs mt-1 shrink-0"></i>
-                </div>
-            </div>
-        `).join('');
-
-            col.querySelectorAll('.task-card').forEach(card => {
-                card.addEventListener('click', () => openEditModal(card.dataset.id, tasks));
+            let html = `<table class="w-full text-white border-collapse">
+        <thead><tr class="border-b border-white/20">
+            <th class="text-left py-2 px-3">Название</th>
+            <th class="text-left py-2 px-3">Статус</th>
+            <th class="text-left py-2 px-3">Проект</th>
+            <th class="text-left py-2 px-3">Дата создания</th>
+            <th class="text-center py-2 px-3">Действие</th>
+        </tr></thead><tbody>`;
+            for (let t of sorted) {
+                html += `<tr class="border-b border-white/10 hover:bg-white/5">
+            <td class="py-2 px-3">${escHtml(t.title)}</td>
+            <td class="py-2 px-3">${getStatusBadge(t.status)}</td>
+            <td class="py-2 px-3">${t.project ? escHtml(t.project) : '—'}</td>
+            <td class="py-2 px-3">${formatDate(t.createdAt)}</td>
+            <td class="py-2 px-3 text-center">
+                <button class="delete-task-btn text-green-400 hover:text-green-300" data-id="${t.id}">
+                    <i class="fas fa-check-circle text-xl"></i>
+                </button>
+            </td>
+        </tr>`;
+            }
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+            document.querySelectorAll('.delete-task-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    deleteTask(id);
+                });
             });
         }
 
-        // ── Load tasks ─────────────────────────────────────────
-        async function loadTasks() {
-            try {
-                const res = await fetch(API_URL);
-                const tasks = await res.json();
-                renderBoard(tasks);
-            } catch (e) {
-                document.getElementById('colToday').innerHTML =
-                    '<div class="task-card text-red-400 text-sm cursor-default">⚠️ Бэкенд недоступен</div>';
-            }
+        // ── Создание задачи ──────────────────────────────────────
+        function createTask(title, description, dueDate) {
+            taskCounter++;
+            const newTask = {
+                id: 'task_' + taskCounter,
+                title: title.trim(),
+                description: description.trim(),
+                dueDate: dueDate || '',
+                status: 'available',
+                project: null,
+                createdAt: Date.now()
+            };
+            tasks.push(newTask);
+            if (currentPage === 'tasks') renderTaskTable();
         }
 
-        // ── Create ─────────────────────────────────────────────
+        // ── Удаление задачи (выполнение) ─────────────────────────
+        function deleteTask(taskId) {
+            tasks = tasks.filter(t => t.id !== taskId);
+            if (currentPage === 'tasks') renderTaskTable();
+        }
+
+        // ── Обработчики модалок (адаптация под локальные данные) ──
         function openCreateModal() {
             document.getElementById('createTitle').value = '';
             document.getElementById('createDesc').value = '';
             document.getElementById('createModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('createTitle').focus(), 50);
         }
-
         function closeCreateModal() {
             document.getElementById('createModal').classList.add('hidden');
         }
-
         document.getElementById('fabAddTask').addEventListener('click', openCreateModal);
         document.getElementById('createCancel').addEventListener('click', closeCreateModal);
         document.getElementById('createModal').addEventListener('click', e => {
             if (e.target === e.currentTarget) closeCreateModal();
         });
-
-        document.getElementById('createSave').addEventListener('click', async () => {
+        document.getElementById('createSave').addEventListener('click', () => {
             const title = document.getElementById('createTitle').value.trim();
             if (!title) { document.getElementById('createTitle').focus(); return; }
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content: document.getElementById('createDesc').value.trim() })
-            });
+            const desc = document.getElementById('createDesc').value.trim();
+            createTask(title, desc, '');
             closeCreateModal();
-            loadTasks();
         });
 
-        // ── Edit ───────────────────────────────────────────────
-        function openEditModal(taskId, tasks) {
-            const task = tasks.find(t => String(t.id) === String(taskId));
-            if (!task) return;
-            editingTaskId = task.id;
-            document.getElementById('editTitle').value = task.title;
-            document.getElementById('editDesc').value = task.content ?? '';
-            document.getElementById('editModal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('editTitle').focus(), 50);
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').classList.add('hidden');
-            editingTaskId = null;
-        }
-
-        document.getElementById('editCancel').addEventListener('click', closeEditModal);
-        document.getElementById('editModal').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeEditModal();
+        // ── Инициализация навигации ──────────────────────────────
+        document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
+            btn.addEventListener('click', () => switchPage(btn.dataset.page));
         });
 
-        document.getElementById('editSave').addEventListener('click', async () => {
-            const title = document.getElementById('editTitle').value.trim();
-            if (!title) { document.getElementById('editTitle').focus(); return; }
-            await fetch(`${API_URL}/${editingTaskId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content: document.getElementById('editDesc').value.trim() })
-            });
-            closeEditModal();
-            loadTasks();
-        });
-
-        // ── Complete (удаление с анимацией) ────────────────────
-        document.getElementById('editComplete').addEventListener('click', async () => {
-            const idToRemove = editingTaskId;
-            const card = document.querySelector(`.task-card[data-id="${idToRemove}"]`);
-            closeEditModal();
-            if (card) {
-                card.classList.add('task-completing');
-                card.addEventListener('animationend', async () => {
-                    await fetch(`${API_URL}/${idToRemove}`, { method: 'DELETE' });
-                    loadTasks();
-                }, { once: true });
-            } else {
-                await fetch(`${API_URL}/${idToRemove}`, { method: 'DELETE' });
-                loadTasks();
-            }
-        });
-
-        // ── Init ───────────────────────────────────────────────
-        loadTasks();
+        // ── Запуск (показываем доску) ────────────────────────────
+        switchPage('dashboard');
     </script>
 
     <script>
