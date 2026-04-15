@@ -28,7 +28,7 @@ public class TasksController : ControllerBase
     private string GetCurrentUserId()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             _logger.LogError("User ID not found in token claims");
@@ -46,10 +46,10 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var userId = GetCurrentUserId();
-        
+
         _logger.LogInformation("Getting all tasks for user {UserId}", userId);
         var tasks = await _taskService.GetAllTasksAsync(userId);
-        
+
         return Ok(tasks);
     }
 
@@ -63,7 +63,7 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> GetById(int id)
     {
         var userId = GetCurrentUserId();
-        
+
         _logger.LogInformation("User {UserId} getting task {TaskId}", userId, id);
         var task = await _taskService.GetTaskByIdAsync(id, userId);
 
@@ -85,10 +85,10 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
     {
         var userId = GetCurrentUserId();
-        
+
         _logger.LogInformation("User {UserId} creating new task with title: {Title}", userId, dto.Title);
         var task = await _taskService.CreateTaskAsync(dto, userId);
-        
+
         return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
     }
 
@@ -103,7 +103,7 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto dto)
     {
         var userId = GetCurrentUserId();
-        
+
         _logger.LogInformation("User {UserId} updating task {TaskId}", userId, id);
         var task = await _taskService.UpdateTaskAsync(id, dto, userId);
 
@@ -126,7 +126,7 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetCurrentUserId();
-        
+
         _logger.LogInformation("User {UserId} deleting task {TaskId}", userId, id);
         var result = await _taskService.DeleteTaskAsync(id, userId);
 

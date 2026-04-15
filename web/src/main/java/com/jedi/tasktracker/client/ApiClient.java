@@ -1,16 +1,15 @@
 package com.jedi.tasktracker.client;
 
 import com.jedi.tasktracker.client.dto.TaskDto;
-
 import java.util.List;
 
 public interface ApiClient {
 
-    List<TaskDto> getTasks();
+  List<TaskDto> getTasks();
 
-    void createTask(String title, String description);
+  void createTask(String title, String description);
 
-    void updateTask(Long id, String title, String content);
+  void updateTask(Long id, String title, String content);
 
-    void deleteTask(Long id);
+  void deleteTask(Long id);
 }

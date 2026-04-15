@@ -25,19 +25,19 @@ public class TaskServiceTests
         // Arrange
         var tasks = new List<TaskItem>
         {
-            new() 
-            { 
-                Id = 1, 
-                Title = "Task 1", 
-                Content = "Content 1", 
+            new()
+            {
+                Id = 1,
+                Title = "Task 1",
+                Content = "Content 1",
                 UserId = TestUserId,
                 CreatedAt = DateTime.UtcNow.AddHours(-1)
             },
-            new() 
-            { 
-                Id = 2, 
-                Title = "Task 2", 
-                Content = "Content 2", 
+            new()
+            {
+                Id = 2,
+                Title = "Task 2",
+                Content = "Content 2",
                 UserId = TestUserId,
                 CreatedAt = DateTime.UtcNow
             }
@@ -54,11 +54,11 @@ public class TaskServiceTests
     [Fact]
     public async Task GetTaskByIdAsync_ExistingId_ReturnsDto()
     {
-        var task = new TaskItem 
-        { 
-            Id = 1, 
-            Title = "Test Task", 
-            Content = "Test Content", 
+        var task = new TaskItem
+        {
+            Id = 1,
+            Title = "Test Task",
+            Content = "Test Content",
             UserId = TestUserId,
             CreatedAt = DateTime.UtcNow
         };
@@ -88,19 +88,19 @@ public class TaskServiceTests
     public async Task CreateTaskAsync_ValidDto_CallsRepositoryAndReturnsDto()
     {
         var dto = new CreateTaskDto { Title = "New Task", Content = "New Content" };
-        var createdTask = new TaskItem 
-        { 
-            Id = 1, 
-            Title = "New Task", 
-            Content = "New Content", 
+        var createdTask = new TaskItem
+        {
+            Id = 1,
+            Title = "New Task",
+            Content = "New Content",
             UserId = TestUserId,
             CreatedAt = DateTime.UtcNow
         };
 
         _repositoryMock
-            .Setup(r => r.AddAsync(It.Is<TaskItem>(t => 
-                t.Title == "New Task" && 
-                t.Content == "New Content" && 
+            .Setup(r => r.AddAsync(It.Is<TaskItem>(t =>
+                t.Title == "New Task" &&
+                t.Content == "New Content" &&
                 t.UserId == TestUserId)))
             .ReturnsAsync(createdTask);
 
@@ -110,9 +110,9 @@ public class TaskServiceTests
         result.Title.Should().Be("New Task");
         result.Content.Should().Be("New Content");
         result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        
-        _repositoryMock.Verify(r => r.AddAsync(It.Is<TaskItem>(t => 
-            t.Title == "New Task" && 
+
+        _repositoryMock.Verify(r => r.AddAsync(It.Is<TaskItem>(t =>
+            t.Title == "New Task" &&
             t.UserId == TestUserId)), Times.Once);
     }
 
@@ -120,11 +120,11 @@ public class TaskServiceTests
     public async Task UpdateTaskAsync_ExistingTask_ReturnsUpdatedDto()
     {
         var dto = new UpdateTaskDto { Title = "Updated", Content = "Updated Content" };
-        var updatedTask = new TaskItem 
-        { 
-            Id = 1, 
-            Title = "Updated", 
-            Content = "Updated Content", 
+        var updatedTask = new TaskItem
+        {
+            Id = 1,
+            Title = "Updated",
+            Content = "Updated Content",
             UserId = TestUserId,
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UpdatedAt = DateTime.UtcNow
@@ -141,9 +141,9 @@ public class TaskServiceTests
         result.Content.Should().Be("Updated Content");
         result.UpdatedAt.Should().NotBeNull();
         result.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        
+
         _repositoryMock.Verify(r => r.UpdateAsync(
-            It.Is<TaskItem>(t => t.Id == 1 && t.UserId == TestUserId), 
+            It.Is<TaskItem>(t => t.Id == 1 && t.UserId == TestUserId),
             TestUserId), Times.Once);
     }
 
