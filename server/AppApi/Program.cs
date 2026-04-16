@@ -17,6 +17,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<IInboxRepository, InboxRepository>();
+builder.Services.AddScoped<IInboxService, InboxService>();
 
 // Configure HttpClient for GitHub API calls
 builder.Services.AddHttpClient("GitHub", client =>
