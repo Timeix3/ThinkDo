@@ -1,12 +1,15 @@
 using Common.Models;
+using Common.Enums;
 
 namespace AppApi.Repositories.Interfaces;
 
 public interface ITaskRepository
 {
-    Task<IEnumerable<TaskItem>> GetAllAsync(string userId);
+    Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetAllAsync(string userId, int offset = 0, int limit = 50);
     Task<TaskItem?> GetByIdAsync(int id, string userId);
     Task<TaskItem> AddAsync(TaskItem task);
     Task<TaskItem?> UpdateAsync(TaskItem task, string userId);
-    Task<bool> DeleteAsync(int id, string userId);
+    Task<bool> SoftDeleteAsync(int id, string userId);
+    Task<TaskItem?> UpdateStatusAsync(int id, string userId, TasksStatus newStatus);
+    Task<IEnumerable<TaskItem>> GetBlockedByTaskIdAsync(int taskId, string userId);
 }

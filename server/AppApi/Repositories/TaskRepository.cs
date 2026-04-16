@@ -1,6 +1,7 @@
 using AppApi.Repositories.Interfaces;
 using Common.Data;
 using Common.Models;
+using Common.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AppApi.Repositories;
@@ -14,18 +15,26 @@ public class TaskRepository : ITaskRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<TaskItem>> GetAllAsync(string userId)
+    public async Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetAllAsync(string userId, int offset = 0, int limit = 50)
     {
-        return await _context.Tasks
-            .Where(t => t.UserId == userId)
-            .OrderByDescending(t => t.CreatedAt)
+        var query = _context.Tasks
+            .Where(t => t.UserId == userId && t.DeletedAt == null)
+            .OrderByDescending(t => t.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip(offset)
+            .Take(limit)
             .ToListAsync();
+
+        return (items, totalCount);
     }
 
     public async Task<TaskItem?> GetByIdAsync(int id, string userId)
     {
         return await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId && t.DeletedAt == null);
     }
 
     public async Task<TaskItem> AddAsync(TaskItem task)
@@ -39,29 +48,58 @@ public class TaskRepository : ITaskRepository
     public async Task<TaskItem?> UpdateAsync(TaskItem task, string userId)
     {
         var existing = await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == task.Id && t.UserId == userId);
+            .FirstOrDefaultAsync(t => t.Id == task.Id && t.UserId == userId && t.DeletedAt == null);
 
         if (existing is null)
             return null;
 
         existing.Title = task.Title;
         existing.Content = task.Content;
+
+        if (task.Status != default)
+            existing.Status = task.Status;
+
+        if (task.BlockedByTaskId.HasValue)
+            existing.BlockedByTaskId = task.BlockedByTaskId;
+
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return existing;
     }
 
-    public async Task<bool> DeleteAsync(int id, string userId)
+    public async Task<bool> SoftDeleteAsync(int id, string userId)
     {
         var task = await _context.Tasks
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId && t.DeletedAt == null);
 
         if (task is null)
             return false;
 
-        _context.Tasks.Remove(task);
+        task.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<TaskItem?> UpdateStatusAsync(int id, string userId, TasksStatus newStatus)
+    {
+        var task = await _context.Tasks
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId && t.DeletedAt == null);
+
+        if (task is null)
+            return null;
+
+        task.Status = newStatus;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return task;
+    }
+
+    public async Task<IEnumerable<TaskItem>> GetBlockedByTaskIdAsync(int taskId, string userId)
+    {
+        return await _context.Tasks
+            .Where(t => t.BlockedByTaskId == taskId && t.UserId == userId && t.DeletedAt == null)
+            .ToListAsync();
     }
 }

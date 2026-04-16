@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
-
 namespace AppApi.Controllers;
 
 [ApiController]
@@ -39,18 +38,40 @@ public class TasksController : ControllerBase
     }
 
     /// <summary>
-    /// Получить все задачи текущего пользователя
+    /// Получить все задачи текущего пользователя с пагинацией
     /// </summary>
+    /// <param name="offset">Смещение (по умолчанию 0)</param>
+    /// <param name="limit">Лимит записей (по умолчанию 50, максимум 100)</param>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(TaskListResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAll([FromQuery] int offset = 0, [FromQuery] int limit = 50)
     {
         var userId = GetCurrentUserId();
 
-        _logger.LogInformation("Getting all tasks for user {UserId}", userId);
-        var tasks = await _taskService.GetAllTasksAsync(userId);
+        // Валидация параметров пагинации
+        if (offset < 0)
+        {
+            return BadRequest(new { message = "Offset cannot be negative" });
+        }
 
-        return Ok(tasks);
+        if (limit <= 0 || limit > 100)
+        {
+            return BadRequest(new { message = "Limit must be between 1 and 100" });
+        }
+
+        _logger.LogInformation("Getting tasks for user {UserId} with offset={Offset}, limit={Limit}",
+            userId, offset, limit);
+
+        var result = await _taskService.GetAllTasksAsync(userId, offset, limit);
+
+        // Добавляем метаданные пагинации в заголовки
+        Response.Headers.Append("X-Total-Count", result.TotalCount.ToString());
+        Response.Headers.Append("X-Page-Number", result.PageNumber.ToString());
+        Response.Headers.Append("X-Page-Size", result.PageSize.ToString());
+        Response.Headers.Append("X-Has-More", result.HasMore.ToString().ToLowerInvariant());
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -59,7 +80,6 @@ public class TasksController : ControllerBase
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetById(int id)
     {
         var userId = GetCurrentUserId();
@@ -99,7 +119,6 @@ public class TasksController : ControllerBase
     [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTaskDto dto)
     {
         var userId = GetCurrentUserId();
@@ -117,17 +136,16 @@ public class TasksController : ControllerBase
     }
 
     /// <summary>
-    /// Удалить задачу
+    /// Удалить задачу (soft delete)
     /// </summary>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(int id)
     {
         var userId = GetCurrentUserId();
 
-        _logger.LogInformation("User {UserId} deleting task {TaskId}", userId, id);
+        _logger.LogInformation("User {UserId} soft deleting task {TaskId}", userId, id);
         var result = await _taskService.DeleteTaskAsync(id, userId);
 
         if (!result)
@@ -137,5 +155,74 @@ public class TasksController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Завершить задачу (статус → Completed)
+    /// </summary>
+    [HttpPatch("{id:int}/complete")]
+    [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Complete(int id)
+    {
+        var userId = GetCurrentUserId();
+
+        _logger.LogInformation("User {UserId} completing task {TaskId}", userId, id);
+
+        try
+        {
+            var task = await _taskService.CompleteTaskAsync(id, userId);
+
+            if (task is null)
+            {
+                _logger.LogWarning("Task {TaskId} not found for user {UserId}", id, userId);
+                return NotFound(new { message = $"Task with id '{id}' not found" });
+            }
+
+            _logger.LogInformation("Task {TaskId} completed successfully by user {UserId}", id, userId);
+            return Ok(task);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Cannot complete task {TaskId} for user {UserId}: {Message}",
+                id, userId, ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Отменить задачу (статус → Cancelled)
+    /// </summary>
+    [HttpPatch("{id:int}/cancel")]
+    [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Cancel(int id)
+    {
+        var userId = GetCurrentUserId();
+
+        _logger.LogInformation("User {UserId} cancelling task {TaskId}", userId, id);
+
+        try
+        {
+            var task = await _taskService.CancelTaskAsync(id, userId);
+
+            if (task is null)
+            {
+                _logger.LogWarning("Task {TaskId} not found for user {UserId}", id, userId);
+                return NotFound(new { message = $"Task with id '{id}' not found" });
+            }
+
+            _logger.LogInformation("Task {TaskId} cancelled successfully by user {UserId}", id, userId);
+            return Ok(task);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Cannot cancel task {TaskId} for user {UserId}: {Message}",
+                id, userId, ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
