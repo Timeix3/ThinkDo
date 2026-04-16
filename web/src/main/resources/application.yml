@@ -16,4 +16,4 @@ server:
   forward-headers-strategy: framework
 thinkdo:
   api:
-    base-url: ${API_BASE_URL:http://localhost:5288}
+    base-url: ${API_BASE_URL:http://localhost:8081}

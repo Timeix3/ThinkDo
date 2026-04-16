@@ -1,6 +1,6 @@
-using AdminApi.Models.DTOs;
+using AppApi.Models.DTOs;
 
-namespace AdminApi.Services.Interfaces;
+namespace AppApi.Services.Interfaces;
 
 public interface ITaskService
 {

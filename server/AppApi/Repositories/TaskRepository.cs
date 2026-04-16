@@ -1,9 +1,9 @@
-using AdminApi.Repositories.Interfaces;
+using AppApi.Repositories.Interfaces;
 using Common.Data;
 using Common.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace AdminApi.Repositories;
+namespace AppApi.Repositories;
 
 public class TaskRepository : ITaskRepository
 {

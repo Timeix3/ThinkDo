@@ -1,10 +1,9 @@
-// AdminApi/Services/TaskService.cs
-using AdminApi.Models.DTOs;
-using AdminApi.Repositories.Interfaces;
-using AdminApi.Services.Interfaces;
+using AppApi.Models.DTOs;
+using AppApi.Repositories.Interfaces;
+using AppApi.Services.Interfaces;
 using Common.Models;
 
-namespace AdminApi.Services;
+namespace AppApi.Services;
 
 public class TaskService : ITaskService
 {
