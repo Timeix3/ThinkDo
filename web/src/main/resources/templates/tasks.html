@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle}">Обезьяна и Умник</title>
+    <title>Обезьяна и Умник</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -71,6 +71,65 @@
             background: #ea6c00;
         }
 
+        #fabNavFocus:hover {
+            background: #7c3aed !important;
+        }
+
+        /* Ripple wave — расходящееся кольцо ОТ кнопки наружу */
+        @keyframes fabRippleOut {
+            0% {
+                width: 56px;
+                height: 56px;
+                opacity: 0.6;
+            }
+
+            100% {
+                width: 180px;
+                height: 180px;
+                opacity: 0;
+            }
+        }
+
+        .fab-ripple-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 3px solid rgba(249, 115, 22, 0.7);
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
+            pointer-events: none;
+            animation: fabRippleOut 0.65s ease-out forwards;
+        }
+
+        /* Предупреждение переполнения инбокса */
+        .inbox-overflow-warn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            border-radius: 0.6rem;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.2;
+            animation: warnPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes warnPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -90,7 +149,8 @@
         }
 
         input[type="text"],
-        textarea {
+        textarea,
+        input[type="date"] {
             width: 100%;
             border: 1.5px solid #e2e8f0;
             border-radius: 0.75rem;
@@ -101,7 +161,8 @@
         }
 
         input[type="text"]:focus,
-        textarea:focus {
+        textarea:focus,
+        input[type="date"]:focus {
             border-color: #667eea;
         }
 
@@ -170,108 +231,8 @@
             background: rgba(255, 255, 255, 0.35) !important;
         }
 
-        /* ── Список задач / инбокса ─────────────────────────── */
-        .task-list-container {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 1.5rem;
-            padding: 1.25rem;
-            overflow: hidden;
-        }
-
-        .task-list-item {
-            background: white;
-            border-radius: 1rem;
-            padding: 0.85rem 1rem;
-            margin-bottom: 0.75rem;
-            color: #1e293b;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .task-list-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-
-        /* ── Бейдж даты ─────────────────────────────────────── */
-        .date-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.75rem;
-            padding: 0.15rem 0.55rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-        }
-
-        .date-badge-none {
-            background: #f1f5f9;
-            color: #94a3b8;
-        }
-
-        /* ── Предупреждение о переполнении инбокса ──────────── */
-        .inbox-overflow-warn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            background: #fef2f2;
-            color: #dc2626;
-            border: 1px solid #fecaca;
-            border-radius: 0.6rem;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.72rem;
-            font-weight: 600;
-            line-height: 1.2;
-            animation: warnPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes warnPulse {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.7; }
-        }
-
-        /* ── Inline-ввод инбокса ────────────────────────────── */
-        .inbox-inline-input {
-            position: fixed;
-            bottom: 6rem;
-            right: 2rem;
-            z-index: 42;
-            width: 300px;
-        }
-
-        .inbox-input-box {
-            background: white;
-            border-radius: 1rem;
-            padding: 0.75rem 1rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        /* ── Ripple-волна FAB ───────────────────────────────── */
-        @keyframes fabRippleOut {
-            0%   { width: 56px; height: 56px; opacity: 0.6; }
-            100% { width: 180px; height: 180px; opacity: 0; }
-        }
-
-        .fab-ripple-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            border: 3px solid rgba(249, 115, 22, 0.7);
-            box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
-            pointer-events: none;
-            animation: fabRippleOut 0.65s ease-out forwards;
-        }
-
-        /* ── Анимация высоты контейнера ─────────────────────── */
-        .anim-height {
-            transition: height 300ms ease;
-            overflow: hidden;
+        .nav-pill button {
+            color: white;
         }
 
         @keyframes slideOutLeft {
@@ -302,6 +263,105 @@
             animation: slideOutLeft 0.4s ease-in forwards;
             overflow: hidden;
         }
+
+        /* Чекбокс выполнения задачи */
+        .task-check {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: transparent;
+            font-size: 0.65rem;
+        }
+
+        .task-check:hover {
+            border-color: #22c55e;
+            background: #dcfce7;
+            color: #22c55e;
+        }
+
+        /* Список задач */
+        .task-list-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+            overflow: hidden;
+        }
+
+        .task-list-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .task-list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+
+        .date-badge-today {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .date-badge-past {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .date-badge-future {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .date-badge-none {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        /* Инлайн-ввод инбокса */
+        .inbox-inline-input {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            z-index: 42;
+            width: 300px;
+        }
+
+        .inbox-inline-input .inbox-input-box {
+            background: white;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .nav-pill button {
+            color: white !important;
+        }
     </style>
 </head>
 
@@ -315,67 +375,50 @@
                 <span class="text-xl font-bold">Обезьяна и Умник</span>
             </div>
             <div class="flex items-center gap-3">
-
-                <!-- Не авторизован -->
-                <div sec:authorize="isAnonymous()">
-                    <a href="/oauth2/authorization/github"
-                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                        </svg>
-                        Войти через GitHub
-                    </a>
-                </div>
-
-                <!-- Авторизован -->
-                <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
-                    <img th:src="${#authentication.principal.attributes['avatar_url']}"
-                        alt="avatar" class="w-8 h-8 rounded-full border-2 border-white/50">
-                    <span class="text-sm opacity-90">
-                        Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
-                    </span>
-                    <form th:action="@{/logout}" method="post" id="logoutForm">
-                        <!-- Кнопка с вызовом функции очистки данных -->
-                        <button type="submit" onclick="clearAllData()"
-                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
-                            <i class="fas fa-sign-out-alt text-xs"></i> Выйти
-                        </button>
-                    </form>
-                </div>
-
+                <span class="text-sm opacity-90" id="greetingText">Привет, <strong
+                        id="accountName">Алексей</strong>!</span>
+                <button id="logoutBtn"
+                    class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <i class="fas fa-sign-out-alt text-xs"></i> Выйти
+                </button>
             </div>
         </div>
 
         <!-- Навигация по центру -->
         <div class="flex justify-center mb-6">
-            <div class="nav-pill flex gap-2 text-white">
-                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">🗂 Доска</button>
-                <button data-page="inbox"     id="navInbox"     class="px-3 py-1 rounded-full">📥 Инбокс</button>
-                <button disabled class="px-3 py-1 rounded-full nav-disabled">📁 Проекты</button>
-                <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
+            <div class="nav-pill flex gap-2">
+                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">📅
+                    Доска</button>
+                <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
+                <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
+                <button data-page="projects" disabled class="px-3 py-1 rounded-full nav-disabled">📁 Проекты</button>
+                <button data-page="routines" disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
             </div>
         </div>
 
         <!-- ====== Страница: Доска ====== -->
         <div id="pageDashboard">
-            <div class="grid md:grid-cols-3 gap-5">
+            <div class="grid md:grid-cols-3 gap-5" id="kanbanBoard">
                 <div class="kanban-col">
-                    <h2 class="text-white font-bold text-lg mb-3">⚡ На сегодня</h2>
+                    <h2 class="text-white font-bold text-lg mb-3">✅ На сегодня</h2>
                     <div id="colToday"></div>
                 </div>
                 <div class="kanban-col">
-                    <h2 class="text-white font-bold text-lg mb-3">🔧 В работе / Бэклог</h2>
-                    <div id="colBacklog">
-                        <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>
-                    </div>
+                    <h2 class="text-white font-bold text-lg mb-3">📋 В работе / Бэклог</h2>
+                    <div id="colBacklog"></div>
                 </div>
                 <div class="kanban-col">
-                    <h2 class="text-white font-bold text-lg mb-3">🚧 Заблокировано</h2>
-                    <div id="colBlocked">
-                        <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">—</div>
-                    </div>
+                    <h2 class="text-white font-bold text-lg mb-3">🔒 Заблокировано</h2>
+                    <div id="colBlocked"></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ====== Страница: Задачи ====== -->
+        <div id="pageTasks" class="hidden">
+            <div class="task-list-container">
+                <h2 class="text-white font-bold text-lg mb-4">📝 Все задачи</h2>
+                <div id="taskListContent"></div>
             </div>
         </div>
 
@@ -395,20 +438,23 @@
 
     </div>
 
-    <!-- FAB: Создать задачу (только на Доске) -->
-    <div class="fab" id="fabAddTask"><i class="fas fa-plus"></i></div>
+    <!-- FAB: Навигация на вторую страницу -->
+    <a href="focus_page.html" class="fab" id="fabNavFocus"
+        style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
+        🐒
+    </a>
 
-    <!-- FAB: Добавить в инбокс (только на Инбоксе) -->
-    <div class="fab hidden" id="fabAddInbox" style="position:fixed;">
-        <i class="fas fa-plus" id="fabAddInboxIcon"></i>
-    </div>
+    <!-- FAB: Создать задачу (видна только на странице Задачи) -->
+    <div class="fab hidden" id="fabAddTask"><i class="fas fa-plus"></i></div>
 
-    <!-- Inline-поле ввода для инбокса -->
+    <!-- FAB: Создать запись в инбокс (видна только на странице Инбокс) -->
+    <div class="fab hidden" id="fabAddInbox"><i class="fas fa-plus" id="fabAddInboxIcon"></i></div>
+
+    <!-- Инлайн-поле ввода для инбокса -->
     <div id="inboxInputBar" class="inbox-inline-input hidden">
         <div class="inbox-input-box">
-            <input type="text" id="inboxInputField"
-                   placeholder="Быстрая запись в инбокс…"
-                   style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
+            <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
+                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
         </div>
     </div>
 
@@ -422,8 +468,12 @@
                     <input type="text" id="createTitle" placeholder="Что нужно сделать?" />
                 </div>
                 <div>
-                    <label class="text-sm font-medium text-slate-600 mb-1 block">Контент</label>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Описание</label>
                     <textarea id="createDesc" rows="3" placeholder="Подробности..."></textarea>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Дата</label>
+                    <input type="date" id="createDate" />
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-5">
@@ -443,12 +493,16 @@
                     <input type="text" id="editTitle" placeholder="Название задачи" />
                 </div>
                 <div>
-                    <label class="text-sm font-medium text-slate-600 mb-1 block">Контент</label>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Описание</label>
                     <textarea id="editDesc" rows="3" placeholder="Подробности..."></textarea>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Дата</label>
+                    <input type="date" id="editDate" />
                 </div>
             </div>
             <div class="flex justify-between mt-5">
-                <button class="btn-success" id="editComplete">✓ Выполнено</button>
+                <button class="btn-success" id="editComplete"><i class="fas fa-check mr-1.5"></i>Выполнить</button>
                 <div class="flex gap-2">
                     <button class="btn-ghost" id="editCancel">Отмена</button>
                     <button class="btn-primary" id="editSave">Сохранить</button>
@@ -468,9 +522,7 @@
                 </div>
             </div>
             <div class="flex justify-between mt-5">
-                <button class="btn-danger" id="inboxEditDelete">
-                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
-                </button>
+                <button class="btn-danger" id="inboxEditDelete"><i class="fas fa-trash-alt mr-1.5"></i>Удалить</button>
                 <div class="flex gap-2">
                     <button class="btn-ghost" id="inboxEditCancel">Отмена</button>
                     <button class="btn-primary" id="inboxEditSave">Сохранить</button>
@@ -480,61 +532,206 @@
     </div>
 
     <script>
-        const API_URL = '/api/tasks';
-
+        // ── State ──────────────────────────────────────────────
+        let tasks = [];
         let editingTaskId = null;
+        let taskCounter = 0;
+        let currentPage = 'dashboard';
+
+        // Inbox state
+        let inboxItems = [];
+        let inboxCounter = 0;
+        let editingInboxId = null;
+        let inboxInputOpen = false;
 
         // ── Helpers ────────────────────────────────────────────
+        function getTodayStr() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${dd}`;
+        }
+
+        function formatDateRu(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            return `${d}.${m}.${y}`;
+        }
+
+        function dateBadgeClass(dateStr) {
+            if (!dateStr) return 'date-badge-none';
+            const today = getTodayStr();
+            if (dateStr === today) return 'date-badge-today';
+            if (dateStr < today) return 'date-badge-past';
+            return 'date-badge-future';
+        }
+
+        function dateBadgeLabel(dateStr) {
+            if (!dateStr) return 'Без даты';
+            const today = getTodayStr();
+            if (dateStr === today) return 'Сегодня';
+            if (dateStr < today) return formatDateRu(dateStr);
+            return formatDateRu(dateStr);
+        }
+
         function escHtml(str) {
-            return String(str ?? '')
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        function emptyPlaceholder() {
-            return '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>';
+        // ── Плавная анимация высоты контейнера ─────────────────
+        const ANIM_DURATION = 300; // мс
+
+        /**
+         * Оборачивает изменение содержимого контейнера в плавную анимацию высоты.
+         * @param {HTMLElement} container — элемент, чью высоту анимируем
+         * @param {Function} updateFn — колбэк, который меняет innerHTML / DOM внутри container
+         */
+        function animateContentChange(container, updateFn) {
+            const startH = container.scrollHeight;
+            updateFn();
+            const endH = container.scrollHeight;
+
+            if (startH === endH) return; // нет изменений — нечего анимировать
+
+            container.style.height = startH + 'px';
+            container.style.overflow = 'hidden';
+            container.style.transition = `height ${ANIM_DURATION}ms ease`;
+
+            requestAnimationFrame(() => {
+                container.style.height = endH + 'px';
+            });
+
+            const cleanup = () => {
+                container.style.height = '';
+                container.style.overflow = '';
+                container.style.transition = '';
+            };
+            container.addEventListener('transitionend', cleanup, { once: true });
+            // страховка на случай, если transitionend не сработает
+            setTimeout(cleanup, ANIM_DURATION + 50);
         }
 
-        // ── Render ─────────────────────────────────────────────
-        function renderBoard(tasks) {
-            const col = document.getElementById('colToday');
-            if (!tasks.length) {
-                col.innerHTML = emptyPlaceholder();
-                return;
-            }
-            col.innerHTML = tasks.map(t => `
-            <div class="task-card" data-id="${t.id}">
-                <div class="flex items-start justify-between gap-2">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                        ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
+        // ── Ripple wave effect for FAB buttons ─────────────────
+        function spawnFabRipple(fabEl) {
+            const ring = document.createElement('span');
+            ring.className = 'fab-ripple-ring';
+            fabEl.appendChild(ring);
+            ring.addEventListener('animationend', () => ring.remove());
+        }
+
+        // ── Навигация ──────────────────────────────────────────
+        function switchPage(page) {
+            currentPage = page;
+
+            // Активная кнопка
+            document.querySelectorAll('.nav-pill button').forEach(btn => {
+                btn.classList.remove('active-page');
+                if (btn.dataset.page === page) btn.classList.add('active-page');
+            });
+
+            // Показ/скрытие страниц
+            document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
+            document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
+            document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
+
+            // FAB: видна только на соответствующей странице
+            document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'tasks');
+            document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox');
+
+            // Скрыть инлайн-ввод инбокса при смене страницы
+            closeInboxInput();
+
+            // Перерендер
+            if (page === 'dashboard') renderBoard();
+            if (page === 'tasks') renderTaskList();
+            if (page === 'inbox') renderInboxList();
+        }
+
+        document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
+        document.getElementById('navTasks').addEventListener('click', () => switchPage('tasks'));
+        document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
+
+        // ── Render: Доска (собственные колонки, без задач из navTasks) ──
+        function renderBoard() {
+            const emptyPlaceholder = '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>';
+            document.getElementById('colToday').innerHTML = emptyPlaceholder;
+            document.getElementById('colBacklog').innerHTML = emptyPlaceholder;
+            document.getElementById('colBlocked').innerHTML = emptyPlaceholder;
+        }
+
+        // ── Render: Список задач ───────────────────────────────
+        function renderTaskList() {
+            const container = document.getElementById('taskListContent');
+            const sorted = [...tasks].sort((a, b) => b.createdAt - a.createdAt);
+
+            animateContentChange(container, () => {
+                if (sorted.length === 0) {
+                    container.innerHTML = '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Нет задач. Нажмите + чтобы создать.</div>';
+                    return;
+                }
+
+                container.innerHTML = sorted.map(t => {
+                    const badgeCls = dateBadgeClass(t.date);
+                    const badgeLabel = dateBadgeLabel(t.date);
+                    return `
+                    <div class="task-list-item" data-id="${t.id}">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1 min-w-0 cursor-pointer" data-edit-id="${t.id}">
+                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(t.title)}</div>
+                                ${t.desc ? `<p class="text-sm text-slate-500 line-clamp-2 mb-1.5">${escHtml(t.desc)}</p>` : ''}
+                                <span class="date-badge ${badgeCls}">
+                                    <i class="fas fa-calendar-alt text-[0.65rem]"></i>
+                                    ${badgeLabel}
+                                </span>
+                            </div>
+                            <div class="task-check shrink-0" data-complete-id="${t.id}" title="Выполнить">
+                                <i class="fas fa-check"></i>
+                            </div>
+                        </div>
                     </div>
-                    <i class="fas fa-pencil-alt text-slate-300 text-xs mt-1 shrink-0"></i>
-                </div>
-            </div>
-        `).join('');
+                `;
+                }).join('');
 
-            col.querySelectorAll('.task-card').forEach(card => {
-                card.addEventListener('click', () => openEditModal(card.dataset.id, tasks));
+                container.querySelectorAll('.task-check').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        completeTask(btn.dataset.completeId);
+                    });
+                });
+                container.querySelectorAll('[data-edit-id]').forEach(area => {
+                    area.addEventListener('click', () => openEditModal(area.dataset.editId));
+                });
             });
         }
 
-        // ── Load tasks ─────────────────────────────────────────
-        async function loadTasks() {
-            try {
-                const res = await fetch(API_URL);
-                const tasks = await res.json();
-                renderBoard(tasks);
-            } catch (e) {
-                document.getElementById('colToday').innerHTML =
-                    '<div class="task-card text-red-400 text-sm cursor-default">⚠️ Бэкенд недоступен</div>';
+        // ── Create Task Modal ──────────────────────────────────
+
+        // ── Выполнение задачи с анимацией ──────────────────────
+        function completeTask(taskId) {
+            const el = document.querySelector(`.task-list-item[data-id="${taskId}"]`);
+            if (!el) return;
+
+            // Зелёная галочка мгновенно
+            const check = el.querySelector('.task-check');
+            if (check) {
+                check.style.borderColor = '#22c55e';
+                check.style.background = '#22c55e';
+                check.style.color = '#fff';
             }
+
+            // Анимация уезжания влево
+            el.classList.add('task-completing');
+            el.addEventListener('animationend', () => {
+                tasks = tasks.filter(t => t.id !== taskId);
+                renderTaskList();
+            }, { once: true });
         }
 
-        // ── Create ─────────────────────────────────────────────
         function openCreateModal() {
             document.getElementById('createTitle').value = '';
             document.getElementById('createDesc').value = '';
+            document.getElementById('createDate').value = '';
             document.getElementById('createModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('createTitle').focus(), 50);
         }
@@ -543,31 +740,36 @@
             document.getElementById('createModal').classList.add('hidden');
         }
 
-        document.getElementById('fabAddTask').addEventListener('click', openCreateModal);
-        document.getElementById('createCancel').addEventListener('click', closeCreateModal);
-        document.getElementById('createModal').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeCreateModal();
+        document.getElementById('fabAddTask').addEventListener('click', () => {
+            spawnFabRipple(document.getElementById('fabAddTask'));
+            openCreateModal();
         });
+        document.getElementById('createCancel').addEventListener('click', closeCreateModal);
+        document.getElementById('createModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeCreateModal(); });
 
-        document.getElementById('createSave').addEventListener('click', async () => {
+        document.getElementById('createSave').addEventListener('click', () => {
             const title = document.getElementById('createTitle').value.trim();
             if (!title) { document.getElementById('createTitle').focus(); return; }
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content: document.getElementById('createDesc').value.trim() })
+            taskCounter++;
+            tasks.push({
+                id: 'task_' + taskCounter,
+                title,
+                desc: document.getElementById('createDesc').value.trim(),
+                date: document.getElementById('createDate').value || '',
+                createdAt: Date.now()
             });
             closeCreateModal();
-            loadTasks();
+            renderTaskList();
         });
 
-        // ── Edit ───────────────────────────────────────────────
-        function openEditModal(taskId, tasks) {
-            const task = tasks.find(t => String(t.id) === String(taskId));
+        // ── Edit Task Modal ────────────────────────────────────
+        function openEditModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
             if (!task) return;
-            editingTaskId = task.id;
+            editingTaskId = taskId;
             document.getElementById('editTitle').value = task.title;
-            document.getElementById('editDesc').value = task.content ?? '';
+            document.getElementById('editDesc').value = task.desc || '';
+            document.getElementById('editDate').value = task.date || '';
             document.getElementById('editModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('editTitle').focus(), 50);
         }
@@ -578,188 +780,79 @@
         }
 
         document.getElementById('editCancel').addEventListener('click', closeEditModal);
-        document.getElementById('editModal').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeEditModal();
+        document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditModal(); });
+
+        document.getElementById('editComplete').addEventListener('click', () => {
+            const taskId = editingTaskId;
+            closeEditModal();
+            if (currentPage === 'tasks') {
+                completeTask(taskId);
+            } else {
+                tasks = tasks.filter(t => t.id !== taskId);
+                if (currentPage === 'dashboard') renderBoard();
+            }
         });
 
-        document.getElementById('editSave').addEventListener('click', async () => {
+        document.getElementById('editSave').addEventListener('click', () => {
             const title = document.getElementById('editTitle').value.trim();
             if (!title) { document.getElementById('editTitle').focus(); return; }
-            await fetch(`${API_URL}/${editingTaskId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content: document.getElementById('editDesc').value.trim() })
-            });
+            const task = tasks.find(t => t.id === editingTaskId);
+            if (task) {
+                task.title = title;
+                task.desc = document.getElementById('editDesc').value.trim();
+                task.date = document.getElementById('editDate').value || '';
+            }
             closeEditModal();
-            loadTasks();
+            if (currentPage === 'dashboard') renderBoard();
+            if (currentPage === 'tasks') renderTaskList();
         });
 
-        // ── Complete (удаление с анимацией) ────────────────────
-        document.getElementById('editComplete').addEventListener('click', async () => {
-            const idToRemove = editingTaskId;
-            const card = document.querySelector(`.task-card[data-id="${idToRemove}"]`);
-            closeEditModal();
-            if (card) {
-                card.classList.add('task-completing');
-                card.addEventListener('animationend', async () => {
-                    await fetch(`${API_URL}/${idToRemove}`, { method: 'DELETE' });
-                    loadTasks();
-                }, { once: true });
-            } else {
-                await fetch(`${API_URL}/${idToRemove}`, { method: 'DELETE' });
-                loadTasks();
-            }
-        });
-
-        // ── Init ───────────────────────────────────────────────
-        loadTasks();
-
-        // ══════════════════════════════════════════════════════
-        // НАВИГАЦИЯ ПО СТРАНИЦАМ
-        // ══════════════════════════════════════════════════════
-        let currentPage = 'dashboard';
-
-        function switchPage(page) {
-            currentPage = page;
-
-            // Активная кнопка в nav
-            document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
-                btn.classList.toggle('active-page', btn.dataset.page === page);
-            });
-
-            // Показ/скрытие страниц
-            document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
-            document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
-
-            // FAB: нужный видимый, лишний скрыт
-            document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'dashboard');
-            document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox');
-
-            // Закрыть inline-ввод при смене страницы
-            closeInboxInput();
-
-            // Рендер контента страницы
-            if (page === 'inbox') inboxLoad();
-        }
-
-        document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
-        document.getElementById('navInbox').addEventListener('click',    () => switchPage('inbox'));
-
-        // ══════════════════════════════════════════════════════
-        // ИНБОКС — API-СЛОЙ
-        // Методы пробуют обращаться к /api/inbox.
-        // Пока бэкенд не готов — fallback на локальное состояние.
-        // Когда API появится, ничего менять не нужно: fallback не
-        // сработает, потому что запросы будут успешными.
-        // ══════════════════════════════════════════════════════
-        const INBOX_API_URL = '/api/inbox';
-        let inboxItems = [];
-        let inboxCounter = 0;
-
-        async function inboxLoad() {
-            try {
-                const res = await fetch(INBOX_API_URL);
-                if (!res.ok) throw new Error('API not ready');
-                inboxItems = await res.json();
-            } catch {
-                // API ещё не готов — продолжаем с локальным состоянием
-            }
-            renderInboxList();
-            updateInboxOverflowBadge();
-        }
-
-        async function inboxCreate(title) {
-            try {
-                const res = await fetch(INBOX_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title })
-                });
-                if (!res.ok) throw new Error('API not ready');
-                await inboxLoad();
-                return;
-            } catch {}
-            // Fallback: локальное состояние
-            inboxCounter++;
-            inboxItems.push({ id: 'inbox_' + inboxCounter, title, createdAt: Date.now() });
-            renderInboxList();
-            updateInboxOverflowBadge();
-        }
-
-        async function inboxUpdate(id, title) {
-            try {
-                const res = await fetch(`${INBOX_API_URL}/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title })
-                });
-                if (!res.ok) throw new Error('API not ready');
-                await inboxLoad();
-                return;
-            } catch {}
-            // Fallback
-            const item = inboxItems.find(i => String(i.id) === String(id));
-            if (item) item.title = title;
-            renderInboxList();
-        }
-
-        async function inboxDelete(id) {
-            try {
-                const res = await fetch(`${INBOX_API_URL}/${id}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error('API not ready');
-                await inboxLoad();
-                return;
-            } catch {}
-            // Fallback
-            inboxItems = inboxItems.filter(i => String(i.id) !== String(id));
-            renderInboxList();
-            updateInboxOverflowBadge();
-        }
-
-        // ══════════════════════════════════════════════════════
-        // ИНБОКС — РЕНДЕР
-        // ══════════════════════════════════════════════════════
-        function formatDateRu(ts) {
-            if (!ts) return '';
-            const d = new Date(ts);
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const yyyy = d.getFullYear();
-            return `${dd}.${mm}.${yyyy}`;
-        }
-
+        // ── Render: Инбокс ─────────────────────────────────────
         function renderInboxList() {
             const container = document.getElementById('inboxListContent');
             const sorted = [...inboxItems].sort((a, b) => a.createdAt - b.createdAt);
 
-            if (sorted.length === 0) {
-                container.innerHTML = '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Нет записей. Нажмите + чтобы добавить.</div>';
-                return;
-            }
+            animateContentChange(container, () => {
+                if (sorted.length === 0) {
+                    container.innerHTML = '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Нет записей. Нажмите + чтобы создать.</div>';
+                    return;
+                }
 
-            container.innerHTML = sorted.map(item => `
-                <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="flex-1 min-w-0">
-                            <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
-                            <span class="date-badge date-badge-none">
-                                <i class="fas fa-calendar-alt text-[0.65rem]"></i>
-                                ${formatDateRu(item.createdAt)}
-                            </span>
+                container.innerHTML = sorted.map(item => {
+                    const dateStr = formatDateRu(item.date);
+                    return `
+                    <div class="task-list-item" data-inbox-id="${item.id}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                <span class="date-badge date-badge-none">
+                                    <i class="fas fa-calendar-alt text-[0.65rem]"></i>
+                                    ${dateStr}
+                                </span>
+                            </div>
+                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                         </div>
-                        <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                     </div>
-                </div>
-            `).join('');
+                `;
+                }).join('');
 
-            container.querySelectorAll('.task-list-item').forEach(el => {
-                el.addEventListener('click', () => openInboxEditModal(el.dataset.inboxId));
+                container.querySelectorAll('.task-list-item').forEach(item => {
+                    item.addEventListener('click', () => openInboxEditModal(item.dataset.inboxId));
+                });
             });
+        }
+
+        // ── Inbox FAB: toggle ввод / создание записи ────────
+        function closeInboxInput() {
+            inboxInputOpen = false;
+            document.getElementById('inboxInputBar').classList.add('hidden');
+            document.getElementById('inboxInputField').value = '';
+            document.getElementById('fabAddInboxIcon').className = 'fas fa-plus';
         }
 
         function updateInboxOverflowBadge() {
             const badge = document.getElementById('inboxOverflowBadge');
-            const text  = document.getElementById('inboxOverflowText');
+            const text = document.getElementById('inboxOverflowText');
             if (inboxItems.length > 10) {
                 badge.classList.remove('hidden');
                 text.textContent = `${inboxItems.length} записей — разберите инбокс!`;
@@ -768,54 +861,47 @@
             }
         }
 
-        // ══════════════════════════════════════════════════════
-        // ИНБОКС — FAB + INLINE-ВВОД
-        // ══════════════════════════════════════════════════════
-        let inboxInputOpen = false;
-
-        function spawnFabRipple(fabEl) {
-            const ring = document.createElement('span');
-            ring.className = 'fab-ripple-ring';
-            fabEl.appendChild(ring);
-            ring.addEventListener('animationend', () => ring.remove());
-        }
-
-        function closeInboxInput() {
-            inboxInputOpen = false;
-            document.getElementById('inboxInputBar').classList.add('hidden');
-            document.getElementById('inboxInputField').value = '';
-            document.getElementById('fabAddInboxIcon').className = 'fas fa-plus';
-        }
-
         document.getElementById('fabAddInbox').addEventListener('click', () => {
             const fab = document.getElementById('fabAddInbox');
             if (!inboxInputOpen) {
+                // Первое нажатие — показать поле ввода + ripple
                 spawnFabRipple(fab);
                 inboxInputOpen = true;
                 document.getElementById('inboxInputBar').classList.remove('hidden');
                 document.getElementById('fabAddInboxIcon').className = 'fas fa-check';
                 setTimeout(() => document.getElementById('inboxInputField').focus(), 50);
             } else {
+                // Повторное нажатие — создать запись
                 const title = document.getElementById('inboxInputField').value.trim();
-                if (!title) { document.getElementById('inboxInputField').focus(); return; }
+                if (!title) {
+                    document.getElementById('inboxInputField').focus();
+                    return;
+                }
+                // Ripple wave при создании
                 spawnFabRipple(fab);
-                inboxCreate(title);
+                inboxCounter++;
+                inboxItems.push({
+                    id: 'inbox_' + inboxCounter,
+                    title: title,
+                    date: getTodayStr(),
+                    createdAt: Date.now()
+                });
                 closeInboxInput();
+                updateInboxOverflowBadge();
+                if (currentPage === 'inbox') renderInboxList();
             }
         });
 
-        document.getElementById('inboxInputField').addEventListener('keydown', e => {
-            if (e.key === 'Enter') document.getElementById('fabAddInbox').click();
-            if (e.key === 'Escape') closeInboxInput();
+        // Enter для создания записи
+        document.getElementById('inboxInputField').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('fabAddInbox').click();
+            }
         });
 
-        // ══════════════════════════════════════════════════════
-        // ИНБОКС — МОДАЛКА РЕДАКТИРОВАНИЯ
-        // ══════════════════════════════════════════════════════
-        let editingInboxId = null;
-
+        // ── Inbox Edit Modal ────────────────────────────────────
         function openInboxEditModal(itemId) {
-            const item = inboxItems.find(i => String(i.id) === String(itemId));
+            const item = inboxItems.find(i => i.id === itemId);
             if (!item) return;
             editingInboxId = itemId;
             document.getElementById('inboxEditTitle').value = item.title;
@@ -829,59 +915,38 @@
         }
 
         document.getElementById('inboxEditCancel').addEventListener('click', closeInboxEditModal);
-        document.getElementById('inboxEditModal').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeInboxEditModal();
-        });
+        document.getElementById('inboxEditModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeInboxEditModal(); });
 
         document.getElementById('inboxEditSave').addEventListener('click', () => {
             const title = document.getElementById('inboxEditTitle').value.trim();
             if (!title) { document.getElementById('inboxEditTitle').focus(); return; }
-            const id = editingInboxId;
+            const item = inboxItems.find(i => i.id === editingInboxId);
+            if (item) {
+                item.title = title;
+            }
             closeInboxEditModal();
-            inboxUpdate(id, title);
+            renderInboxList();
         });
 
         document.getElementById('inboxEditDelete').addEventListener('click', () => {
-            const id = editingInboxId;
+            inboxItems = inboxItems.filter(i => i.id !== editingInboxId);
             closeInboxEditModal();
-            inboxDelete(id);
+            renderInboxList();
+            updateInboxOverflowBadge();
         });
-    </script>
 
-    <script>
-        function clearAllData() {
-            // Очищаем localStorage (там может храниться токен)
-            try {
-                localStorage.clear();
-                sessionStorage.clear();
-            } catch (e) { }
+        // ── Logout toggle ──────────────────────────────────────
+        let loggedIn = true;
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            loggedIn = !loggedIn;
+            const g = document.getElementById('greetingText');
+            if (g) g.innerHTML = loggedIn
+                ? 'Привет, <strong id="accountName">Алексей</strong>!'
+                : 'Рады познакомиться, <strong id="accountName">Алексей</strong>!';
+        });
 
-            // Очищаем все куки (там может быть JSESSIONID и OAuth2 данные)
-            document.cookie.split(";").forEach(function (cookie) {
-                var name = cookie.split("=")[0].trim();
-                if (name) {
-                    // Удаляем куку для текущего пути
-                    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-                    // Удаляем куку для корневого пути
-                    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
-                }
-            });
-            // Очистка IndexedDB (где GitHub иногда хранит токены)
-            if (window.indexedDB) {
-                indexedDB.databases().then(dbs => {
-                    dbs.forEach(db => {
-                        if (db.name) indexedDB.deleteDatabase(db.name);
-                    });
-                }).catch(() => { });
-            }
-
-            // Очистка кэша браузера
-            if ('caches' in window) {
-                caches.keys().then(names => {
-                    names.forEach(name => caches.delete(name));
-                });
-            }
-        }
+        // ── Init ───────────────────────────────────────────────
+        switchPage('dashboard');
     </script>
 </body>
 
