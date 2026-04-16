@@ -64,8 +64,15 @@ jobs:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
     needs: [ check-backend, check-frontend ]
+    outputs:
+      short_sha: ${{ steps.vars.outputs.sha_short }}
     steps:
       - uses: actions/checkout@v4
+
+      # Генерация короткого SHA
+      - name: Set outputs
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       # Разрешаем runner'у пушить в insecure registry
       - name: Configure insecure registry
@@ -83,6 +90,7 @@ jobs:
           platforms: linux/amd64
           tags: |
             ${{ secrets.VPS_IP }}:5000/backend:latest
+            ${{ secrets.VPS_IP }}:5000/backend:${{ steps.vars.outputs.sha_short }}
 
       - name: Build & Push Frontend
         uses: docker/build-push-action@v5
@@ -93,6 +101,7 @@ jobs:
           platforms: linux/amd64
           tags: |
             ${{ secrets.VPS_IP }}:5000/frontend:latest
+            ${{ secrets.VPS_IP }}:5000/frontend:${{ steps.vars.outputs.sha_short }}
 
   # ——————————————————————————————————————————
   # 3. Деплой на VPS
@@ -126,4 +135,5 @@ jobs:
             cd ~/app
             docker compose -f docker-compose.production.yml pull -q
             docker compose -f docker-compose.production.yml up -d --remove-orphans
+            docker image prune -f
           EOF
