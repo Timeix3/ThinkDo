@@ -83,7 +83,6 @@ jobs:
           platforms: linux/amd64
           tags: |
             ${{ secrets.VPS_IP }}:5000/backend:latest
-            ${{ secrets.VPS_IP }}:5000/backend:${{ github.sha }}
 
       - name: Build & Push Frontend
         uses: docker/build-push-action@v5
@@ -94,7 +93,6 @@ jobs:
           platforms: linux/amd64
           tags: |
             ${{ secrets.VPS_IP }}:5000/frontend:latest
-            ${{ secrets.VPS_IP }}:5000/frontend:${{ github.sha }}
 
   # ——————————————————————————————————————————
   # 3. Деплой на VPS

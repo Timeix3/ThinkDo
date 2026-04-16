@@ -21,9 +21,7 @@ services:
   app-api:
     restart: always
     container_name: app-api
-    build:
-      context: ./server
-      dockerfile: AppApi/Dockerfile
+    image: localhost:5000/backend:latest
     environment:
       ConnectionStrings__DefaultConnection: ${CONNECTION_STRING:-Host=postgres;Port=5432;Database=thinkdodb;Username=thinkdouser;Password=thinkdopassword}
       ASPNETCORE_URLS: http://+:8081
@@ -42,9 +40,7 @@ services:
   web:
     restart: always
     container_name: web
-    build:
-      context: ./web
-      dockerfile: Dockerfile
+    image: localhost:5000/frontend:latest
     environment:
       SPRING_PROFILES_ACTIVE: production
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-Ov23lidbxnx4ozM8EsfW}
