@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 
-namespace AdminApi.Services;
+namespace AppApi.Services;
 
 public class GitHubAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {

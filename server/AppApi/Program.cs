@@ -1,5 +1,11 @@
+using AppApi.Repositories;
+using AppApi.Repositories.Interfaces;
+using AppApi.Services;
+using AppApi.Services.Interfaces;
 using Common.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +14,24 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+
+// Configure HttpClient for GitHub API calls
+builder.Services.AddHttpClient("GitHub", client =>
+{
+    client.BaseAddress = new Uri("https://api.github.com/");
+    client.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
+    client.DefaultRequestHeaders.Add("User-Agent", "AppApi-Resource-Server");
+});
+
+// Configure GitHub OAuth token validation for Resource Server
+// GitHub tokens are opaque tokens, not JWTs, so we validate them via GitHub API
+builder.Services.AddAuthentication("GitHub")
+    .AddScheme<AuthenticationSchemeOptions, GitHubAuthenticationHandler>("GitHub", null);
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
@@ -20,6 +44,37 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API приложения"
     });
+
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
+
+    // Configure Bearer token authentication for Swagger UI
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "OAuth2 Access Token",
+        In = ParameterLocation.Header,
+        Description = "Введите GitHub OAuth access token.\n\nПример: gho_xxxxxxxxxxxxxxxxxxxx"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 builder.Services.AddCors(options =>
@@ -28,8 +83,7 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:5173"
+                "http://localhost:8080"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
@@ -37,6 +91,25 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var db = services.GetRequiredService<AppDbContext>();
+        logger.LogInformation("Applying database migrations...");
+        db.Database.Migrate();
+        logger.LogInformation("Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating the database");
+        throw;
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -49,6 +122,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
@@ -60,3 +134,5 @@ app.MapGet("/health", () => Results.Ok(new
 }));
 
 app.Run();
+
+public partial class Program { }

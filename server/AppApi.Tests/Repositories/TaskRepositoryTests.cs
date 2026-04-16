@@ -1,9 +1,9 @@
-using AdminApi.Repositories;
-using AdminApi.Tests.Helpers;
+using AppApi.Repositories;
+using AppApi.Tests.Helpers;
 using Common.Models;
 using FluentAssertions;
 
-namespace AdminApi.Tests.Repositories;
+namespace AppApi.Tests.Repositories;
 
 public class TaskRepositoryTests : IDisposable
 {

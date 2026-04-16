@@ -1,7 +1,7 @@
 using Common.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace AdminApi.Tests.Helpers;
+namespace AppApi.Tests.Helpers;
 
 public static class DbContextHelper
 {

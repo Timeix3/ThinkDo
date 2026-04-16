@@ -1,6 +1,6 @@
 using Common.Models;
 
-namespace AdminApi.Repositories.Interfaces;
+namespace AppApi.Repositories.Interfaces;
 
 public interface ITaskRepository
 {

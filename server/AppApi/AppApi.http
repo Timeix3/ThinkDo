@@ -1,6 +1,39 @@
-@AppApi_HostAddress = http://localhost:5183
+@AppApi_HostAddress = http://localhost:8081
 
-GET {{AppApi_HostAddress}}/weatherforecast/
+GET {{AppApi_HostAddress}}/health
 Accept: application/json
+
+###
+
+GET {{AppApi_HostAddress}}/api/tasks
+Authorization: Bearer your_github_token_here
+Accept: application/json
+
+###
+
+POST {{AppApi_HostAddress}}/api/tasks
+Authorization: Bearer your_github_token_here
+Content-Type: application/json
+
+{
+  "title": "New Task",
+  "content": "Task description"
+}
+
+###
+
+PUT {{AppApi_HostAddress}}/api/tasks/1
+Authorization: Bearer your_github_token_here
+Content-Type: application/json
+
+{
+  "title": "Updated Task",
+  "content": "Updated description"
+}
+
+###
+
+DELETE {{AppApi_HostAddress}}/api/tasks/1
+Authorization: Bearer your_github_token_here
 
 ###

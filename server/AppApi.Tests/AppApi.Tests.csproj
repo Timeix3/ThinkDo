@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
@@ -24,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AdminApi\AdminApi.csproj" />
+    <ProjectReference Include="..\AppApi\AppApi.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 

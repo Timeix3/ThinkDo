@@ -1,11 +1,11 @@
-using AdminApi.Models.DTOs;
-using AdminApi.Repositories.Interfaces;
-using AdminApi.Services;
+using AppApi.Models.DTOs;
+using AppApi.Repositories.Interfaces;
+using AppApi.Services;
 using Common.Models;
 using FluentAssertions;
 using Moq;
 
-namespace AdminApi.Tests.Services;
+namespace AppApi.Tests.Services;
 
 public class TaskServiceTests
 {
@@ -22,7 +22,6 @@ public class TaskServiceTests
     [Fact]
     public async Task GetAllTasksAsync_WithTasks_ReturnsAllTasksAsDtos()
     {
-        // Arrange
         var tasks = new List<TaskItem>
         {
             new()

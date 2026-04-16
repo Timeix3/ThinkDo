@@ -1,14 +1,14 @@
-using AdminApi.Models.DTOs;
-using AdminApi.Services.Interfaces;
+using AppApi.Models.DTOs;
+using AppApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
 
-namespace AdminApi.Controllers;
+namespace AppApi.Controllers;
 
 [ApiController]
-[Route("api/admin/tasks")]
+[Route("api/tasks")]
 [Produces("application/json")]
 [Authorize(AuthenticationSchemes = "GitHub")]
 public class TasksController : ControllerBase

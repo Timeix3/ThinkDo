@@ -17,7 +17,7 @@ public class DefaultApiClient implements ApiClient {
   public List<TaskDto> getTasks() {
     return restClient
         .get()
-        .uri("/api/admin/tasks")
+        .uri("/api/tasks")
         .retrieve()
         .body(new ParameterizedTypeReference<>() {});
   }
@@ -26,7 +26,7 @@ public class DefaultApiClient implements ApiClient {
   public void createTask(String title, String description) {
     restClient
         .post()
-        .uri("/api/admin/tasks")
+        .uri("/api/tasks")
         .contentType(MediaType.APPLICATION_JSON)
         .body(Map.of("title", title, "content", description != null ? description : ""))
         .retrieve()
@@ -37,7 +37,7 @@ public class DefaultApiClient implements ApiClient {
   public void updateTask(Long id, String title, String content) {
     restClient
         .put()
-        .uri("/api/admin/tasks/{id}", id)
+        .uri("/api/tasks/{id}", id)
         .contentType(MediaType.APPLICATION_JSON)
         .body(Map.of("title", title, "content", content != null ? content : ""))
         .retrieve()
@@ -46,6 +46,6 @@ public class DefaultApiClient implements ApiClient {
 
   @Override
   public void deleteTask(Long id) {
-    restClient.delete().uri("/api/admin/tasks/{id}", id).retrieve().toBodilessEntity();
+    restClient.delete().uri("/api/tasks/{id}", id).retrieve().toBodilessEntity();
   }
 }

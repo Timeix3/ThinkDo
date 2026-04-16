@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AdminApi.Models.DTOs;
+namespace AppApi.Models.DTOs;
 
 
 /// <summary>
