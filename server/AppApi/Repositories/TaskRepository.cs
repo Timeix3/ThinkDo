@@ -28,6 +28,28 @@ public class TaskRepository : ITaskRepository
             .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
     }
 
+    public async Task<TaskItem?> GetByDateAsync(DateTime date, string userId)
+    {
+        var start = date.Date;
+        var end = start.AddDays(1);
+
+        return await _context.Tasks
+            .Where(t => t.UserId == userId && t.CreatedAt >= start && t.CreatedAt < end)
+            .OrderByDescending(t => t.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<TaskItem>> GetAllByDateAsync(DateTime date, string userId)
+    {
+        var start = date.Date;
+        var end = start.AddDays(1);
+
+        return await _context.Tasks
+            .Where(t => t.UserId == userId && t.CreatedAt >= start && t.CreatedAt < end)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<TaskItem> AddAsync(TaskItem task)
     {
         task.CreatedAt = DateTime.UtcNow;

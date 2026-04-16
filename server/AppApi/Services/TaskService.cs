@@ -26,6 +26,20 @@ public class TaskService : ITaskService
         return task is null ? null : MapToDto(task);
     }
 
+    public async Task<TaskResponseDto?> GetTodayTaskAsync(string userId)
+    {
+        var todayUtc = DateTime.UtcNow.Date;
+        var task = await _repository.GetByDateAsync(todayUtc, userId);
+        return task is null ? null : MapToDto(task);
+    }
+
+    public async Task<IEnumerable<TaskResponseDto>> GetTodayTasksAsync(string userId)
+    {
+        var todayUtc = DateTime.UtcNow.Date;
+        var tasks = await _repository.GetAllByDateAsync(todayUtc, userId);
+        return tasks.Select(MapToDto);
+    }
+
     public async Task<TaskResponseDto> CreateTaskAsync(CreateTaskDto dto, string userId)
     {
         var task = new TaskItem

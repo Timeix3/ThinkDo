@@ -39,6 +39,38 @@ public class TasksController : ControllerBase
     }
 
     /// <summary>
+    /// Получить задачу "Обезьяна" на сегодня
+    /// </summary>
+    [HttpGet("monkey")]
+    [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMonkey()
+    {
+        var userId = GetCurrentUserId();
+        _logger.LogInformation("Getting today's monkey task for user {UserId}", userId);
+
+        var task = await _taskService.GetTodayTaskAsync(userId);
+
+        if (task is null)
+            return Ok(Array.Empty<TaskResponseDto>());
+
+        return Ok(new[] { task });
+    }
+
+    /// <summary>
+    /// Получить все задачи "Обезьяна" на сегодня
+    /// </summary>
+    [HttpGet("monkey/all")]
+    [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMonkeyAll()
+    {
+        var userId = GetCurrentUserId();
+        _logger.LogInformation("Getting all today's monkey tasks for user {UserId}", userId);
+
+        var tasks = await _taskService.GetTodayTasksAsync(userId);
+        return Ok(tasks);
+    }
+
+    /// <summary>
     /// Получить все задачи текущего пользователя
     /// </summary>
     [HttpGet]
