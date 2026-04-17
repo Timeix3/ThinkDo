@@ -1,3 +1,4 @@
+web\src\main\resources\templates\monkey.html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -139,6 +140,40 @@
             border: 1px solid rgba(255,255,255,0.08);
             pointer-events: none;
         }
+
+        /* Модалка капчи (локальные стили) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            width: 100%;
+            max-width: 420px;
+            color: #1e293b;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        }
+
+        .captcha-question {
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .captcha-error {
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            min-height: 1.1rem;
+        }
     </style>
 </head>
 <body class="p-5">
@@ -183,10 +218,27 @@
     <a href="/tasks" class="fab" id="fabNavMain" style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
         🤓
     </a>
+
+    <!-- Модалка: Капча для перехода на Умника -->
+    <div id="umnikCaptchaModal" class="modal-overlay hidden" style="display:none;">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="captchaTitle">
+            <h2 id="captchaTitle" class="text-lg font-bold text-slate-800 mb-2">Подтвердите переход</h2>
+            <div>
+                <div class="captcha-question" id="captchaQuestion">Сколько будет 1 + 2?</div>
+                <input type="text" id="captchaInput" placeholder="Введите ответ" style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.5rem;margin-top:0.5rem;font-size:1rem;" />
+                <div class="captcha-error" id="captchaError" aria-live="polite"></div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="captchaCancel" class="btn-ghost">Отмена</button>
+                    <button id="captchaSubmit" class="btn-primary">Перейти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = '/api/tasks';
         const MONKEY_API_URL = '/api/tasks/monkey/all';
-        
+
         let remaining = [];
         let completedCount = 0;
         let totalCount = 0;
@@ -199,12 +251,12 @@
             const area = document.getElementById('focusArea');
             if (remaining.length === 0) {
                 area.innerHTML = `
-          <div class="empty-state task-entering">
-            <i class="fas fa-trophy"></i>
-            Все задачи выполнены! 🎉<br/>
-            <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
-          </div>
-        `;
+              <div class="empty-state task-entering">
+                <i class="fas fa-trophy"></i>
+                Все задачи выполнены! 🎉<br/>
+                <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
+              </div>
+            `;
                 return;
             }
 
@@ -212,22 +264,22 @@
             const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
             area.innerHTML = `
-        <div class="focus-card task-entering" id="focusCard">
-          <div class="flex items-start gap-4">
-            <div class="focus-check" id="focusCheck" title="Выполнить">
-              <i class="fas fa-check"></i>
+            <div class="focus-card task-entering" id="focusCard">
+              <div class="flex items-start gap-4">
+                <div class="focus-check" id="focusCheck" title="Выполнить">
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
+                  <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
+                </div>
+              </div>
+              <!-- Прогресс-бар внизу карточки -->
+              <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+              </div>
             </div>
-            <div class="flex-1 min-w-0">
-              <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
-              <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
-            </div>
-          </div>
-          <!-- Прогресс-бар внизу карточки -->
-          <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
-          </div>
-        </div>
-      `;
+          `;
 
             document.getElementById('focusCheck').addEventListener('click', () => completeCurrentTask());
         }
@@ -245,12 +297,12 @@
                 renderCurrentTask();
             } catch (e) {
                 area.innerHTML = `
-          <div class="empty-state task-entering">
-            <i class="fas fa-exclamation-triangle"></i>
-            Ошибка загрузки задач<br/>
-            <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
-          </div>
-        `;
+              <div class="empty-state task-entering">
+                <i class="fas fa-exclamation-triangle"></i>
+                Ошибка загрузки задач<br/>
+                <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
+              </div>
+            `;
             }
         }
 
@@ -321,6 +373,127 @@
             }
         }
 
+        //Captcha logic for Umnik navigation
+        (function () {
+
+            let currentCaptcha = null;
+
+            const modal = document.getElementById('umnikCaptchaModal');
+            const qEl = document.getElementById('captchaQuestion');
+            const input = document.getElementById('captchaInput');
+            const err = document.getElementById('captchaError');
+            const btnSubmit = document.getElementById('captchaSubmit');
+            const btnCancel = document.getElementById('captchaCancel');
+            const fab = document.getElementById('fabNavMain');
+            let countError = 0;
+
+            function generateCaptcha() {
+                function evalExpr(nums, ops) {
+                    let val = nums[0];
+                    for (let i = 0; i < ops.length; i++) {
+                        if (ops[i] === '+') val += nums[i + 1];
+                        else val -= nums[i + 1];
+                    }
+                    return val;
+                }
+
+                for (let attempt = 0; attempt < 200; attempt++) {
+                    const n = Math.random() < 0.5 ? 2 : 3;
+                    const nums = Array.from({ length: n }, () => Math.floor(Math.random() * 8) + 1);
+
+                    if (nums.every(x => x === 0)) continue;
+
+                    const ops = [];
+                    for (let i = 0; i < n - 1; i++) ops.push(Math.random() < 0.5 ? '+' : '-');
+
+                    const value = evalExpr(nums, ops);
+                    if (value >= 1 && value <= 10) {
+
+                        let parts = [String(nums[0])];
+                        for (let i = 0; i < ops.length; i++) {
+                            parts.push(` ${ops[i]} ` + String(nums[i + 1]));
+                        }
+                        const expr = parts.join('');
+                        return { expr, answer: value };
+                    }
+                }
+            }
+
+            function openModal() {
+                currentCaptcha = generateCaptcha();
+                qEl.textContent = `Решите пример: ${currentCaptcha.expr}`;
+                err.textContent = '';
+                input.value = '';
+                modal.style.display = 'flex';
+                modal.classList.remove('hidden');
+                setTimeout(() => input.focus(), 50);
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                currentCaptcha = null;
+                err.textContent = '';
+                input.value = '';
+            }
+
+            function submitAnswer() {
+                if (!currentCaptcha) { err.textContent = 'Ошибка — попробуйте ещё раз.'; return; }
+                const val = parseInt(input.value.trim(), 10);
+                if (Number.isNaN(val)) {
+                    err.textContent = 'Введите числовой ответ';
+                    input.focus();
+                    return;
+                }
+                if (val === currentCaptcha.answer) {
+                    closeModal();
+                    window.location.href = fab.getAttribute('href') || '/tasks';
+                } else {
+
+                    if (countError > 1) {
+                        err.textContent = 'Неверно — попробуйте другой пример';
+                        currentCaptcha = generateCaptcha();
+                        qEl.textContent = `Решите пример: ${currentCaptcha.expr}`;
+                        countError = 0;
+                    }
+
+                    else {
+                        err.textContent = 'Неверно — попробуйте ещё раз';
+                        countError++;
+                    }
+                    
+                    input.value = '';
+                    input.focus();
+                }
+            }
+
+            // FAB click: если есть задачи — показать капчу, иначе перейти
+            fab.addEventListener('click', function (e) {
+                // предотвращаем обычную навигацию по ссылке
+                e.preventDefault();
+                openModal();
+                // only show captcha when there are tasks
+                /*if (Array.isArray(remaining) && remaining.length > 0) {
+                    openModal();
+                } else {
+                    // без задач — свободный переход
+                    window.location.href = fab.getAttribute('href') || '/tasks';
+                }*/
+            });
+
+            // Закрыть при клике по оверлею или по cancel
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closeModal();
+            });
+            btnCancel.addEventListener('click', closeModal);
+
+            // Submit
+            btnSubmit.addEventListener('click', submitAnswer);
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') submitAnswer();
+                if (e.key === 'Escape') closeModal();
+            });
+        })();
         // ── Init ──
         loadTasks();
     </script>
