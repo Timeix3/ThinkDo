@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фокус — Обезьяна и Умник</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            z-index: 40;
+            text-decoration: none;
+        }
+
+            .fab:hover {
+                transform: scale(1.1);
+            }
+        /* ── Focus card ── */
+        .focus-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2.5rem 2rem;
+            max-width: 520px;
+            width: 100%;
+            color: #1e293b;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+            position: relative;
+        }
+        /* ── Чекбокс ── */
+        .focus-check {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border: 2.5px solid #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            color: transparent;
+            font-size: 0.85rem;
+        }
+
+            .focus-check:hover {
+                border-color: #22c55e;
+                background: #dcfce7;
+                color: #22c55e;
+            }
+
+            .focus-check.checked {
+                border-color: #22c55e;
+                background: #22c55e;
+                color: #fff;
+            }
+        /* ── Анимация: задача уезжает влево ── */
+        @keyframes taskSlideOutLeft {
+            0% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(-140%) scale(0.85);
+                opacity: 0;
+            }
+        }
+
+        .task-leaving {
+            animation: taskSlideOutLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        /* ── Анимация: следующая задача выезжает из глубины ── */
+        @keyframes taskEmergeFromDepth {
+            0% {
+                transform: scale(0.6) translateY(40px);
+                opacity: 0;
+                filter: blur(6px);
+            }
+
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+                filter: blur(0);
+            }
+        }
+
+        .task-entering {
+            animation: taskEmergeFromDepth 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        /* ── Пустое состояние / Загрузка / Ошибка ── */
+        .empty-state {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 3rem 1rem;
+        }
+
+            .empty-state i {
+                font-size: 3rem;
+                display: block;
+                margin-bottom: 1rem;
+                opacity: 0.4;
+            }
+        /* ── Счётчик задач ── */
+        .task-counter {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            border-radius: 2rem;
+            padding: 0.35rem 0.9rem;
+            font-size: 0.8rem;
+            color: white;
+            font-weight: 600;
+        }
+        /* ── Декоративные кольца на фоне ── */
+        .bg-ring {
+            position: fixed;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="p-5">
+    <!-- Декоративные кольца -->
+    <div class="bg-ring" style="width:500px;height:500px;top:-100px;right:-120px;"></div>
+    <div class="bg-ring" style="width:350px;height:350px;bottom:-80px;left:-60px;"></div>
+    <div class="bg-ring" style="width:200px;height:200px;top:30%;left:10%;"></div>
+    <div class="max-w-6xl mx-auto">
+        <!-- Верхняя панель — идентична главной -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 text-white">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-brain text-2xl"></i>
+                <span class="text-xl font-bold">Обезьяна и Умник</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="task-counter" id="taskCounter">0 / 0</span>
+                <img th:src="${#authentication.principal.attributes['avatar_url']}"
+                     alt="avatar" class="w-8 h-8 rounded-full border-2 border-white/50">
+                <span class="text-sm opacity-90">
+                    Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
+                </span>
+                <form th:action="@{/logout}" method="post" id="logoutForm">
+                    <!-- Кнопка с вызовом функции очистки данных -->
+                    <button type="submit" onclick="clearAllData()"
+                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                        <i class="fas fa-sign-out-alt text-xs"></i> Выйти
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- Подзаголовок -->
+        <div class="text-center mb-10 mt-6">
+            <h1 class="text-white text-2xl font-bold mb-1">🎯 Режим фокуса</h1>
+            <p class="text-white/60 text-sm">Одна задача за раз. Сделай и двигайся дальше.</p>
+        </div>
+        <!-- Контейнер для одной задачи по центру -->
+        <div class="flex items-center justify-center" style="min-height: 320px;">
+            <div id="focusArea"></div>
+        </div>
+    </div>
+    <!-- FAB: Навигация на умника -->
+    <a href="/tasks" class="fab" id="fabNavMain" style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
+        🤓
+    </a>
+    <script>
+        const API_URL = '/api/tasks';
+        const MONKEY_API_URL = '/api/tasks/monkey/all';
+        
+        let remaining = [];
+        let completedCount = 0;
+        let totalCount = 0;
+
+        function updateCounter() {
+            document.getElementById('taskCounter').textContent = `${completedCount} / ${totalCount}`;
+        }
+
+        function renderCurrentTask() {
+            const area = document.getElementById('focusArea');
+            if (remaining.length === 0) {
+                area.innerHTML = `
+          <div class="empty-state task-entering">
+            <i class="fas fa-trophy"></i>
+            Все задачи выполнены! 🎉<br/>
+            <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
+          </div>
+        `;
+                return;
+            }
+
+            const task = remaining[0];
+            const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+            area.innerHTML = `
+        <div class="focus-card task-entering" id="focusCard">
+          <div class="flex items-start gap-4">
+            <div class="focus-check" id="focusCheck" title="Выполнить">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
+              <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
+            </div>
+          </div>
+          <!-- Прогресс-бар внизу карточки -->
+          <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+          </div>
+        </div>
+      `;
+
+            document.getElementById('focusCheck').addEventListener('click', () => completeCurrentTask());
+        }
+
+        async function loadTasks() {
+            const area = document.getElementById('focusArea');
+            area.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Загрузка задач...</div>`;
+            try {
+                const res = await fetch(MONKEY_API_URL);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                remaining = await res.json();
+                totalCount = remaining.length;
+                completedCount = 0;
+                updateCounter();
+                renderCurrentTask();
+            } catch (e) {
+                area.innerHTML = `
+          <div class="empty-state task-entering">
+            <i class="fas fa-exclamation-triangle"></i>
+            Ошибка загрузки задач<br/>
+            <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
+          </div>
+        `;
+            }
+        }
+
+        async function completeCurrentTask() {
+            const card = document.getElementById('focusCard');
+            const check = document.getElementById('focusCheck');
+            if (!card || !check || remaining.length === 0) return;
+
+            const currentTask = remaining[0];
+
+            check.classList.add('checked');
+
+            setTimeout(async () => {
+                card.classList.remove('task-entering');
+                card.classList.add('task-leaving');
+
+                card.addEventListener('animationend', async () => {
+                    try {
+                        await fetch(`${API_URL}/${currentTask.id}`, { method: 'DELETE' });
+                    } catch (e) {
+                        console.warn('Не удалось удалить задачу на сервере:', e);
+                    }
+                    remaining.shift();
+                    completedCount++;
+                    updateCounter();
+                    renderCurrentTask();
+                }, { once: true });
+            }, 250);
+        }
+
+        function escHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function clearAllData() {
+            // Очищаем localStorage (там может храниться токен)
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch (e) { }
+
+            // Очищаем все куки (там может быть JSESSIONID и OAuth2 данные)
+            document.cookie.split(";").forEach(function (cookie) {
+                var name = cookie.split("=")[0].trim();
+                if (name) {
+                    // Удаляем куку для текущего пути
+                    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+                    // Удаляем куку для корневого пути
+                    document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
+                }
+            });
+            // Очистка IndexedDB (где GitHub иногда хранит токены)
+            if (window.indexedDB) {
+                indexedDB.databases().then(dbs => {
+                    dbs.forEach(db => {
+                        if (db.name) indexedDB.deleteDatabase(db.name);
+                    });
+                }).catch(() => { });
+            }
+
+            // Очистка кэша браузера
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+        }
+
+        // ── Init ──
+        loadTasks();
+    </script>
+</body>
+</html>

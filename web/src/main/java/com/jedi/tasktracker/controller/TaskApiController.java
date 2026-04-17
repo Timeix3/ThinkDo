@@ -20,6 +20,11 @@ public class TaskApiController {
     return apiClient.getTasks();
   }
 
+  @GetMapping("/monkey/all")
+  public List<TaskDto> getTodayTasks() {
+    return apiClient.getTodayTasks();
+  }
+
   @PostMapping
   public ResponseEntity<Void> createTask(@RequestBody Map<String, String> body) {
     apiClient.createTask(body.get("title"), body.get("content"));
