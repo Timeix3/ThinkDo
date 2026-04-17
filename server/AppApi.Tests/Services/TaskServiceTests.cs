@@ -20,8 +20,11 @@ public class TaskServiceTests
     }
 
     [Fact]
-    public async Task GetAllTasksAsync_WithTasks_ReturnsAllTasksAsDtos()
+    public async Task GetAllTasksAsync_WithTasks_ReturnsPagedDto()
     {
+        var pageNumber = 1;
+        var pageSize = 2;
+
         var tasks = new List<TaskItem>
         {
             new()
@@ -41,13 +44,20 @@ public class TaskServiceTests
                 CreatedAt = DateTime.UtcNow
             }
         };
-        _repositoryMock.Setup(r => r.GetAllAsync(TestUserId)).ReturnsAsync(tasks);
 
-        var result = await _service.GetAllTasksAsync(TestUserId);
+        _repositoryMock
+            .Setup(r => r.GetAllAsync(TestUserId, pageNumber, pageSize))
+            .ReturnsAsync((tasks, 5));
 
-        result.Should().HaveCount(2);
-        result.Should().AllBeOfType<TaskResponseDto>();
-        _repositoryMock.Verify(r => r.GetAllAsync(TestUserId), Times.Once);
+        var result = await _service.GetAllTasksAsync(TestUserId, pageNumber, pageSize);
+
+        result.Items.Should().HaveCount(2);
+        result.Items.Should().AllBeOfType<TaskResponseDto>();
+        result.TotalCount.Should().Be(5);
+        result.PageNumber.Should().Be(1);
+        result.PageSize.Should().Be(2);
+
+        _repositoryMock.Verify(r => r.GetAllAsync(TestUserId, pageNumber, pageSize), Times.Once);
     }
 
     [Fact]
@@ -162,23 +172,23 @@ public class TaskServiceTests
     [Fact]
     public async Task DeleteTaskAsync_ExistingTask_ReturnsTrue()
     {
-        _repositoryMock.Setup(r => r.DeleteAsync(1, TestUserId)).ReturnsAsync(true);
+        _repositoryMock.Setup(r => r.SoftDeleteAsync(1, TestUserId)).ReturnsAsync(true);
 
         var result = await _service.DeleteTaskAsync(1, TestUserId);
 
         result.Should().BeTrue();
-        _repositoryMock.Verify(r => r.DeleteAsync(1, TestUserId), Times.Once);
+        _repositoryMock.Verify(r => r.SoftDeleteAsync(1, TestUserId), Times.Once);
     }
 
     [Fact]
     public async Task DeleteTaskAsync_NonExistingTask_ReturnsFalse()
     {
-        _repositoryMock.Setup(r => r.DeleteAsync(999, TestUserId)).ReturnsAsync(false);
+        _repositoryMock.Setup(r => r.SoftDeleteAsync(999, TestUserId)).ReturnsAsync(false);
 
         var result = await _service.DeleteTaskAsync(999, TestUserId);
 
         result.Should().BeFalse();
-        _repositoryMock.Verify(r => r.DeleteAsync(999, TestUserId), Times.Once);
+        _repositoryMock.Verify(r => r.SoftDeleteAsync(999, TestUserId), Times.Once);
     }
 
     [Fact]

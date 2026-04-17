@@ -1,5 +1,6 @@
 using Common.Models;
 using Microsoft.EntityFrameworkCore;
+using Common.Enums;
 
 namespace Common.Data;
 
@@ -40,6 +41,14 @@ public class AppDbContext : DbContext
                 .HasMaxLength(450)
                 .IsRequired();
 
+            entity.Property(e => e.Status)
+                .HasColumnName("status")
+                .IsRequired()
+                .HasDefaultValue(TasksStatus.Available);
+
+            entity.Property(e => e.BlockedByTaskId)
+                .HasColumnName("blocked_by_task_id");
+
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
                 .IsRequired()
@@ -48,11 +57,23 @@ public class AppDbContext : DbContext
             entity.Property(e => e.UpdatedAt)
                 .HasColumnName("updated_at");
 
+            entity.Property(e => e.DeletedAt)
+                .HasColumnName("deleted_at");
+
             entity.HasIndex(e => e.UserId)
                 .HasDatabaseName("ix_tasks_user_id");
 
             entity.HasIndex(e => new { e.UserId, e.Id })
                 .HasDatabaseName("ix_tasks_user_id_id");
+
+            entity.HasIndex(e => e.DeletedAt)
+                .HasDatabaseName("ix_tasks_deleted_at");
+
+            entity.HasIndex(e => e.Status)
+                .HasDatabaseName("ix_tasks_status");
+
+            entity.HasIndex(e => e.BlockedByTaskId)
+                .HasDatabaseName("ix_tasks_blocked_by_task_id");
         });
 
         modelBuilder.Entity<InboxItem>(entity =>
