@@ -3,6 +3,7 @@ using System;
 using Common.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Common.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416131956_AddInboxItems")]
+    partial class AddInboxItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -80,10 +83,6 @@ namespace Common.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("BlockedByTaskId")
-                        .HasColumnType("integer")
-                        .HasColumnName("blocked_by_task_id");
-
                     b.Property<string>("Content")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)")
@@ -94,16 +93,6 @@ namespace Common.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("NOW()");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("status");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -122,15 +111,6 @@ namespace Common.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BlockedByTaskId")
-                        .HasDatabaseName("ix_tasks_blocked_by_task_id");
-
-                    b.HasIndex("DeletedAt")
-                        .HasDatabaseName("ix_tasks_deleted_at");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("ix_tasks_status");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_tasks_user_id");

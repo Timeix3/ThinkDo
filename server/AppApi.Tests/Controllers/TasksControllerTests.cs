@@ -23,12 +23,12 @@ public class TasksControllerTests
         _loggerMock = new Mock<ILogger<TasksController>>();
         _controller = new TasksController(_serviceMock.Object, _loggerMock.Object);
 
-        // Setup authenticated user
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, TestUserId),
             new Claim(ClaimTypes.Name, "testuser")
         };
+
         var identity = new ClaimsIdentity(claims, "TestAuth");
         var principal = new ClaimsPrincipal(identity);
 
@@ -41,31 +41,47 @@ public class TasksControllerTests
     [Fact]
     public async Task GetAll_ReturnsOkWithTasks()
     {
-        var tasks = new List<TaskResponseDto>
+        var tasks = new TaskListResponseDto
         {
-            new() { Id = 1, Title = "Task 1", Content = "Content 1", CreatedAt = DateTime.UtcNow },
-            new() { Id = 2, Title = "Task 2", Content = "Content 2", CreatedAt = DateTime.UtcNow }
+            Items = new[]
+            {
+                new TaskResponseDto { Id = 1, Title = "Task 1", Content = "Content 1", CreatedAt = DateTime.UtcNow },
+                new TaskResponseDto { Id = 2, Title = "Task 2", Content = "Content 2", CreatedAt = DateTime.UtcNow }
+            },
+            TotalCount = 2,
+            PageSize = 50,
+            PageNumber = 1,
+            HasMore = false
         };
-        _serviceMock.Setup(s => s.GetAllTasksAsync(TestUserId)).ReturnsAsync(tasks);
+
+        _serviceMock.Setup(s => s.GetAllTasksAsync(TestUserId, 0, 50)).ReturnsAsync(tasks);
 
         var result = await _controller.GetAll();
 
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        var returnedTasks = okResult.Value.Should().BeAssignableTo<IEnumerable<TaskResponseDto>>().Subject;
-        returnedTasks.Should().HaveCount(2);
-        _serviceMock.Verify(s => s.GetAllTasksAsync(TestUserId), Times.Once);
+        var returnedDto = okResult.Value.Should().BeOfType<TaskListResponseDto>().Subject;
+        returnedDto.Items.Should().HaveCount(2);
+
+        _serviceMock.Verify(s => s.GetAllTasksAsync(TestUserId, 0, 50), Times.Once);
     }
 
     [Fact]
     public async Task GetAll_EmptyList_ReturnsOkWithEmptyList()
     {
-        _serviceMock.Setup(s => s.GetAllTasksAsync(TestUserId)).ReturnsAsync(new List<TaskResponseDto>());
+        _serviceMock.Setup(s => s.GetAllTasksAsync(TestUserId, 0, 50)).ReturnsAsync(new TaskListResponseDto
+        {
+            Items = Array.Empty<TaskResponseDto>(),
+            TotalCount = 0,
+            PageSize = 50,
+            PageNumber = 1,
+            HasMore = false
+        });
 
         var result = await _controller.GetAll();
 
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        var returnedTasks = okResult.Value.Should().BeAssignableTo<IEnumerable<TaskResponseDto>>().Subject;
-        returnedTasks.Should().BeEmpty();
+        var returnedDto = okResult.Value.Should().BeOfType<TaskListResponseDto>().Subject;
+        returnedDto.Items.Should().BeEmpty();
     }
 
     [Fact]
@@ -111,7 +127,14 @@ public class TasksControllerTests
     public async Task Update_ExistingTask_ReturnsOkWithUpdatedTask()
     {
         var dto = new UpdateTaskDto { Title = "Updated", Content = "Updated Content" };
-        var updatedTask = new TaskResponseDto { Id = 1, Title = "Updated", Content = "Updated Content", CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+        var updatedTask = new TaskResponseDto
+        {
+            Id = 1,
+            Title = "Updated",
+            Content = "Updated Content",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
         _serviceMock.Setup(s => s.UpdateTaskAsync(1, dto, TestUserId)).ReturnsAsync(updatedTask);
 
         var result = await _controller.Update(1, dto);
@@ -155,10 +178,17 @@ public class TasksControllerTests
     [Fact]
     public async Task GetAll_UserIdExtractedFromClaims()
     {
-        _serviceMock.Setup(s => s.GetAllTasksAsync(TestUserId)).ReturnsAsync(new List<TaskResponseDto>());
+        _serviceMock.Setup(s => s.GetAllTasksAsync(TestUserId, 0, 50)).ReturnsAsync(new TaskListResponseDto
+        {
+            Items = Array.Empty<TaskResponseDto>(),
+            TotalCount = 0,
+            PageSize = 50,
+            PageNumber = 1,
+            HasMore = false
+        });
 
         await _controller.GetAll();
 
-        _serviceMock.Verify(s => s.GetAllTasksAsync(TestUserId), Times.Once);
+        _serviceMock.Verify(s => s.GetAllTasksAsync(TestUserId, 0, 50), Times.Once);
     }
 }

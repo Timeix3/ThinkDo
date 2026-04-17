@@ -30,8 +30,9 @@ public class TaskRepositoryTests : IDisposable
 
         var result = await _repository.GetAllAsync(TestUserId);
 
-        result.Should().HaveCount(2);
-        result.Should().OnlyContain(t => t.UserId == TestUserId);
+        result.Items.Should().HaveCount(2);
+        result.Items.Should().OnlyContain(t => t.UserId == TestUserId);
+        result.TotalCount.Should().Be(2);
     }
 
     [Fact]
@@ -47,7 +48,8 @@ public class TaskRepositoryTests : IDisposable
 
         var result = await _repository.GetAllAsync(TestUserId);
 
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
     }
 
     [Fact]
@@ -173,12 +175,13 @@ public class TaskRepositoryTests : IDisposable
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
 
-        var result = await _repository.DeleteAsync(task.Id, TestUserId);
+        var result = await _repository.SoftDeleteAsync(task.Id, TestUserId);
 
         result.Should().BeTrue();
 
         var inDb = await _context.Tasks.FindAsync(task.Id);
-        inDb.Should().BeNull();
+        inDb.Should().NotBeNull();
+        inDb!.DeletedAt.Should().NotBeNull();
     }
 
     [Fact]
@@ -192,12 +195,13 @@ public class TaskRepositoryTests : IDisposable
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
 
-        var result = await _repository.DeleteAsync(task.Id, TestUserId);
+        var result = await _repository.SoftDeleteAsync(task.Id, TestUserId);
 
         result.Should().BeFalse();
 
         var inDb = await _context.Tasks.FindAsync(task.Id);
         inDb.Should().NotBeNull();
+        inDb!.DeletedAt.Should().BeNull();
     }
 
     [Fact]
@@ -226,7 +230,7 @@ public class TaskRepositoryTests : IDisposable
         );
         await _context.SaveChangesAsync();
 
-        var result = (await _repository.GetAllAsync(TestUserId)).ToList();
+        var result = (await _repository.GetAllAsync(TestUserId)).Items.ToList();
 
         result.Should().HaveCount(3);
         result[0].Title.Should().Be("Third");
