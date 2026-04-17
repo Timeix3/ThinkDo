@@ -43,7 +43,7 @@ public class TaskRepository : ITaskRepository
         var end = start.AddDays(1);
 
         return await _context.Tasks
-            .Where(t => t.UserId == userId && t.CreatedAt >= start && t.CreatedAt < end)
+            .Where(t => t.UserId == userId && t.CreatedAt >= start && t.CreatedAt < end && t.DeletedAt == null)
             .OrderByDescending(t => t.CreatedAt)
             .FirstOrDefaultAsync();
     }
@@ -54,7 +54,7 @@ public class TaskRepository : ITaskRepository
         var end = start.AddDays(1);
 
         return await _context.Tasks
-            .Where(t => t.UserId == userId && t.CreatedAt >= start && t.CreatedAt < end)
+            .Where(t => t.UserId == userId && t.CreatedAt >= start && t.CreatedAt < end && t.DeletedAt == null)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
     }

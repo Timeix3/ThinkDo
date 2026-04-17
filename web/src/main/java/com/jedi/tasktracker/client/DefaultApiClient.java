@@ -1,6 +1,7 @@
 package com.jedi.tasktracker.client;
 
 import com.jedi.tasktracker.client.dto.TaskDto;
+import com.jedi.tasktracker.client.dto.TaskListResponseDto;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -15,20 +16,22 @@ public class DefaultApiClient implements ApiClient {
 
   @Override
   public List<TaskDto> getTasks() {
-    return restClient
-        .get()
-        .uri("/api/tasks")
-        .retrieve()
-        .body(new ParameterizedTypeReference<>() {});
+    var resp =
+        restClient
+            .get()
+            .uri("/api/tasks")
+            .retrieve()
+            .body(new ParameterizedTypeReference<TaskListResponseDto>() {});
+    return resp.items();
   }
 
   @Override
   public List<TaskDto> getTodayTasks() {
     return restClient
         .get()
-        .uri("/api/admin/tasks/monkey/all")
+        .uri("/api/tasks/monkey/all")
         .retrieve()
-        .body(new ParameterizedTypeReference<>() {});
+        .body(new ParameterizedTypeReference<List<TaskDto>>() {});
   }
 
   @Override
