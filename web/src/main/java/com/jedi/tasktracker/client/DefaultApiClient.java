@@ -23,6 +23,15 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
+  public List<TaskDto> getTodayTasks() {
+    return restClient
+        .get()
+        .uri("/api/admin/tasks/monkey/all")
+        .retrieve()
+        .body(new ParameterizedTypeReference<>() {});
+  }
+
+  @Override
   public void createTask(String title, String description) {
     restClient
         .post()

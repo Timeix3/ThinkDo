@@ -7,6 +7,8 @@ public interface ApiClient {
 
   List<TaskDto> getTasks();
 
+  List<TaskDto> getTodayTasks();
+
   void createTask(String title, String description);
 
   void updateTask(Long id, String title, String content);
