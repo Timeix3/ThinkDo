@@ -16,11 +16,12 @@ public class DefaultApiClient implements ApiClient {
 
   @Override
   public List<TaskDto> getTasks() {
-    var resp = restClient
-        .get()
-        .uri("/api/tasks")
-        .retrieve()
-        .body(new ParameterizedTypeReference<TaskListResponseDto>() {});
+    var resp =
+        restClient
+            .get()
+            .uri("/api/tasks")
+            .retrieve()
+            .body(new ParameterizedTypeReference<TaskListResponseDto>() {});
     return resp.items();
   }
 
