@@ -1,4 +1,3 @@
-web\src\main\resources\templates\monkey.html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -467,18 +466,15 @@ web\src\main\resources\templates\monkey.html
                 }
             }
 
-            // FAB click: если есть задачи — показать капчу, иначе перейти
             fab.addEventListener('click', function (e) {
-                // предотвращаем обычную навигацию по ссылке
                 e.preventDefault();
-                openModal();
-                // only show captcha when there are tasks
-                /*if (Array.isArray(remaining) && remaining.length > 0) {
+
+                if (Array.isArray(remaining) && remaining.length > 0) {
                     openModal();
                 } else {
-                    // без задач — свободный переход
+                    
                     window.location.href = fab.getAttribute('href') || '/tasks';
-                }*/
+                }
             });
 
             // Закрыть при клике по оверлею или по cancel
