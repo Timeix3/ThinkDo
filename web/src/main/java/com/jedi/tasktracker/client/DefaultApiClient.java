@@ -64,11 +64,7 @@ public class DefaultApiClient implements ApiClient {
 
   @Override
   public InboxListResponseDto getInboxItems() {
-    return restClient
-        .get()
-        .uri("/api/inbox")
-        .retrieve()
-        .body(InboxListResponseDto.class);
+    return restClient.get().uri("/api/inbox").retrieve().body(InboxListResponseDto.class);
   }
 
   @Override
