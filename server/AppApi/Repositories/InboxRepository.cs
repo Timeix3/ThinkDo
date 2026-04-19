@@ -48,6 +48,22 @@ public class InboxRepository : IInboxRepository
         return item;
     }
 
+    public async Task<bool> UpdateAsync(int id, string userId, string title)
+    {
+        var item = await _context.InboxItems
+            .FirstOrDefaultAsync(i => i.Id == id
+                && i.UserId == userId
+                && i.DeletedAt == null);
+
+        if (item is null)
+            return false;
+
+        item.Title = title;
+        item.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> SoftDeleteAsync(int id, string userId)
     {
         var item = await _context.InboxItems

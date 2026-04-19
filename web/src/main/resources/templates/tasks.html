@@ -908,7 +908,7 @@
 
         function updateInboxOverflowBadge() {
             const badge = document.getElementById('inboxOverflowBadge');
-            const show = inboxOverflow || inboxItems.length > 20;
+            const show = inboxOverflow || inboxItems.length > 10;
             badge.classList.toggle('hidden', !show);
             if (!badge.classList.contains('hidden')) {
                 document.getElementById('inboxOverflowText').textContent = `${inboxItems.length} записей!`;

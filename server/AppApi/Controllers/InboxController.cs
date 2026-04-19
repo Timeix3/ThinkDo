@@ -87,6 +87,36 @@ public class InboxController : ControllerBase
     }
 
     /// <summary>
+    /// Обновление заголовка записи Inbox
+    /// </summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateInboxItemDto dto)
+    {
+        var userId = GetCurrentUserId();
+
+        if (string.IsNullOrWhiteSpace(dto.Title))
+            return BadRequest(new { message = "Title cannot be empty or contain only whitespace" });
+
+        _logger.LogInformation("User {UserId} updating inbox item {ItemId}", userId, id);
+
+        try
+        {
+            var result = await _inboxService.UpdateItemAsync(id, dto, userId);
+            if (!result)
+                return NotFound(new { message = $"Inbox item with id '{id}' not found" });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Восстановление удалённой записи Inbox (Undo delete)
     /// </summary>
     [HttpPatch("{id:int}/restore")]

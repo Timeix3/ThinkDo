@@ -83,6 +83,17 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
+  public void updateInboxItem(int id, String title) {
+    restClient
+        .put()
+        .uri("/api/inbox/{id}", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of("title", title))
+        .retrieve()
+        .toBodilessEntity();
+  }
+
+  @Override
   public void deleteInboxItem(int id) {
     restClient.delete().uri("/api/inbox/{id}", id).retrieve().toBodilessEntity();
   }

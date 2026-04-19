@@ -25,6 +25,13 @@ public class InboxApiController {
     return ResponseEntity.status(201).build();
   }
 
+  @PutMapping("/{id}")
+  public ResponseEntity<Void> updateInboxItem(
+      @PathVariable int id, @RequestBody Map<String, String> body) {
+    apiClient.updateInboxItem(id, body.get("title"));
+    return ResponseEntity.noContent().build();
+  }
+
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteInboxItem(@PathVariable int id) {
     apiClient.deleteInboxItem(id);

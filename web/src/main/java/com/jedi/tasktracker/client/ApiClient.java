@@ -20,6 +20,8 @@ public interface ApiClient {
 
   void createInboxItem(String title);
 
+  void updateInboxItem(int id, String title);
+
   void deleteInboxItem(int id);
 
   void restoreInboxItem(int id);

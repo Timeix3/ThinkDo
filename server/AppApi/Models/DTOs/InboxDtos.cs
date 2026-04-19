@@ -25,6 +25,16 @@ public class InboxItemResponseDto
 }
 
 /// <summary>
+/// DTO для обновления записи в Inbox
+/// </summary>
+public class UpdateInboxItemDto
+{
+    [Required(ErrorMessage = "Title is required")]
+    [MaxLength(255, ErrorMessage = "Title must not exceed 255 characters")]
+    public string Title { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// DTO для списка записей Inbox с флагом переполнения
 /// </summary>
 public class InboxListResponseDto
