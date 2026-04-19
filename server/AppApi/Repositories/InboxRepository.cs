@@ -62,4 +62,19 @@ public class InboxRepository : IInboxRepository
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> RestoreAsync(int id, string userId)
+    {
+        var item = await _context.InboxItems
+            .FirstOrDefaultAsync(i => i.Id == id
+                && i.UserId == userId
+                && i.DeletedAt != null);
+
+        if (item is null)
+            return false;
+
+        item.DeletedAt = null;
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

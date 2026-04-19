@@ -50,6 +50,11 @@ public class InboxService : IInboxService
         return await _repository.SoftDeleteAsync(id, userId);
     }
 
+    public async Task<bool> RestoreItemAsync(int id, string userId)
+    {
+        return await _repository.RestoreAsync(id, userId);
+    }
+
     private static InboxItemResponseDto MapToDto(InboxItem item) => new()
     {
         Id = item.Id,

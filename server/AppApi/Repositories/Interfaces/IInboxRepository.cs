@@ -9,4 +9,5 @@ public interface IInboxRepository
     Task<InboxItem?> GetByIdAsync(int id, string userId);
     Task<InboxItem> AddAsync(InboxItem item);
     Task<bool> SoftDeleteAsync(int id, string userId);
+    Task<bool> RestoreAsync(int id, string userId);
 }

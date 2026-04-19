@@ -87,6 +87,28 @@ public class InboxController : ControllerBase
     }
 
     /// <summary>
+    /// Восстановление удалённой записи Inbox (Undo delete)
+    /// </summary>
+    [HttpPatch("{id:int}/restore")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Restore(int id)
+    {
+        var userId = GetCurrentUserId();
+
+        _logger.LogInformation("User {UserId} restoring inbox item {ItemId}", userId, id);
+        var result = await _inboxService.RestoreItemAsync(id, userId);
+
+        if (!result)
+        {
+            _logger.LogWarning("Inbox item {ItemId} not found or not deleted for user {UserId}", id, userId);
+            return NotFound(new { message = $"Inbox item with id '{id}' not found or not deleted" });
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
     /// Мягкое удаление записи из Inbox
     /// </summary>
     [HttpDelete("{id:int}")]
