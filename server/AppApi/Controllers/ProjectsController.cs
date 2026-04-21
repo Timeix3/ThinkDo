@@ -41,7 +41,7 @@ public class ProjectsController : ControllerBase
         {
             return BadRequest(ModelState);
         }
-        
+
         var result = await _projectService.CreateProjectAsync(dto, GetCurrentUserId());
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }

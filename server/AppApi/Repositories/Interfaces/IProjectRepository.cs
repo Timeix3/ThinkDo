@@ -1,6 +1,6 @@
 using Common.Models;
 
-namespace  AppApi.Repositories.Interfaces;
+namespace AppApi.Repositories.Interfaces;
 
 public interface IProjectRepository
 {

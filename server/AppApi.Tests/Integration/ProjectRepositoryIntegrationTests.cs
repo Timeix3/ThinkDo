@@ -36,7 +36,7 @@ public class ProjectRepositoryIntegrationTests : IAsyncLifetime
         var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(_postgres.GetConnectionString()).Options;
         using var context = new AppDbContext(options);
         await context.Database.EnsureCreatedAsync();
-        
+
         var project = new ProjectItem { Name = "Container", UserId = "u1" };
         context.Projects.Add(project);
         await context.SaveChangesAsync();

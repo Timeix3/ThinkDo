@@ -160,7 +160,7 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => e.UserId)
                 .HasDatabaseName("ix_projects_user_id");
-                
+
             entity.HasIndex(e => e.DeletedAt)
                 .HasDatabaseName("ix_projects_deleted_at");
 
