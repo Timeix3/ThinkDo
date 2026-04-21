@@ -954,9 +954,8 @@
                 renderInboxList();
                 updateInboxOverflowBadge();
                 showInboxUndoToast(idToDelete);
-            } catch {
-                await inboxLoad();
-            }
+            } catch { }
+            await inboxLoad();
         });
 
         function showInboxUndoToast(deletedId) {
