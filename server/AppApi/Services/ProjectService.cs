@@ -12,6 +12,8 @@ public class ProjectService : IProjectService
 
     public async Task<IEnumerable<ProjectResponseDto>> GetProjectsAsync(string userId)
     {
+        await EnsureDefaultProjectExistsAsync(userId);
+
         var projects = await _repository.GetAllAsync(userId);
         return projects.Select(p => MapToDto(p));
     }
@@ -24,11 +26,11 @@ public class ProjectService : IProjectService
 
     public async Task<ProjectResponseDto> CreateProjectAsync(CreateProjectDto dto, string userId)
     {
-        var project = new ProjectItem 
-        { 
-            Name = dto.Name.Trim(), 
-            Description = dto.Description, 
-            UserId = userId 
+        var project = new ProjectItem
+        {
+            Name = dto.Name.Trim(),
+            Description = dto.Description,
+            UserId = userId
         };
         var result = await _repository.AddAsync(project);
         return MapToDto(result);
@@ -68,13 +70,44 @@ public class ProjectService : IProjectService
         Description = p.Description,
         IsDefault = p.IsDefault,
         CreatedAt = p.CreatedAt,
-        Tasks = includeTasks ? p.Tasks.Select(t => new TaskResponseDto 
-        { 
-            Id = t.Id, 
-            Title = t.Title, 
-            Content = t.Content, 
+        Tasks = includeTasks ? p.Tasks.Select(t => new TaskResponseDto
+        {
+            Id = t.Id,
+            Title = t.Title,
+            Content = t.Content,
             Status = t.Status,
-            CreatedAt = t.CreatedAt 
+            CreatedAt = t.CreatedAt
         }) : null
     };
+
+    private async Task EnsureDefaultProjectExistsAsync(string userId)
+    {
+        var defaultProject = await _repository.GetDefaultProjectAsync(userId, includeDeleted: true);
+
+        if (defaultProject == null)
+        {
+            var newDefault = new ProjectItem
+            {
+                Name = "Текучка",
+                Description = "Задачи без конкретного проекта",
+                UserId = userId,
+                IsDefault = true
+            };
+
+            try
+            {
+                await _repository.AddAsync(newDefault);
+            }
+            catch (Exception)
+            {
+                // Если сработал уникальный индекс (гонка потоков), просто игнорируем ошибку
+            }
+        }
+        else if (defaultProject.DeletedAt != null)
+        {
+            defaultProject.DeletedAt = null;
+            defaultProject.UpdatedAt = DateTime.UtcNow;
+            await _repository.UpdateAsync(defaultProject);
+        }
+    }
 }

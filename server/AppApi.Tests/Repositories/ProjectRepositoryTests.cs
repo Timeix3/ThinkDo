@@ -50,4 +50,33 @@ public class ProjectRepositoryTests
 
         result.Should().BeNull();
     }
+
+    [Fact]
+    public async Task GetDefaultProjectAsync_WithIncludeDeleted_ShouldFindSoftDeletedProject()
+    {
+        // Arrange
+        using var context = GetContext();
+        var repo = new ProjectRepository(context);
+        var deletedProject = new ProjectItem
+        {
+            Id = 5,
+            Name = "Текучка",
+            UserId = "user-1",
+            IsDefault = true,
+            DeletedAt = DateTime.UtcNow
+        };
+        context.Projects.Add(deletedProject);
+        await context.SaveChangesAsync();
+
+        // Act
+        // Обычный поиск не должен найти (т.к. есть глобальный фильтр на DeletedAt == null)
+        var notFound = await repo.GetByIdAsync(5, "user-1");
+        // Специальный поиск для восстановления должен найти
+        var found = await repo.GetDefaultProjectAsync("user-1", includeDeleted: true);
+
+        // Assert
+        notFound.Should().BeNull();
+        found.Should().NotBeNull();
+        found!.Id.Should().Be(5);
+    }
 }

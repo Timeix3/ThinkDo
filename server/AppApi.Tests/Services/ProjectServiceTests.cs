@@ -38,7 +38,7 @@ public class ProjectServiceTests
         // Краевой случай: Попытка переименовать Текучку
         var systemProject = new ProjectItem { Id = 1, Name = "Текучка", IsDefault = true, UserId = UserId };
         _repoMock.Setup(r => r.GetByIdAsync(1, UserId, false)).ReturnsAsync(systemProject);
-        
+
         var updateDto = new UpdateProjectDto { Name = "Взломанное Имя" };
 
         await _service.Invoking(s => s.UpdateProjectAsync(1, updateDto, UserId))
@@ -82,5 +82,80 @@ public class ProjectServiceTests
         var result = await _service.GetProjectByIdAsync(1, UserId);
 
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetProjects_WhenDefaultProjectMissing_ShouldCreateNewDefault()
+    {
+        // Arrange: У пользователя вообще нет проектов
+        _repoMock.Setup(r => r.GetAllAsync(UserId)).ReturnsAsync(new List<ProjectItem>());
+        _repoMock.Setup(r => r.GetDefaultProjectAsync(UserId, true)).ReturnsAsync((ProjectItem?)null);
+
+        _repoMock.Setup(r => r.AddAsync(It.IsAny<ProjectItem>()))
+                 .ReturnsAsync((ProjectItem p) =>
+                 {
+                     p.Id = 1;
+                     return p;
+                 })
+                 .Callback<ProjectItem>(p =>
+                 {
+                     // Имитируем, что после добавления проект появится в списке
+                     _repoMock.Setup(r => r.GetAllAsync(UserId))
+                              .ReturnsAsync(new List<ProjectItem> { p });
+                 });
+
+        // Act
+        var result = await _service.GetProjectsAsync(UserId);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.First().Name.Should().Be("Текучка");
+        result.First().IsDefault.Should().BeTrue();
+
+        _repoMock.Verify(r => r.AddAsync(It.Is<ProjectItem>(p => p.IsDefault && p.Name == "Текучка")), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetProjects_WhenDefaultProjectDeleted_ShouldRestoreIt()
+    {
+        // Arrange: Текучка удалена (DeletedAt != null)
+        var deletedDefault = new ProjectItem
+        {
+            Id = 1,
+            Name = "Текучка",
+            IsDefault = true,
+            UserId = UserId,
+            DeletedAt = DateTime.UtcNow
+        };
+
+        _repoMock.Setup(r => r.GetAllAsync(UserId)).ReturnsAsync(new List<ProjectItem>());
+        _repoMock.Setup(r => r.GetDefaultProjectAsync(UserId, true)).ReturnsAsync(deletedDefault);
+
+        // Act
+        await _service.GetProjectsAsync(UserId);
+
+        // Assert
+        // Проверяем, что поле DeletedAt было занулено
+        deletedDefault.DeletedAt.Should().BeNull();
+        // Проверяем, что репозиторий вызвал Update
+        _repoMock.Verify(r => r.UpdateAsync(It.Is<ProjectItem>(p => p.Id == 1 && p.DeletedAt == null)), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateProject_NormalProject_ShouldWorkCorrectly()
+    {
+        // Arrange: Обычный проект (не системный)
+        var normalProject = new ProjectItem { Id = 10, Name = "Старое имя", IsDefault = false, UserId = UserId };
+        _repoMock.Setup(r => r.GetByIdAsync(10, UserId, false)).ReturnsAsync(normalProject);
+
+        var updateDto = new UpdateProjectDto { Name = "Новое имя", Description = "Новое описание" };
+
+        // Act
+        var result = await _service.UpdateProjectAsync(10, updateDto, UserId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Name.Should().Be("Новое имя");
+        _repoMock.Verify(r => r.UpdateAsync(It.Is<ProjectItem>(p => p.Name == "Новое имя")), Times.Once);
     }
 }

@@ -42,4 +42,19 @@ public class ProjectRepository : IProjectRepository
         _context.Projects.Update(project);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<ProjectItem?> GetDefaultProjectAsync(string userId, bool includeDeleted)
+    {
+        var query = _context.Projects.AsQueryable();
+
+        if (includeDeleted)
+        {
+            // IgnoreQueryFilters отключает глобальный фильтр (DeletedAt == null)
+            // Это позволяет нам найти "удаленную" Текучку, чтобы восстановить её
+            query = query.IgnoreQueryFilters();
+        }
+
+        return await query.FirstOrDefaultAsync(p =>
+            p.UserId == userId && p.IsDefault == true);
+    }
 }
