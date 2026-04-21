@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
 
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<InboxItem> InboxItems => Set<InboxItem>();
+    public DbSet<ProjectItem> Projects => Set<ProjectItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,5 +117,35 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.DeletedAt)
                 .HasDatabaseName("ix_inbox_items_deleted_at");
         });
+
+        modelBuilder.Entity<ProjectItem>(entity =>
+        {
+            entity.ToTable("projects");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(200).IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.UserId)
+                .HasMaxLength(450).IsRequired();
+
+            entity.Property(e => e.IsDefault)
+                .HasDefaultValue(false);
+
+            entity.HasIndex(e => e.UserId)
+                .HasDatabaseName("ix_projects_user_id");
+                
+            entity.HasIndex(e => e.DeletedAt)
+                .HasDatabaseName("ix_projects_deleted_at");
+        });
+
+        modelBuilder.Entity<TaskItem>()
+            .HasOne(t => t.Project)
+            .WithMany(p => p.Tasks)
+            .HasForeignKey(t => t.ProjectId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
