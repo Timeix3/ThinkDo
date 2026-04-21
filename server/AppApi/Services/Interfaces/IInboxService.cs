@@ -7,5 +7,7 @@ public interface IInboxService
 {
     Task<InboxListResponseDto> GetAllItemsAsync(string userId);
     Task<InboxItemResponseDto> CreateItemAsync(CreateInboxItemDto dto, string userId);
+    Task<bool> UpdateItemAsync(int id, UpdateInboxItemDto dto, string userId);
     Task<bool> SoftDeleteItemAsync(int id, string userId);
+    Task<bool> RestoreItemAsync(int id, string userId);
 }

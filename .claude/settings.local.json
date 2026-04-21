@@ -3,7 +3,9 @@
     "allow": [
       "Bash(export JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-21.0.10.7-hotspot\")",
       "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
-      "Bash(./mvnw clean:*)"
+      "Bash(./mvnw clean:*)",
+      "Bash(git checkout *)",
+      "Bash(xargs grep *)"
     ]
   }
 }

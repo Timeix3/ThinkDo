@@ -1,5 +1,6 @@
 package com.jedi.tasktracker.client;
 
+import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import com.jedi.tasktracker.client.dto.TaskListResponseDto;
 import java.util.List;
@@ -59,5 +60,47 @@ public class DefaultApiClient implements ApiClient {
   @Override
   public void deleteTask(Long id) {
     restClient.delete().uri("/api/tasks/{id}", id).retrieve().toBodilessEntity();
+  }
+
+  @Override
+  public InboxListResponseDto getInboxItems() {
+    return restClient.get().uri("/api/inbox").retrieve().body(InboxListResponseDto.class);
+  }
+
+  @Override
+  public void createInboxItem(String title) {
+    restClient
+        .post()
+        .uri("/api/inbox")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of("title", title))
+        .retrieve()
+        .toBodilessEntity();
+  }
+
+  @Override
+  public void updateInboxItem(int id, String title) {
+    restClient
+        .put()
+        .uri("/api/inbox/{id}", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of("title", title))
+        .retrieve()
+        .toBodilessEntity();
+  }
+
+  @Override
+  public void deleteInboxItem(int id) {
+    restClient.delete().uri("/api/inbox/{id}", id).retrieve().toBodilessEntity();
+  }
+
+  @Override
+  public void restoreInboxItem(int id) {
+    restClient
+        .patch()
+        .uri("/api/inbox/{id}/restore", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .retrieve()
+        .toBodilessEntity();
   }
 }

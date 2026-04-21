@@ -45,9 +45,22 @@ public class InboxService : IInboxService
         return MapToDto(created);
     }
 
+    public async Task<bool> UpdateItemAsync(int id, UpdateInboxItemDto dto, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Title))
+            throw new ArgumentException("Title cannot be empty or whitespace");
+
+        return await _repository.UpdateAsync(id, userId, dto.Title.Trim());
+    }
+
     public async Task<bool> SoftDeleteItemAsync(int id, string userId)
     {
         return await _repository.SoftDeleteAsync(id, userId);
+    }
+
+    public async Task<bool> RestoreItemAsync(int id, string userId)
+    {
+        return await _repository.RestoreAsync(id, userId);
     }
 
     private static InboxItemResponseDto MapToDto(InboxItem item) => new()

@@ -1,5 +1,6 @@
 package com.jedi.tasktracker.client;
 
+import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import java.util.List;
 
@@ -14,4 +15,14 @@ public interface ApiClient {
   void updateTask(Long id, String title, String content);
 
   void deleteTask(Long id);
+
+  InboxListResponseDto getInboxItems();
+
+  void createInboxItem(String title);
+
+  void updateInboxItem(int id, String title);
+
+  void deleteInboxItem(int id);
+
+  void restoreInboxItem(int id);
 }

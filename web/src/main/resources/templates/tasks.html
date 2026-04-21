@@ -296,6 +296,48 @@
             align-items: center;
         }
 
+        /* ── Undo-тост инбокса ──────────────────────────────── */
+        .inbox-undo-toast {
+            position: fixed;
+            bottom: 5.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            animation: toastIn 0.2s ease-out;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .inbox-undo-btn {
+            background: transparent;
+            border: 1.5px solid #475569;
+            color: #93c5fd;
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .inbox-undo-btn:hover {
+            background: rgba(147, 197, 253, 0.1);
+            border-color: #93c5fd;
+        }
+
         /* ── Ripple-волна FAB ───────────────────────────────── */
         @keyframes fabRippleOut {
             0% {
@@ -533,6 +575,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Undo-тост: удаление записи инбокса -->
+    <div id="inboxUndoToast" class="inbox-undo-toast hidden">
+        <span>Запись удалена</span>
+        <button id="inboxUndoBtn" class="inbox-undo-btn">Отменить</button>
     </div>
 
     <script>
@@ -774,12 +822,17 @@
         // ── Инбокс ────────
         let inboxItems = [];
         let inboxCounter = 0;
+        let inboxOverflow = false;
+        let inboxUndoTimer = null;
+        let inboxUndoDeleteId = null;
 
         async function inboxLoad() {
             try {
                 const res = await fetch(INBOX_API_URL);
                 if (!res.ok) throw new Error('API not ready');
-                inboxItems = await res.json();
+                const data = await res.json();
+                inboxItems = data.items ?? [];
+                inboxOverflow = data.inboxOverflow ?? false;
             } catch { }
             renderInboxList();
             updateInboxOverflowBadge();
@@ -855,7 +908,8 @@
 
         function updateInboxOverflowBadge() {
             const badge = document.getElementById('inboxOverflowBadge');
-            badge.classList.toggle('hidden', inboxItems.length <= 10);
+            const show = inboxOverflow || inboxItems.length > 10;
+            badge.classList.toggle('hidden', !show);
             if (!badge.classList.contains('hidden')) {
                 document.getElementById('inboxOverflowText').textContent = `${inboxItems.length} записей!`;
             }
@@ -891,16 +945,41 @@
         });
 
         document.getElementById('inboxEditDelete').addEventListener('click', async () => {
+            const idToDelete = editingInboxId;
+            closeInboxEditModal();
             try {
-                const res = await fetch(`${INBOX_API_URL}/${editingInboxId}`, { method: 'DELETE' });
+                const res = await fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error();
-                await inboxLoad();
-            } catch {
-                inboxItems = inboxItems.filter(i => String(i.id) !== String(editingInboxId));
+                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
                 renderInboxList();
                 updateInboxOverflowBadge();
-            }
-            closeInboxEditModal();
+                showInboxUndoToast(idToDelete);
+            } catch { }
+            await inboxLoad();
+        });
+
+        function showInboxUndoToast(deletedId) {
+            inboxUndoDeleteId = String(deletedId);
+            if (inboxUndoTimer) clearTimeout(inboxUndoTimer);
+            document.getElementById('inboxUndoToast').classList.remove('hidden');
+            inboxUndoTimer = setTimeout(hideInboxUndoToast, 5000);
+        }
+
+        function hideInboxUndoToast() {
+            if (inboxUndoTimer) { clearTimeout(inboxUndoTimer); inboxUndoTimer = null; }
+            document.getElementById('inboxUndoToast').classList.add('hidden');
+            inboxUndoDeleteId = null;
+        }
+
+        document.getElementById('inboxUndoBtn').addEventListener('click', async () => {
+            const idToRestore = inboxUndoDeleteId;
+            hideInboxUndoToast();
+            if (!idToRestore) return;
+            try {
+                const res = await fetch(`${INBOX_API_URL}/${idToRestore}/restore`, { method: 'PATCH' });
+                if (!res.ok) throw new Error();
+            } catch { }
+            await inboxLoad();
         });
 
         function clearAllData() {
