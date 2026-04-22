@@ -4,9 +4,7 @@ import com.jedi.tasktracker.client.ApiClient;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import java.util.List;
 import java.util.Map;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +27,7 @@ public class ProjectApiController {
   public ResponseEntity<ProjectDto> createProject(@RequestBody Map<String, String> body) {
     String name = body.get("name");
     String description = body.get("description");
-    
+
     var createdProject = apiClient.createProject(name, description);
     return ResponseEntity.status(201).body(createdProject);
   }
