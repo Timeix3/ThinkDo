@@ -21,6 +21,8 @@ builder.Services.AddScoped<IInboxRepository, InboxRepository>();
 builder.Services.AddScoped<IInboxService, InboxService>();
 builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
 builder.Services.AddScoped<IRoutineService, RoutineService>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
 
 // Configure HttpClient for GitHub API calls
 builder.Services.AddHttpClient("GitHub", client =>

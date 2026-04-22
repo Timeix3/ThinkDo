@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<InboxItem> InboxItems => Set<InboxItem>();
     public DbSet<Routine> Routines => Set<Routine>();
+    public DbSet<ProjectItem> Projects => Set<ProjectItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -163,5 +164,63 @@ public class AppDbContext : DbContext
                     entity.HasIndex(e => e.Frequency)
                         .HasDatabaseName("ix_routines_frequency");
                 });
+
+        modelBuilder.Entity<ProjectItem>(entity =>
+        {
+            entity.ToTable("projects");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.Name)
+                .HasColumnName("name")
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(e => e.Description)
+                .HasColumnName("description")
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .HasMaxLength(450)
+                .IsRequired();
+
+            entity.Property(e => e.IsDefault)
+                .HasColumnName("is_default")
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at");
+
+            entity.Property(e => e.DeletedAt)
+                .HasColumnName("deleted_at");
+
+            entity.HasIndex(e => e.UserId)
+                .HasDatabaseName("ix_projects_user_id");
+
+            entity.HasIndex(e => e.DeletedAt)
+                .HasDatabaseName("ix_projects_deleted_at");
+
+            entity.HasIndex(e => new { e.UserId, e.IsDefault })
+                .HasDatabaseName("ix_projects_user_default_unique")
+                .HasFilter("is_default = true")
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<TaskItem>()
+            .HasOne(t => t.Project)
+            .WithMany(p => p.Tasks)
+            .HasForeignKey(t => t.ProjectId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
