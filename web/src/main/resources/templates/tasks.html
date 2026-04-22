@@ -422,7 +422,6 @@
                     Доска</button>
                 <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
-                <!-- Разблокированная кнопка Проекты -->
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
             </div>
@@ -472,7 +471,7 @@
             </div>
         </div>
 
-        <!-- ====== Страница: Проекты (НОВАЯ ЗАДАЧА 9.3) ====== -->
+        <!-- ====== Страница: Проекты ====== -->
         <div id="pageProjects" class="hidden">
             <div class="task-list-container">
                 <h2 class="text-white font-bold text-lg mb-4">📁 Мои проекты</h2>
@@ -482,8 +481,8 @@
 
     </div>
 
-    <!-- FAB: Создать задачу (только на Доске) -->
-    <div class="fab" id="fabAddTask"><i class="fas fa-plus"></i></div>
+    <!-- FAB: Создать задачу (Скрыта на Доске) -->
+    <div class="fab hidden" id="fabAddTask"><i class="fas fa-plus"></i></div>
 
     <!-- FAB: Навигация на обезьяну -->
     <a href="/" class="fab" id="fabNavFocus"
@@ -491,9 +490,14 @@
         🐒
     </a>
 
-    <!-- FAB: Добавить в инбокс (только на Инбоксе) -->
+    <!-- FAB: Добавить в инбокс -->
     <div class="fab hidden" id="fabAddInbox" style="position:fixed;">
         <i class="fas fa-plus" id="fabAddInboxIcon"></i>
+    </div>
+
+    <!-- FAB: Создать проект (Задача 9.4) -->
+    <div class="fab hidden" id="fabAddProject" style="position:fixed;">
+        <i class="fas fa-plus"></i>
     </div>
 
     <!-- Inline-поле ввода для инбокса -->
@@ -549,6 +553,28 @@
         </div>
     </div>
 
+    <!-- Модалка: Создание проекта (Задача 9.4) -->
+    <div id="projectCreateModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">📁 Новый проект</h2>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
+                    <input type="text" id="projectCreateName" placeholder="Название проекта" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Описание</label>
+                    <textarea id="projectCreateDesc" rows="3" placeholder="О чём этот проект..."></textarea>
+                </div>
+                <p id="projectCreateError" class="text-red-500 text-xs hidden">Название обязательно!</p>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-ghost" id="projectCreateCancel">Отмена</button>
+                <button class="btn-primary" id="projectCreateSave">Создать проект</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Модалка: Редактирование записи инбокса -->
     <div id="inboxEditModal" class="modal-overlay hidden">
         <div class="modal-box">
@@ -574,7 +600,7 @@
     <script>
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
-        const PROJECTS_API_URL = '/api/projects'; // Новое
+        const PROJECTS_API_URL = '/api/projects';
 
         let editingTaskId = null;
         let editingInboxId = null;
@@ -623,7 +649,7 @@
             });
         }
 
-        // ── Render Список задач (Твой Task 2.5) ──────────────
+        // ── Render Список задач (Task 2.5) ──────────────
         function renderTaskList(tasks) {
             const container = document.getElementById('taskListContent');
             if (!tasks.length) {
@@ -657,7 +683,6 @@
         function renderProjectsList() {
             const container = document.getElementById('projectsListContent');
 
-            // Сортировка: "Текучка" первая, остальные по алфавиту
             const sorted = [...allProjects].sort((a, b) => {
                 if (a.isDefault) return -1;
                 if (b.isDefault) return 1;
@@ -691,7 +716,7 @@
             }).join('');
         }
 
-        // ── Load tasks (API) ───────────────────────────────────
+        // ── Load Data (API) ───────────────────────────────────
         async function loadTasks() {
             try {
                 const res = await fetch(API_URL);
@@ -711,6 +736,59 @@
                 renderProjectsList();
             } catch (e) { console.error("Projects API error", e); }
         }
+
+        // ── Logic: Projects (Task 9.4) ────────────────────────
+        function openProjectCreateModal() {
+            document.getElementById('projectCreateName').value = '';
+            document.getElementById('projectCreateDesc').value = '';
+            document.getElementById('projectCreateError').classList.add('hidden');
+            document.getElementById('projectCreateModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('projectCreateName').focus(), 50);
+        }
+
+        function closeProjectCreateModal() {
+            document.getElementById('projectCreateModal').classList.add('hidden');
+        }
+
+        document.getElementById('fabAddProject').addEventListener('click', openProjectCreateModal);
+        document.getElementById('projectCreateCancel').addEventListener('click', closeProjectCreateModal);
+
+        document.getElementById('projectCreateSave').addEventListener('click', async () => {
+            const nameInput = document.getElementById('projectCreateName');
+            const name = nameInput.value.trim();
+            const errorLabel = document.getElementById('projectCreateError');
+
+            if (!name) {
+                errorLabel.classList.remove('hidden');
+                nameInput.focus();
+                return;
+            }
+
+            const btn = document.getElementById('projectCreateSave');
+            btn.disabled = true; // Защита от двойного клика
+
+            try {
+                const res = await fetch(PROJECTS_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        description: document.getElementById('projectCreateDesc').value.trim()
+                    })
+                });
+
+                if (res.ok) {
+                    closeProjectCreateModal();
+                    await loadProjects();
+                } else {
+                    alert("Ошибка при создании проекта на сервере.");
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+            }
+        });
 
         // ── Create Task ────────────────────────────────────────
         function openCreateModal() {
@@ -841,12 +919,14 @@
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
+            // Управление видимостью FAB-кнопок
             document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox');
+            document.getElementById('fabAddProject').classList.toggle('hidden', page !== 'projects');
 
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
-            if (page === 'projects') loadProjects(); // Загрузка при переключении
+            if (page === 'projects') loadProjects();
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
@@ -854,7 +934,7 @@
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
 
-        // ── Инбокс (Оригинальная логика коллег) ───────────────
+        // ── Инбокс (Логика коллег полностью сохранена) ───────────────
         let inboxItems = [];
         let inboxCounter = 0;
 
