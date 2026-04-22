@@ -3,6 +3,7 @@ package com.jedi.tasktracker.client;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import com.jedi.tasktracker.client.dto.TaskListResponseDto;
+import com.jedi.tasktracker.client.dto.ProjectDto;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -102,5 +103,27 @@ public class DefaultApiClient implements ApiClient {
         .contentType(MediaType.APPLICATION_JSON)
         .retrieve()
         .toBodilessEntity();
+  }
+
+  @Override
+  public List<ProjectDto> getProjects() {
+    return restClient
+        .get()
+        .uri("/api/projects")
+        .retrieve()
+        .body(new ParameterizedTypeReference<List<ProjectDto>>() {});
+  }
+
+    @Override
+  public ProjectDto createProject(String name, String description) {
+    return restClient.post()
+        .uri("/api/projects")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of(
+            "name", name, 
+            "description", description != null ? description : ""
+        ))
+        .retrieve()
+        .body(ProjectDto.class);
   }
 }

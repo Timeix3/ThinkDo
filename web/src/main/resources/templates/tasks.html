@@ -227,6 +227,34 @@
             color: #4f46e5;
         }
 
+        /* ── Дизайн карточки Проекта (из макета SP3) ───────── */
+        .project-list-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem 1.15rem;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .project-list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-badge-default {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            background: #fef3c7;
+            color: #b45309;
+        }
+
         /* ── Твой чекбокс ───────────────────────────────────── */
         .task-check {
             width: 22px;
@@ -294,55 +322,6 @@
             display: flex;
             gap: 0.5rem;
             align-items: center;
-        }
-
-        /* ── Undo-тост инбокса ──────────────────────────────── */
-        .inbox-undo-toast {
-            position: fixed;
-            bottom: 5.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: #f8fafc;
-            border-radius: 0.75rem;
-            padding: 0.75rem 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-            z-index: 9999;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            animation: toastIn 0.2s ease-out;
-        }
-
-        @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        .inbox-undo-btn {
-            background: transparent;
-            border: 1.5px solid #475569;
-            color: #93c5fd;
-            border-radius: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.15s, border-color 0.15s;
-        }
-
-        .inbox-undo-btn:hover {
-            background: rgba(147, 197, 253, 0.1);
-            border-color: #93c5fd;
         }
 
         /* ── Ripple-волна FAB ───────────────────────────────── */
@@ -443,7 +422,8 @@
                     Доска</button>
                 <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
-                <button disabled class="px-3 py-1 rounded-full nav-disabled">📁 Проекты</button>
+                <!-- Разблокированная кнопка Проекты -->
+                <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
             </div>
         </div>
@@ -492,10 +472,18 @@
             </div>
         </div>
 
+        <!-- ====== Страница: Проекты (НОВАЯ ЗАДАЧА 9.3) ====== -->
+        <div id="pageProjects" class="hidden">
+            <div class="task-list-container">
+                <h2 class="text-white font-bold text-lg mb-4">📁 Мои проекты</h2>
+                <div id="projectsListContent"></div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- FAB: Создать задачу (Скрыта на Доске) -->
-    <div class="fab hidden" id="fabAddTask"><i class="fas fa-plus"></i></div>
+    <!-- FAB: Создать задачу (только на Доске) -->
+    <div class="fab" id="fabAddTask"><i class="fas fa-plus"></i></div>
 
     <!-- FAB: Навигация на обезьяну -->
     <a href="/" class="fab" id="fabNavFocus"
@@ -503,7 +491,7 @@
         🐒
     </a>
 
-    <!-- FAB: Добавить в инбокс -->
+    <!-- FAB: Добавить в инбокс (только на Инбоксе) -->
     <div class="fab hidden" id="fabAddInbox" style="position:fixed;">
         <i class="fas fa-plus" id="fabAddInboxIcon"></i>
     </div>
@@ -551,7 +539,6 @@
                     <textarea id="editDesc" rows="3" placeholder="Подробности..."></textarea>
                 </div>
             </div>
-            <!-- Секция кнопок с динамическим выравниванием -->
             <div class="flex justify-between mt-5" id="editModalFooter">
                 <button class="btn-success" id="editComplete">✓ Выполнено</button>
                 <div class="flex gap-2">
@@ -584,19 +571,15 @@
         </div>
     </div>
 
-    <!-- Undo-тост: удаление записи инбокса -->
-    <div id="inboxUndoToast" class="inbox-undo-toast hidden">
-        <span>Запись удалена</span>
-        <button id="inboxUndoBtn" class="inbox-undo-btn">Отменить</button>
-    </div>
-
     <script>
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
+        const PROJECTS_API_URL = '/api/projects'; // Новое
 
         let editingTaskId = null;
         let editingInboxId = null;
-        let allTasks = []; // Общее состояние
+        let allTasks = [];
+        let allProjects = [];
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
@@ -609,7 +592,6 @@
             return '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>';
         }
 
-        // Форматирование даты
         function formatDateRu(dateStr) {
             if (!dateStr) return '';
             const datePart = dateStr.split('T')[0];
@@ -641,7 +623,7 @@
             });
         }
 
-        // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1) ──
+        // ── Render Список задач (Твой Task 2.5) ──────────────
         function renderTaskList(tasks) {
             const container = document.getElementById('taskListContent');
             if (!tasks.length) {
@@ -650,6 +632,7 @@
             }
 
             container.innerHTML = tasks.sort((a, b) => b.id - a.id).map(t => {
+                const dateLabel = formatDateRu(t.createdAt || new Date().toISOString());
                 return `
                 <div class="task-list-item" id="task-row-${t.id}">
                     <div class="flex items-center gap-3">
@@ -658,12 +641,53 @@
                         </div>
                         <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
                             <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                            <!-- Описание задачи (контент) -->
                             ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
+                            <span class="date-badge date-badge-none">
+                                <i class="fas fa-calendar-alt text-[0.65rem]"></i>
+                                ${dateLabel}
+                            </span>
                         </div>
                     </div>
                 </div>
             `;
+            }).join('');
+        }
+
+        // ── Render ПРОЕКТЫ (9.3) ──
+        function renderProjectsList() {
+            const container = document.getElementById('projectsListContent');
+
+            // Сортировка: "Текучка" первая, остальные по алфавиту
+            const sorted = [...allProjects].sort((a, b) => {
+                if (a.isDefault) return -1;
+                if (b.isDefault) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            if (!sorted.length) {
+                container.innerHTML = '<div class="text-white/30 text-center py-10">Проектов не найдено</div>';
+                return;
+            }
+
+            container.innerHTML = sorted.map(p => {
+                const icon = p.isDefault ? '⭐' : '📁';
+                const badgeHtml = p.isDefault
+                    ? '<span class="project-badge-default"><i class="fas fa-star"></i>По умолчанию</span>'
+                    : '';
+
+                return `
+                    <div class="project-list-item" data-project-id="${p.id}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                    ${badgeHtml}
+                                </div>
+                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
             }).join('');
         }
 
@@ -678,6 +702,14 @@
                 document.getElementById('colToday').innerHTML =
                     '<div class="task-card text-red-400 text-sm cursor-default">⚠️ Бэкенд недоступен</div>';
             }
+        }
+
+        async function loadProjects() {
+            try {
+                const res = await fetch(PROJECTS_API_URL);
+                allProjects = await res.json();
+                renderProjectsList();
+            } catch (e) { console.error("Projects API error", e); }
         }
 
         // ── Create Task ────────────────────────────────────────
@@ -772,7 +804,7 @@
             loadTasks();
         });
 
-        // ── Complete  ────────────────────
+        // ── Complete (Task 2.7 с анимацией) ────────────────────
         async function completeTask(id) {
             const row = document.getElementById(`task-row-${id}`);
             const card = document.querySelector(`.task-card[data-id="${id}"]`);
@@ -797,14 +829,13 @@
         });
 
         // ── Navigation ─────────────────────────────────────────
-        let currentPage = 'dashboard';
-
         function switchPage(page) {
             currentPage = page;
 
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
             document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
+            document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
 
             document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
                 btn.classList.toggle('active-page', btn.dataset.page === page);
@@ -815,26 +846,23 @@
 
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
+            if (page === 'projects') loadProjects(); // Загрузка при переключении
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
         document.getElementById('navTasks').addEventListener('click', () => switchPage('tasks'));
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
+        document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
 
-        // ── Инбокс ────────
+        // ── Инбокс (Оригинальная логика коллег) ───────────────
         let inboxItems = [];
         let inboxCounter = 0;
-        let inboxOverflow = false;
-        let inboxUndoTimer = null;
-        let inboxUndoDeleteId = null;
 
         async function inboxLoad() {
             try {
                 const res = await fetch(INBOX_API_URL);
                 if (!res.ok) throw new Error('API not ready');
-                const data = await res.json();
-                inboxItems = data.items ?? [];
-                inboxOverflow = data.inboxOverflow ?? false;
+                inboxItems = await res.json();
             } catch { }
             renderInboxList();
             updateInboxOverflowBadge();
@@ -910,8 +938,7 @@
 
         function updateInboxOverflowBadge() {
             const badge = document.getElementById('inboxOverflowBadge');
-            const show = inboxOverflow || inboxItems.length > 10;
-            badge.classList.toggle('hidden', !show);
+            badge.classList.toggle('hidden', inboxItems.length <= 10);
             if (!badge.classList.contains('hidden')) {
                 document.getElementById('inboxOverflowText').textContent = `${inboxItems.length} записей!`;
             }
@@ -947,41 +974,16 @@
         });
 
         document.getElementById('inboxEditDelete').addEventListener('click', async () => {
-            const idToDelete = editingInboxId;
-            closeInboxEditModal();
             try {
-                const res = await fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' });
+                const res = await fetch(`${INBOX_API_URL}/${editingInboxId}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error();
-                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
+                await inboxLoad();
+            } catch {
+                inboxItems = inboxItems.filter(i => String(i.id) !== String(editingInboxId));
                 renderInboxList();
                 updateInboxOverflowBadge();
-                showInboxUndoToast(idToDelete);
-            } catch { }
-            await inboxLoad();
-        });
-
-        function showInboxUndoToast(deletedId) {
-            inboxUndoDeleteId = String(deletedId);
-            if (inboxUndoTimer) clearTimeout(inboxUndoTimer);
-            document.getElementById('inboxUndoToast').classList.remove('hidden');
-            inboxUndoTimer = setTimeout(hideInboxUndoToast, 5000);
-        }
-
-        function hideInboxUndoToast() {
-            if (inboxUndoTimer) { clearTimeout(inboxUndoTimer); inboxUndoTimer = null; }
-            document.getElementById('inboxUndoToast').classList.add('hidden');
-            inboxUndoDeleteId = null;
-        }
-
-        document.getElementById('inboxUndoBtn').addEventListener('click', async () => {
-            const idToRestore = inboxUndoDeleteId;
-            hideInboxUndoToast();
-            if (!idToRestore) return;
-            try {
-                const res = await fetch(`${INBOX_API_URL}/${idToRestore}/restore`, { method: 'PATCH' });
-                if (!res.ok) throw new Error();
-            } catch { }
-            await inboxLoad();
+            }
+            closeInboxEditModal();
         });
 
         function clearAllData() {
@@ -993,16 +995,9 @@
                     document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname;
                 }
             });
-            if (window.indexedDB) {
-                indexedDB.databases().then(dbs => {
-                    dbs.forEach(db => { if (db.name) indexedDB.deleteDatabase(db.name); });
-                }).catch(() => { });
-            }
-            if ('caches' in window) {
-                caches.keys().then(names => { names.forEach(name => caches.delete(name)); });
-            }
         }
 
+        // ── Init ──
         loadTasks();
     </script>
 </body>
