@@ -42,10 +42,10 @@
             transition: transform 0.15s, box-shadow 0.15s;
         }
 
-        .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
+            .task-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            }
 
         .fab {
             position: fixed;
@@ -66,10 +66,10 @@
             z-index: 40;
         }
 
-        .fab:hover {
-            transform: scale(1.1);
-            background: #ea6c00;
-        }
+            .fab:hover {
+                transform: scale(1.1);
+                background: #ea6c00;
+            }
 
         .modal-overlay {
             position: fixed;
@@ -101,11 +101,11 @@
             transition: border-color 0.2s;
         }
 
-        input[type="text"]:focus,
-        textarea:focus,
-        input[type="date"]:focus {
-            border-color: #667eea;
-        }
+            input[type="text"]:focus,
+            textarea:focus,
+            input[type="date"]:focus {
+                border-color: #667eea;
+            }
 
         .btn-primary {
             background: #667eea;
@@ -117,9 +117,9 @@
             cursor: pointer;
         }
 
-        .btn-primary:hover {
-            background: #5a6fd6;
-        }
+            .btn-primary:hover {
+                background: #5a6fd6;
+            }
 
         .btn-danger {
             background: #ef4444;
@@ -131,9 +131,9 @@
             cursor: pointer;
         }
 
-        .btn-danger:hover {
-            background: #dc2626;
-        }
+            .btn-danger:hover {
+                background: #dc2626;
+            }
 
         .btn-ghost {
             background: #f1f5f9;
@@ -145,9 +145,9 @@
             cursor: pointer;
         }
 
-        .btn-ghost:hover {
-            background: #e2e8f0;
-        }
+            .btn-ghost:hover {
+                background: #e2e8f0;
+            }
 
         .btn-success {
             background: #22c55e;
@@ -159,9 +159,9 @@
             cursor: pointer;
         }
 
-        .btn-success:hover {
-            background: #16a34a;
-        }
+            .btn-success:hover {
+                background: #16a34a;
+            }
 
         .nav-disabled {
             opacity: 0.45;
@@ -191,12 +191,12 @@
             transition: transform 0.15s, box-shadow 0.15s;
         }
 
-        .task-list-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
+            .task-list-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            }
 
-        /* ── Бейдж даты (Твой дизайн) ────────────────────────── */
+        /* ── Бейдж даты ────────────────────────── */
         .date-badge {
             display: inline-flex;
             align-items: center;
@@ -207,10 +207,25 @@
             font-weight: 500;
         }
 
-        .date-badge-none { background: #f1f5f9; color: #94a3b8; }
-        .date-badge-today { background: #dcfce7; color: #16a34a; }
-        .date-badge-past { background: #fee2e2; color: #dc2626; }
-        .date-badge-future { background: #e0e7ff; color: #4f46e5; }
+        .date-badge-none {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .date-badge-today {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .date-badge-past {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .date-badge-future {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
 
         /* ── Твой чекбокс ───────────────────────────────────── */
         .task-check {
@@ -228,25 +243,84 @@
             font-size: 0.65rem;
         }
 
-        .task-check:hover {
-            border-color: #22c55e;
-            background: #dcfce7;
-            color: #22c55e;
-        }
+            .task-check:hover {
+                border-color: #22c55e;
+                background: #dcfce7;
+                color: #22c55e;
+            }
 
         /* ── Стили Проектов (Задача 9.3) ── */
         .project-list-item {
-            background: white; border-radius: 1rem;
-            padding: 1rem 1.15rem; margin-bottom: 0.75rem;
-            color: #1e293b; cursor: pointer;
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem 1.15rem;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+            cursor: pointer;
             transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
         }
-        .project-list-item:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+
+            .project-list-item:not(.project-default):hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            }
+
+            .project-list-item.project-default {
+                cursor: default;
+                opacity: 0.85;
+            }
+
+        /* ── Кнопка редактирования проекта ── */
+        .project-edit-btn {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 0.65rem;
+            opacity: 0;
+            transition: opacity 0.15s, background 0.15s;
+        }
+
+        .project-list-item:not(.project-default):hover .project-edit-btn {
+            opacity: 1;
+        }
+
+        .project-edit-btn:hover {
+            background: #e2e8f0 !important;
+        }
+
+        /* ── Бейдж со счётчиком задач ── */
+        .project-task-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            padding: 0;
+            font-weight: 400;
+            color: #94a3b8;
+            background: transparent;
+        }
+
+            .project-task-count i {
+                font-size: 0.7rem;
+                color: #cbd5e1;
+            }
+
         .project-badge-default {
-            display: inline-flex; align-items: center; gap: 0.3rem;
-            font-size: 0.7rem; padding: 0.15rem 0.55rem;
-            border-radius: 0.5rem; font-weight: 600;
-            background: #fef3c7; color: #b45309;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            background: #fef3c7;
+            color: #b45309;
         }
 
         /* ── Предупреждение о переполнении инбокса ──────────── */
@@ -266,8 +340,13 @@
         }
 
         @keyframes warnPulse {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.7; }
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
         }
 
         /* ── Inline-ввод инбокса ────────────────────────────── */
@@ -310,8 +389,15 @@
         }
 
         @keyframes toastIn {
-            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
         }
 
         .inbox-undo-btn {
@@ -326,10 +412,10 @@
             transition: background 0.15s, border-color 0.15s;
         }
 
-        .inbox-undo-btn:hover {
-            background: rgba(147, 197, 253, 0.1);
-            border-color: #93c5fd;
-        }
+            .inbox-undo-btn:hover {
+                background: rgba(147, 197, 253, 0.1);
+                border-color: #93c5fd;
+            }
 
         /* ── Ripple-волна FAB ───────────────────────────────── */
         @keyframes fabRippleOut {
@@ -394,10 +480,9 @@
                 <!-- Не авторизован -->
                 <div sec:authorize="isAnonymous()">
                     <a href="/oauth2/authorization/github"
-                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                       class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                         </svg>
                         Войти через GitHub
                     </a>
@@ -406,14 +491,14 @@
                 <!-- Авторизован -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
                     <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
-                        class="w-8 h-8 rounded-full border-2 border-white/50">
+                         class="w-8 h-8 rounded-full border-2 border-white/50">
                     <span class="text-sm opacity-90">
                         Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                     </span>
                     <form th:action="@{/logout}" method="post" id="logoutForm">
                         <!-- Кнопка с вызовом функции очистки данных -->
                         <button type="submit" onclick="clearAllData()"
-                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                                class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                             <i class="fas fa-sign-out-alt text-xs"></i> Выйти
                         </button>
                     </form>
@@ -492,7 +577,7 @@
 
     <!-- FAB: Навигация на обезьяну -->
     <a href="/" class="fab" id="fabNavFocus"
-        style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
+       style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
         🐒
     </a>
 
@@ -510,7 +595,7 @@
     <div id="inboxInputBar" class="inbox-inline-input hidden">
         <div class="inbox-input-box">
             <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
-                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
+                   style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
         </div>
     </div>
 
@@ -582,6 +667,33 @@
         </div>
     </div>
 
+    <!-- Модалка: Редактирование проекта -->
+    <div id="projectEditModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать проект</h2>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
+                    <input type="text" id="projectEditName" placeholder="Название проекта" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Описание</label>
+                    <textarea id="projectEditDesc" rows="3" placeholder="Описание проекта..."></textarea>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Задачи проекта</label>
+                    <div id="projectEditTasks" class="text-sm text-slate-500 bg-slate-50 rounded-lg p-3 min-h-[60px]">
+                    </div>
+                </div>
+                <p id="projectEditError" class="text-red-500 text-xs hidden">Название обязательно!</p>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-ghost" id="projectEditCancel">Отмена</button>
+                <button class="btn-primary" id="projectEditSave">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Модалка: Редактирование записи инбокса -->
     <div id="inboxEditModal" class="modal-overlay hidden">
         <div class="modal-box">
@@ -613,10 +725,11 @@
     <script>
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
-        const PROJECTS_API_URL = '/api/projects'; // Новое
+        const PROJECTS_API_URL = '/api/projects';
 
         let editingTaskId = null;
         let editingInboxId = null;
+        let editingProjectId = null;
         let allTasks = []; // Общее состояние
         let allProjects = [];
 
@@ -646,16 +759,16 @@
                 return;
             }
             col.innerHTML = tasks.map(t => `
-                <div class="task-card" data-id="${t.id}">
-                    <div class="flex items-start justify-between gap-2">
-                        <div class="flex-1 min-w-0">
-                            <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                            ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
+                        <div class="task-card" data-id="${t.id}">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
+                                    ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
+                                </div>
+                                <i class="fas fa-pencil-alt text-slate-300 text-xs mt-1 shrink-0"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-pencil-alt text-slate-300 text-xs mt-1 shrink-0"></i>
-                    </div>
-                </div>
-            `).join('');
+                    `).join('');
 
             col.querySelectorAll('.task-card').forEach(card => {
                 card.addEventListener('click', () => openEditModal(card.dataset.id, tasks));
@@ -672,25 +785,25 @@
 
             container.innerHTML = tasks.sort((a, b) => b.id - a.id).map(t => {
                 return `
-                <div class="task-list-item" id="task-row-${t.id}">
-                    <div class="flex items-center gap-3">
-                        <div class="task-check shrink-0" onclick="completeTask(${t.id})" title="Выполнить">
-                            <i class="fas fa-check"></i>
+                        <div class="task-list-item" id="task-row-${t.id}">
+                            <div class="flex items-center gap-3">
+                                <div class="task-check shrink-0" onclick="completeTask(${t.id})" title="Выполнить">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
+                                    <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
+                                    ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
-                            <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                            ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
+                    `;
             }).join('');
         }
 
         // ── Render ПРОЕКТОВ (Задача 9.3) ──
         function renderProjectsList() {
             const container = document.getElementById('projectsListContent');
-            
+
             const sorted = [...allProjects].sort((a, b) => {
                 if (a.isDefault) return -1;
                 if (b.isDefault) return 1;
@@ -704,24 +817,49 @@
 
             container.innerHTML = sorted.map(p => {
                 const icon = p.isDefault ? '⭐' : '📁';
-                const badgeHtml = p.isDefault 
-                    ? '<span class="project-badge-default"><i class="fas fa-star"></i>По умолчанию</span>' 
+                const badgeHtml = p.isDefault
+                    ? '<span class="project-badge-default"><i class="fas fa-star"></i>По умолчанию</span>'
                     : '';
-                
+
+                const taskCount = allTasks.filter(t => t.projectId === p.id).length;
+                const taskCountHtml = `
+            <span class="project-task-count mt-2 block">
+                <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+            </span>
+        `;
+
+                const defaultClass = p.isDefault ? 'project-default' : '';
+
                 return `
-                    <div class="project-list-item" data-project-id="${p.id}">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                    ${badgeHtml}
-                                </div>
-                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                            </div>
-                        </div>
+            <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                <!-- Кнопка редактирования: только для НЕ системных проектов -->
+                ${p.isDefault ? '' : `
+                    <button class="project-edit-btn absolute top-2 right-2" 
+                            data-project-id="${p.id}" 
+                            title="Редактировать проект"
+                            onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                `}
+                
+                <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                        ${badgeHtml}
                     </div>
-                `;
+                    ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                    ${taskCountHtml}
+                </div>
+            </div>
+        `;
             }).join('');
+        }
+
+        function getTaskCountWord(count) {
+            if (count === 0) return 'задач';
+            if (count === 1) return 'задача';
+            if (count >= 2 && count <= 4) return 'задачи';
+            return 'задач';
         }
 
         // ── Load tasks (API) ───────────────────────────────────
@@ -821,9 +959,9 @@
                 const res = await fetch(PROJECTS_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        name, 
-                        description: document.getElementById('projectCreateDesc').value.trim() 
+                    body: JSON.stringify({
+                        name,
+                        description: document.getElementById('projectCreateDesc').value.trim()
                     })
                 });
 
@@ -835,6 +973,97 @@
                 }
             } catch (e) {
                 console.error(e);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // ── Edit Project ───────────────────────────────────────
+        function openProjectEditModal(projectId) {
+            const project = allProjects.find(p => String(p.id) === String(projectId));
+            if (!project) {
+                alert('Проект не найден');
+                return;
+            }
+
+            if (project.isDefault) {
+                alert('Редактирование системного проекта запрещено.');
+                return;
+            }
+
+            editingProjectId = project.id;
+            document.getElementById('projectEditName').value = project.name;
+            document.getElementById('projectEditDesc').value = project.description ?? '';
+
+            // Заполняем блок "Задачи проекта"
+            const tasksContainer = document.getElementById('projectEditTasks');
+            const projectTasks = allTasks.filter(t => t.projectId === project.id);
+
+            tasksContainer.innerHTML = '<span class="text-slate-400">Задач пока нет</span>';
+
+            document.getElementById('projectEditError').classList.add('hidden');
+            document.getElementById('projectEditModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('projectEditName').focus(), 50);
+        }
+
+        function closeProjectEditModal() {
+            document.getElementById('projectEditModal').classList.add('hidden');
+            editingProjectId = null;
+        }
+
+        document.getElementById('projectEditCancel').addEventListener('click', closeProjectEditModal);
+        document.getElementById('projectEditModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeProjectEditModal();
+        });
+
+        document.getElementById('projectEditSave').addEventListener('click', async () => {
+            const nameInput = document.getElementById('projectEditName');
+            const name = nameInput.value.trim();
+            const desc = document.getElementById('projectEditDesc').value.trim();
+            const errorLabel = document.getElementById('projectEditError');
+
+            if (!name) {
+                errorLabel.classList.remove('hidden');
+                nameInput.focus();
+                return;
+            }
+
+            if (!editingProjectId) return;
+
+            const btn = document.getElementById('projectEditSave');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${PROJECTS_API_URL}/${editingProjectId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description: desc })
+                });
+
+                if (res.status === 404) {
+                    alert('Проект не найден');
+                    closeProjectEditModal();
+                    await loadProjects();
+                    return;
+                }
+
+                if (res.ok) {
+                    closeProjectEditModal();
+                    await loadProjects();
+                    return;
+                }
+
+                // Попытка показать сообщение от API
+                try {
+                    const json = await res.json();
+                    if (json && json.message) alert(json.message);
+                    else alert('Ошибка при сохранении проекта');
+                } catch {
+                    alert('Ошибка при сохранении проекта');
+                }
+            } catch (e) {
+                console.error('Project update error', e);
+                alert('Ошибка при сохранении проекта');
             } finally {
                 btn.disabled = false;
             }
@@ -988,15 +1217,15 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="flex-1 min-w-0">
-                            <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                        <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                </div>
+                                <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
-                    </div>
-                </div>
-            `).join('');
+                    `).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {
                 el.addEventListener('click', () => openInboxEditModal(el.dataset.inboxId));

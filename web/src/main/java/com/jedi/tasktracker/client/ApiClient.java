@@ -30,4 +30,6 @@ public interface ApiClient {
   List<ProjectDto> getProjects();
 
   ProjectDto createProject(String name, String description);
+
+  ProjectDto updateProject(Long id, String name, String description);
 }

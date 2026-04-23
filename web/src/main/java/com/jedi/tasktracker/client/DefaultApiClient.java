@@ -124,4 +124,15 @@ public class DefaultApiClient implements ApiClient {
         .retrieve()
         .body(ProjectDto.class);
   }
+
+  @Override
+  public ProjectDto updateProject(Long id, String name, String description) {
+    return restClient
+        .put()
+        .uri("/api/projects/{id}", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of("name", name, "description", description != null ? description : ""))
+        .retrieve()
+        .body(ProjectDto.class);
+  }
 }
