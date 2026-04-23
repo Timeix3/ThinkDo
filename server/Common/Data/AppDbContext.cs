@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
 
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<InboxItem> InboxItems => Set<InboxItem>();
+    public DbSet<Routine> Routines => Set<Routine>();
     public DbSet<ProjectItem> Projects => Set<ProjectItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -117,6 +118,52 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.DeletedAt)
                 .HasDatabaseName("ix_inbox_items_deleted_at");
         });
+
+        modelBuilder.Entity<Routine>(entity =>
+                {
+                    entity.ToTable("routines");
+
+                    entity.HasKey(e => e.Id);
+
+                    entity.Property(e => e.Id)
+                        .HasColumnName("id")
+                        .ValueGeneratedOnAdd();
+
+                    entity.Property(e => e.UserId)
+                        .HasColumnName("user_id")
+                        .HasMaxLength(450)
+                        .IsRequired();
+
+                    entity.Property(e => e.Name)
+                        .HasColumnName("name")
+                        .HasMaxLength(255)
+                        .IsRequired();
+
+                    entity.Property(e => e.Frequency)
+                        .HasColumnName("frequency")
+                        .HasConversion<int>()
+                        .IsRequired();
+
+                    entity.Property(e => e.CreatedAt)
+                        .HasColumnName("created_at")
+                        .IsRequired()
+                        .HasDefaultValueSql("NOW()");
+
+                    entity.Property(e => e.UpdatedAt)
+                        .HasColumnName("updated_at");
+
+                    entity.Property(e => e.DeletedAt)
+                        .HasColumnName("deleted_at");
+
+                    entity.HasIndex(e => e.UserId)
+                        .HasDatabaseName("ix_routines_user_id");
+
+                    entity.HasIndex(e => new { e.UserId, e.DeletedAt })
+                        .HasDatabaseName("ix_routines_user_id_deleted_at");
+
+                    entity.HasIndex(e => e.Frequency)
+                        .HasDatabaseName("ix_routines_frequency");
+                });
 
         modelBuilder.Entity<ProjectItem>(entity =>
         {

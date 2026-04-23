@@ -3,6 +3,7 @@ using System;
 using Common.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Common.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422115654_AddRoutines")]
+    partial class AddRoutines
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -124,68 +127,6 @@ namespace Common.Migrations
                     b.ToTable("routines", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Models.ProjectItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("NOW()");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsDefault")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_default");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeletedAt")
-                        .HasDatabaseName("ix_projects_deleted_at");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_projects_user_id");
-
-                    b.HasIndex("UserId", "IsDefault")
-                        .IsUnique()
-                        .HasDatabaseName("ix_projects_user_default_unique")
-                        .HasFilter("is_default = true");
-
-                    b.ToTable("projects", (string)null);
-                });
-
             modelBuilder.Entity("Common.Models.TaskItem", b =>
                 {
                     b.Property<int>("Id")
@@ -213,9 +154,6 @@ namespace Common.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
-
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
@@ -247,8 +185,6 @@ namespace Common.Migrations
                     b.HasIndex("DeletedAt")
                         .HasDatabaseName("ix_tasks_deleted_at");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_tasks_status");
 
@@ -259,21 +195,6 @@ namespace Common.Migrations
                         .HasDatabaseName("ix_tasks_user_id_id");
 
                     b.ToTable("tasks", (string)null);
-                });
-
-            modelBuilder.Entity("Common.Models.TaskItem", b =>
-                {
-                    b.HasOne("Common.Models.ProjectItem", "Project")
-                        .WithMany("Tasks")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("Common.Models.ProjectItem", b =>
-                {
-                    b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618
         }

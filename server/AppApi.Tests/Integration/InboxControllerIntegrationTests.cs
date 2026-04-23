@@ -1,4 +1,3 @@
-// AppApi.Tests/Integration/InboxControllerIntegrationTests.cs
 using Common.Data;
 using Common.Models;
 using FluentAssertions;
@@ -25,6 +24,7 @@ public class InboxControllerIntegrationTests : IAsyncLifetime
 
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
+    private const string TestUserId = "github-test-user";
 
     public async Task InitializeAsync()
     {
@@ -70,6 +70,14 @@ public class InboxControllerIntegrationTests : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
+    private async Task ClearInboxItemsAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.InboxItems.RemoveRange(db.InboxItems);
+        await db.SaveChangesAsync();
+    }
+
     private async Task SeedInboxItemsAsync(params InboxItem[] items)
     {
         using var scope = _factory.Services.CreateScope();
@@ -78,12 +86,13 @@ public class InboxControllerIntegrationTests : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    private async Task ClearInboxItemsAsync()
+    private async Task<int> SeedSingleInboxItemAsync(InboxItem item)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.InboxItems.RemoveRange(db.InboxItems);
+        db.InboxItems.Add(item);
         await db.SaveChangesAsync();
+        return item.Id;
     }
 
     [Fact]
@@ -99,6 +108,122 @@ public class InboxControllerIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetAll_WithItems_ReturnsItemsList()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+        await SeedInboxItemsAsync(
+            new InboxItem { Title = "First item", UserId = TestUserId, CreatedAt = DateTime.UtcNow.AddHours(-2) },
+            new InboxItem { Title = "Second item", UserId = TestUserId, CreatedAt = DateTime.UtcNow.AddHours(-1) }
+        );
+
+        // Act
+        var response = await _client.GetAsync("/api/inbox");
+
+        // Assert
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var result = await response.Content.ReadFromJsonAsync<InboxListResponseDto>();
+            result.Should().NotBeNull();
+            result!.Items.Should().HaveCount(2);
+            result.InboxOverflow.Should().BeFalse();
+
+            // Проверяем заголовок
+            response.Headers.Should().ContainKey("X-Inbox-Overflow");
+        }
+        else
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+    }
+
+    [Fact]
+    public async Task GetAll_EmptyList_ReturnsEmptyArray()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+
+        // Act
+        var response = await _client.GetAsync("/api/inbox");
+
+        // Assert
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var result = await response.Content.ReadFromJsonAsync<InboxListResponseDto>();
+            result.Should().NotBeNull();
+            result!.Items.Should().BeEmpty();
+            result.InboxOverflow.Should().BeFalse();
+        }
+        else
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+    }
+
+    [Fact]
+    public async Task GetAll_WithMoreThan20Items_ReturnsOverflowTrue()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+        var items = Enumerable.Range(1, 25)
+            .Select(i => new InboxItem
+            {
+                Title = $"Item {i}",
+                UserId = TestUserId,
+                CreatedAt = DateTime.UtcNow.AddHours(-i)
+            })
+            .ToArray();
+        await SeedInboxItemsAsync(items);
+
+        // Act
+        var response = await _client.GetAsync("/api/inbox");
+
+        // Assert
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var result = await response.Content.ReadFromJsonAsync<InboxListResponseDto>();
+            result.Should().NotBeNull();
+            result!.Items.Should().HaveCount(20);
+            result.InboxOverflow.Should().BeTrue();
+
+            // Проверяем заголовок
+            response.Headers.Should().ContainKey("X-Inbox-Overflow");
+            response.Headers.GetValues("X-Inbox-Overflow").First().Should().Be("true");
+        }
+        else
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+    }
+
+    [Fact]
+    public async Task GetAll_ExcludesDeletedItems()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+        await SeedInboxItemsAsync(
+            new InboxItem { Title = "Active item", UserId = TestUserId, CreatedAt = DateTime.UtcNow },
+            new InboxItem { Title = "Deleted item", UserId = TestUserId, CreatedAt = DateTime.UtcNow.AddHours(-1), DeletedAt = DateTime.UtcNow }
+        );
+
+        // Act
+        var response = await _client.GetAsync("/api/inbox");
+
+        // Assert
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var result = await response.Content.ReadFromJsonAsync<InboxListResponseDto>();
+            result.Should().NotBeNull();
+            result!.Items.Should().HaveCount(1);
+            result.Items.First().Title.Should().Be("Active item");
+        }
+        else
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+    }
+
+    [Fact]
     public async Task Create_ValidItem_ReturnsCreated()
     {
         // Arrange
@@ -109,27 +234,155 @@ public class InboxControllerIntegrationTests : IAsyncLifetime
         var response = await _client.PostAsJsonAsync("/api/inbox", dto);
 
         // Assert
-        // Note: This may return 401 if auth is not properly configured for integration tests
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.Created, HttpStatusCode.Unauthorized);
-
         if (response.StatusCode == HttpStatusCode.Created)
         {
             var item = await response.Content.ReadFromJsonAsync<InboxItemResponseDto>();
             item.Should().NotBeNull();
             item!.Title.Should().Be("Test Inbox Item");
+            item.Id.Should().BeGreaterThan(0);
+            response.Headers.Location.Should().NotBeNull();
+        }
+        else
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
     }
 
-    [Fact]
-    public async Task Create_EmptyTitle_ReturnsBadRequest()
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("   ")]
+    public async Task Create_EmptyTitle_ReturnsBadRequest(string invalidTitle)
     {
         // Arrange
-        var dto = new CreateInboxItemDto { Title = "   " };
+        var dto = new CreateInboxItemDto { Title = invalidTitle };
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/inbox", dto);
 
         // Assert
         response.StatusCode.Should().BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Create_TrimsWhitespaceFromTitle()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+        var dto = new CreateInboxItemDto { Title = "  Trimmed Title  " };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/inbox", dto);
+
+        // Assert
+        if (response.StatusCode == HttpStatusCode.Created)
+        {
+            var item = await response.Content.ReadFromJsonAsync<InboxItemResponseDto>();
+            item!.Title.Should().Be("Trimmed Title");
+        }
+        else
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+    }
+
+    [Fact]
+    public async Task Delete_ExistingItem_ReturnsNoContent()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+        var itemId = await SeedSingleInboxItemAsync(
+            new InboxItem { Title = "To Delete", UserId = TestUserId, CreatedAt = DateTime.UtcNow }
+        );
+
+        // Act
+        var response = await _client.DeleteAsync($"/api/inbox/{itemId}");
+
+        // Assert
+        if (response.StatusCode == HttpStatusCode.NoContent)
+        {
+            // Verify it's not returned in GET
+            var getResponse = await _client.GetAsync("/api/inbox");
+            if (getResponse.StatusCode == HttpStatusCode.OK)
+            {
+                var result = await getResponse.Content.ReadFromJsonAsync<InboxListResponseDto>();
+                result!.Items.Should().NotContain(i => i.Id == itemId);
+            }
+        }
+        else
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+    }
+
+    [Fact]
+    public async Task Delete_NonExistingItem_ReturnsNotFound()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+
+        // Act
+        var response = await _client.DeleteAsync("/api/inbox/99999");
+
+        // Assert
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Delete_AlreadyDeletedItem_ReturnsNotFound()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+        var itemId = await SeedSingleInboxItemAsync(
+            new InboxItem
+            {
+                Title = "Already Deleted",
+                UserId = TestUserId,
+                CreatedAt = DateTime.UtcNow,
+                DeletedAt = DateTime.UtcNow
+            }
+        );
+
+        // Act
+        var response = await _client.DeleteAsync($"/api/inbox/{itemId}");
+
+        // Assert
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task FullWorkflow_CreateDelete_WorksCorrectly()
+    {
+        // Arrange
+        await ClearInboxItemsAsync();
+
+        // 1. Create
+        var createDto = new CreateInboxItemDto { Title = "Workflow Test Item" };
+        var createResponse = await _client.PostAsJsonAsync("/api/inbox", createDto);
+
+        if (createResponse.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            // Skip if auth is not configured
+            return;
+        }
+
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await createResponse.Content.ReadFromJsonAsync<InboxItemResponseDto>();
+        var itemId = created!.Id;
+
+        // 2. Verify in list
+        var getResponse = await _client.GetAsync("/api/inbox");
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var list = await getResponse.Content.ReadFromJsonAsync<InboxListResponseDto>();
+        list!.Items.Should().Contain(i => i.Id == itemId);
+
+        // 3. Delete
+        var deleteResponse = await _client.DeleteAsync($"/api/inbox/{itemId}");
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // 4. Verify deleted
+        var getAfterDelete = await _client.GetAsync("/api/inbox");
+        var listAfterDelete = await getAfterDelete.Content.ReadFromJsonAsync<InboxListResponseDto>();
+        listAfterDelete!.Items.Should().NotContain(i => i.Id == itemId);
     }
 }

@@ -19,6 +19,8 @@ builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IInboxRepository, InboxRepository>();
 builder.Services.AddScoped<IInboxService, InboxService>();
+builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
+builder.Services.AddScoped<IRoutineService, RoutineService>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 
