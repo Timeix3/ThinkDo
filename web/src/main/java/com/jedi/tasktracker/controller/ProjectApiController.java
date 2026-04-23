@@ -7,9 +7,9 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,7 +36,8 @@ public class ProjectApiController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<ProjectDto> updateProject(@PathVariable Long id, @RequestBody Map<String, String> body) {
+  public ResponseEntity<ProjectDto> updateProject(
+    @PathVariable Long id, @RequestBody Map<String, String> body) {
     String name = body.get("name");
     String description = body.get("description");
     try {
