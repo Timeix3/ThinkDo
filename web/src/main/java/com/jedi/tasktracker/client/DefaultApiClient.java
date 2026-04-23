@@ -135,4 +135,9 @@ public class DefaultApiClient implements ApiClient {
         .retrieve()
         .body(ProjectDto.class);
   }
+
+  @Override
+  public void deleteProject(Long id) {
+    restClient.delete().uri("/api/projects/{id}", id).retrieve().toBodilessEntity();
+  }
 }
