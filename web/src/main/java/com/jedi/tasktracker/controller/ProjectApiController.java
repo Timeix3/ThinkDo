@@ -37,7 +37,7 @@ public class ProjectApiController {
 
   @PutMapping("/{id}")
   public ResponseEntity<ProjectDto> updateProject(
-    @PathVariable Long id, @RequestBody Map<String, String> body) {
+      @PathVariable Long id, @RequestBody Map<String, String> body) {
     String name = body.get("name");
     String description = body.get("description");
     try {
