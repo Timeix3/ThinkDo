@@ -155,6 +155,11 @@ public class AppDbContext : DbContext
                     entity.Property(e => e.DeletedAt)
                         .HasColumnName("deleted_at");
 
+                    entity.Property(e => e.LastTriggeredAt)
+                        .HasColumnName("last_triggered_at");
+                    entity.HasIndex(e => e.LastTriggeredAt)
+                        .HasDatabaseName("ix_routines_last_triggered_at");
+
                     entity.HasIndex(e => e.UserId)
                         .HasDatabaseName("ix_routines_user_id");
 
