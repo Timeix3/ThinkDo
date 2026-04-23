@@ -207,25 +207,10 @@
             font-weight: 500;
         }
 
-        .date-badge-none {
-            background: #f1f5f9;
-            color: #94a3b8;
-        }
-
-        .date-badge-today {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .date-badge-past {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .date-badge-future {
-            background: #e0e7ff;
-            color: #4f46e5;
-        }
+        .date-badge-none { background: #f1f5f9; color: #94a3b8; }
+        .date-badge-today { background: #dcfce7; color: #16a34a; }
+        .date-badge-past { background: #fee2e2; color: #dc2626; }
+        .date-badge-future { background: #e0e7ff; color: #4f46e5; }
 
         /* ── Твой чекбокс ───────────────────────────────────── */
         .task-check {
@@ -249,6 +234,21 @@
             color: #22c55e;
         }
 
+        /* ── Стили Проектов (Задача 9.3) ── */
+        .project-list-item {
+            background: white; border-radius: 1rem;
+            padding: 1rem 1.15rem; margin-bottom: 0.75rem;
+            color: #1e293b; cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .project-list-item:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .project-badge-default {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            font-size: 0.7rem; padding: 0.15rem 0.55rem;
+            border-radius: 0.5rem; font-weight: 600;
+            background: #fef3c7; color: #b45309;
+        }
+
         /* ── Предупреждение о переполнении инбокса ──────────── */
         .inbox-overflow-warn {
             display: inline-flex;
@@ -266,15 +266,8 @@
         }
 
         @keyframes warnPulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.7;
-            }
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.7; }
         }
 
         /* ── Inline-ввод инбокса ────────────────────────────── */
@@ -317,15 +310,8 @@
         }
 
         @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
+            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         .inbox-undo-btn {
@@ -439,11 +425,10 @@
         <!-- Навигация по центру -->
         <div class="flex justify-center mb-6">
             <div class="nav-pill flex gap-2 text-white">
-                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">🗂
-                    Доска</button>
+                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">🗂 Доска</button>
                 <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
-                <button disabled class="px-3 py-1 rounded-full nav-disabled">📁 Проекты</button>
+                <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
             </div>
         </div>
@@ -492,6 +477,14 @@
             </div>
         </div>
 
+        <!-- ====== Страница: Проекты (Задача 9.3) ====== -->
+        <div id="pageProjects" class="hidden">
+            <div class="task-list-container">
+                <h2 class="text-white font-bold text-lg mb-4">📁 Мои проекты</h2>
+                <div id="projectsListContent"></div>
+            </div>
+        </div>
+
     </div>
 
     <!-- FAB: Создать задачу (Скрыта на Доске) -->
@@ -506,6 +499,11 @@
     <!-- FAB: Добавить в инбокс -->
     <div class="fab hidden" id="fabAddInbox" style="position:fixed;">
         <i class="fas fa-plus" id="fabAddInboxIcon"></i>
+    </div>
+
+    <!-- FAB: Создать проект (Задача 9.4) -->
+    <div class="fab hidden" id="fabAddProject" style="position:fixed;">
+        <i class="fas fa-plus"></i>
     </div>
 
     <!-- Inline-поле ввода для инбокса -->
@@ -562,6 +560,28 @@
         </div>
     </div>
 
+    <!-- Модалка: Создание проекта (Задача 9.4) -->
+    <div id="projectCreateModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">📁 Новый проект</h2>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
+                    <input type="text" id="projectCreateName" placeholder="Название проекта" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Описание</label>
+                    <textarea id="projectCreateDesc" rows="3" placeholder="О чём этот проект..."></textarea>
+                </div>
+                <p id="projectCreateError" class="text-red-500 text-xs hidden">Название обязательно!</p>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-ghost" id="projectCreateCancel">Отмена</button>
+                <button class="btn-primary" id="projectCreateSave">Создать проект</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Модалка: Редактирование записи инбокса -->
     <div id="inboxEditModal" class="modal-overlay hidden">
         <div class="modal-box">
@@ -593,10 +613,12 @@
     <script>
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
+        const PROJECTS_API_URL = '/api/projects'; // Новое
 
         let editingTaskId = null;
         let editingInboxId = null;
         let allTasks = []; // Общее состояние
+        let allProjects = [];
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
@@ -609,7 +631,6 @@
             return '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>';
         }
 
-        // Форматирование даты
         function formatDateRu(dateStr) {
             if (!dateStr) return '';
             const datePart = dateStr.split('T')[0];
@@ -641,7 +662,7 @@
             });
         }
 
-        // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1) ──
+        // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1 + ОТОБРАЖЕНИЕ КОНТЕНТА) ──
         function renderTaskList(tasks) {
             const container = document.getElementById('taskListContent');
             if (!tasks.length) {
@@ -658,12 +679,48 @@
                         </div>
                         <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
                             <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                            <!-- Описание задачи (контент) -->
                             ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
                         </div>
                     </div>
                 </div>
             `;
+            }).join('');
+        }
+
+        // ── Render ПРОЕКТОВ (Задача 9.3) ──
+        function renderProjectsList() {
+            const container = document.getElementById('projectsListContent');
+            
+            const sorted = [...allProjects].sort((a, b) => {
+                if (a.isDefault) return -1;
+                if (b.isDefault) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            if (!sorted.length) {
+                container.innerHTML = '<div class="text-white/30 text-center py-10">Проектов не найдено</div>';
+                return;
+            }
+
+            container.innerHTML = sorted.map(p => {
+                const icon = p.isDefault ? '⭐' : '📁';
+                const badgeHtml = p.isDefault 
+                    ? '<span class="project-badge-default"><i class="fas fa-star"></i>По умолчанию</span>' 
+                    : '';
+                
+                return `
+                    <div class="project-list-item" data-project-id="${p.id}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                    ${badgeHtml}
+                                </div>
+                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
             }).join('');
         }
 
@@ -678,6 +735,14 @@
                 document.getElementById('colToday').innerHTML =
                     '<div class="task-card text-red-400 text-sm cursor-default">⚠️ Бэкенд недоступен</div>';
             }
+        }
+
+        async function loadProjects() {
+            try {
+                const res = await fetch(PROJECTS_API_URL);
+                allProjects = await res.json();
+                renderProjectsList();
+            } catch (e) { console.error("Projects API error", e); }
         }
 
         // ── Create Task ────────────────────────────────────────
@@ -717,6 +782,59 @@
                 });
                 closeCreateModal();
                 loadTasks();
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // ── Create Project (Задача 9.4) ──
+        function openProjectCreateModal() {
+            document.getElementById('projectCreateName').value = '';
+            document.getElementById('projectCreateDesc').value = '';
+            document.getElementById('projectCreateError').classList.add('hidden');
+            document.getElementById('projectCreateModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('projectCreateName').focus(), 50);
+        }
+
+        function closeProjectCreateModal() {
+            document.getElementById('projectCreateModal').classList.add('hidden');
+        }
+
+        document.getElementById('fabAddProject').addEventListener('click', openProjectCreateModal);
+        document.getElementById('projectCreateCancel').addEventListener('click', closeProjectCreateModal);
+
+        document.getElementById('projectCreateSave').addEventListener('click', async () => {
+            const nameInput = document.getElementById('projectCreateName');
+            const name = nameInput.value.trim();
+            const errorLabel = document.getElementById('projectCreateError');
+
+            if (!name) {
+                errorLabel.classList.remove('hidden');
+                nameInput.focus();
+                return;
+            }
+
+            const btn = document.getElementById('projectCreateSave');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(PROJECTS_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name, 
+                        description: document.getElementById('projectCreateDesc').value.trim() 
+                    })
+                });
+
+                if (res.ok) {
+                    closeProjectCreateModal();
+                    await loadProjects();
+                } else {
+                    alert("Ошибка при создании проекта.");
+                }
+            } catch (e) {
+                console.error(e);
             } finally {
                 btn.disabled = false;
             }
@@ -805,6 +923,7 @@
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
             document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
+            document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
 
             document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
                 btn.classList.toggle('active-page', btn.dataset.page === page);
@@ -812,14 +931,17 @@
 
             document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox');
+            document.getElementById('fabAddProject').classList.toggle('hidden', page !== 'projects');
 
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
+            if (page === 'projects') loadProjects();
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
         document.getElementById('navTasks').addEventListener('click', () => switchPage('tasks'));
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
+        document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
 
         // ── Инбокс ────────
         let inboxItems = [];
@@ -833,6 +955,7 @@
                 const res = await fetch(INBOX_API_URL);
                 if (!res.ok) throw new Error('API not ready');
                 const data = await res.json();
+                // Важно: берем items и overflow из объекта, который возвращает ваш бэкенд
                 inboxItems = data.items ?? [];
                 inboxOverflow = data.inboxOverflow ?? false;
             } catch { }
@@ -923,6 +1046,7 @@
             editingInboxId = itemId;
             document.getElementById('inboxEditTitle').value = item.title;
             document.getElementById('inboxEditModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('inboxEditTitle').focus(), 50);
         }
 
         function closeInboxEditModal() { document.getElementById('inboxEditModal').classList.add('hidden'); }
