@@ -9,4 +9,6 @@ public interface IRoutineRepository
     Task<Routine> AddAsync(Routine routine);
     Task<Routine?> UpdateAsync(Routine routine, string userId);
     Task<bool> SoftDeleteAsync(int id, string userId);
+    Task<IEnumerable<Routine>> GetAllActiveAsync();
+    Task UpdateLastTriggeredAtAsync(int routineId, DateTime triggeredAt);
 }

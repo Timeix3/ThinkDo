@@ -20,6 +20,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+    <InternalsVisibleTo Include="AppApi.Tests" />
+
   </ItemGroup>
 
   <ItemGroup>

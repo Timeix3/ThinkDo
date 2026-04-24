@@ -18,7 +18,7 @@ public class RoutineRepository : IRoutineRepository
     {
         return await _context.Routines
             .Where(r => r.UserId == userId && r.DeletedAt == null)
-            .OrderBy(r => r.Name) // или OrderByDescending(r => r.CreatedAt)
+            .OrderBy(r => r.Name)
             .ToListAsync();
     }
 
@@ -69,5 +69,24 @@ public class RoutineRepository : IRoutineRepository
         routine.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<IEnumerable<Routine>> GetAllActiveAsync()
+    {
+        return await _context.Routines
+            .Where(r => r.DeletedAt == null)
+            .ToListAsync();
+    }
+
+    public async Task UpdateLastTriggeredAtAsync(int routineId, DateTime triggeredAt)
+    {
+        var routine = await _context.Routines
+            .FirstOrDefaultAsync(r => r.Id == routineId);
+
+        if (routine is null)
+            return;
+
+        routine.LastTriggeredAt = triggeredAt;
+        await _context.SaveChangesAsync();
     }
 }
