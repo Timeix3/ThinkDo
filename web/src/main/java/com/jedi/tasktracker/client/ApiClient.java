@@ -32,4 +32,6 @@ public interface ApiClient {
   ProjectDto createProject(String name, String description);
 
   ProjectDto updateProject(Long id, String name, String description);
+
+  void deleteProject(Long id);
 }

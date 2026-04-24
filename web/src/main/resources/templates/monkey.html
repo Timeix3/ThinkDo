@@ -173,6 +173,103 @@
             margin-top: 0.5rem;
             min-height: 1.1rem;
         }
+
+
+        /* ── Большая кнопка завершения ── */
+        .done-btn {
+            position: fixed;
+            bottom: 2.5rem;
+            left: 50%;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            transform: translateX(-50%);
+            padding: 1rem 2.2rem;
+            border-radius: 2rem;
+            background: white;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            z-index: 45;
+            animation: doneBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, doneBtnPulse 2.4s ease-in-out 0.5s infinite;
+            transition: transform 0.2s;
+        }
+
+        .done-btn i {
+            font-size: 1.1rem;
+            color: #8b5cf6;
+        }
+
+        @keyframes doneBtnAppear {
+            0% {
+                transform: translateX(-50%) translateY(40px) scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateX(-50%) translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+        @keyframes doneBtnPulse {
+            0%, 100% {
+                transform: translateX(-50%) scale(1);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            }
+
+            50% {
+                transform: translateX(-50%) scale(1.02);
+                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        /* ── Инлайн-ввод инбокса (фокус-страница) ── */
+        .focus-inbox-input {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            z-index: 42;
+            width: 280px;
+        }
+
+        .focus-inbox-input .inbox-input-box {
+            background: white;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        /* ── Ripple для FAB фокус-страницы ── */
+        @keyframes fabRippleOut {
+            0% {
+                width: 56px;
+                height: 56px;
+                opacity: 0.6;
+            }
+
+            100% {
+                width: 180px;
+                height: 180px;
+                opacity: 0;
+            }
+        }
+
+        .fab-ripple-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 3px solid rgba(249, 115, 22, 0.7);
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.35);
+            pointer-events: none;
+            animation: fabRippleOut 0.65s ease-out forwards;
+        }
     </style>
 </head>
 <body class="p-5">
@@ -213,9 +310,28 @@
             <div id="focusArea"></div>
         </div>
     </div>
+
+    <!-- FAB: Добавить в инбокс -->
+    <div class="fab" id="fabAddInbox" style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
+        <i class="fas fa-plus" id="fabAddInboxIcon"></i>
+    </div>
+
+    <!-- Инлайн-поле ввода инбокса -->
+    <div id="inboxInputBar" class="focus-inbox-input hidden">
+        <div class="inbox-input-box">
+            <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
+                   style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;font-family:inherit;" />
+        </div>
+    </div>
+
     <!-- FAB: Навигация на умника -->
     <a href="/tasks" class="fab" id="fabNavMain" style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
         🤓
+    </a>
+
+    <a href="/tasks" id="doneAllBtn" class="done-btn hidden">
+        <i class="fas fa-inbox"></i>
+        К разбору!
     </a>
 
     <!-- Модалка: Капча для перехода на Умника -->
@@ -237,10 +353,13 @@
     <script>
         const API_URL = '/api/tasks';
         const MONKEY_API_URL = '/api/tasks/monkey/all';
+        const INBOX_API_URL = '/api/inbox';
 
         let remaining = [];
         let completedCount = 0;
         let totalCount = 0;
+        let inboxInputOpen = false;
+        let isCreatingInbox = false;
 
         function updateCounter() {
             document.getElementById('taskCounter').textContent = `${completedCount} / ${totalCount}`;
@@ -248,37 +367,40 @@
 
         function renderCurrentTask() {
             const area = document.getElementById('focusArea');
+            const doneBtn = document.getElementById('doneAllBtn');
             if (remaining.length === 0) {
                 area.innerHTML = `
-              <div class="empty-state task-entering">
-                <i class="fas fa-trophy"></i>
-                Все задачи выполнены! 🎉<br/>
-                <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
-              </div>
-            `;
+                                  <div class="empty-state task-entering">
+                                    <i class="fas fa-trophy"></i>
+                                    Все задачи выполнены! 🎉<br/>
+                                    <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
+                                  </div>
+                                `;
+                doneBtn.classList.remove('hidden');
                 return;
             }
+            doneBtn.classList.add('hidden');
 
             const task = remaining[0];
             const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
             area.innerHTML = `
-            <div class="focus-card task-entering" id="focusCard">
-              <div class="flex items-start gap-4">
-                <div class="focus-check" id="focusCheck" title="Выполнить">
-                  <i class="fas fa-check"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
-                  <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
-                </div>
-              </div>
-              <!-- Прогресс-бар внизу карточки -->
-              <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
-              </div>
-            </div>
-          `;
+                                <div class="focus-card task-entering" id="focusCard">
+                                  <div class="flex items-start gap-4">
+                                    <div class="focus-check" id="focusCheck" title="Выполнить">
+                                      <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                      <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
+                                      <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
+                                    </div>
+                                  </div>
+                                  <!-- Прогресс-бар внизу карточки -->
+                                  <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                                  </div>
+                                </div>
+                              `;
 
             document.getElementById('focusCheck').addEventListener('click', () => completeCurrentTask());
         }
@@ -296,12 +418,12 @@
                 renderCurrentTask();
             } catch (e) {
                 area.innerHTML = `
-              <div class="empty-state task-entering">
-                <i class="fas fa-exclamation-triangle"></i>
-                Ошибка загрузки задач<br/>
-                <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
-              </div>
-            `;
+                      <div class="empty-state task-entering">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Ошибка загрузки задач<br/>
+                        <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
+                      </div>
+                    `;
             }
         }
 
@@ -331,6 +453,69 @@
                 }, { once: true });
             }, 250);
         }
+
+        function spawnFabRipple(fabEl) {
+            const ring = document.createElement('span');
+            ring.className = 'fab-ripple-ring';
+            fabEl.appendChild(ring);
+            ring.addEventListener('animationend', () => ring.remove());
+        }
+
+        function closeInboxInput() {
+            inboxInputOpen = false;
+            document.getElementById('inboxInputBar').classList.add('hidden');
+            document.getElementById('inboxInputField').value = '';
+            document.getElementById('fabAddInboxIcon').className = 'fas fa-plus';
+        }
+
+        async function inboxCreate(title) {
+            try {
+                const res = await fetch(INBOX_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+                if (!res.ok) throw new Error('API not ready');
+            } catch { }
+        }
+
+        async function toggleInboxInput() {
+            const fab = document.getElementById('fabAddInbox');
+            if (!inboxInputOpen) {
+                spawnFabRipple(fab);
+                inboxInputOpen = true;
+                document.getElementById('inboxInputBar').classList.remove('hidden');
+                document.getElementById('fabAddInboxIcon').className = 'fas fa-check';
+                setTimeout(() => document.getElementById('inboxInputField').focus(), 50);
+            } else {
+                if (isCreatingInbox) return;
+                const title = document.getElementById('inboxInputField').value.trim();
+                if (!title) { document.getElementById('inboxInputField').focus(); return; }
+                isCreatingInbox = true;
+                spawnFabRipple(fab);
+                await inboxCreate(title);
+                closeInboxInput();
+                isCreatingInbox = false;
+            }
+        }
+
+        document.getElementById('fabAddInbox').addEventListener('click', toggleInboxInput);
+        document.getElementById('inboxInputField').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') toggleInboxInput();
+            if (e.key === 'Escape') closeInboxInput();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!inboxInputOpen) return;
+
+            const isInsideInput = e.target.closest('#inboxInputBar');
+            const isInsideFab = e.target.closest('#fabAddInbox');
+
+            if (!isInsideInput && !isInsideFab) {
+                closeInboxInput();
+            }
+        });
+
 
         function escHtml(str) {
             return String(str ?? '')
@@ -460,7 +645,7 @@
                         err.textContent = 'Неверно — попробуйте ещё раз';
                         countError++;
                     }
-                    
+
                     input.value = '';
                     input.focus();
                 }
@@ -472,7 +657,7 @@
                 if (Array.isArray(remaining) && remaining.length > 0) {
                     openModal();
                 } else {
-                    
+
                     window.location.href = fab.getAttribute('href') || '/tasks';
                 }
             });
