@@ -51,6 +51,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.BlockedByTaskId)
                 .HasColumnName("blocked_by_task_id");
 
+            entity.Property(e => e.ProjectId)
+                .HasColumnName("project_id");
+
             entity.Property(e => e.CreatedAt)
                 .HasColumnName("created_at")
                 .IsRequired()

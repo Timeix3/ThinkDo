@@ -9,10 +9,12 @@ namespace AppApi.Services;
 public class TaskService : ITaskService
 {
     private readonly ITaskRepository _repository;
+    private readonly IProjectRepository _projectRepository;
 
-    public TaskService(ITaskRepository repository)
+    public TaskService(ITaskRepository repository, IProjectRepository projectRepository)
     {
         _repository = repository;
+        _projectRepository = projectRepository;
     }
 
     public async Task<TaskListResponseDto> GetAllTasksAsync(string userId, int offset = 0, int limit = 50)
@@ -51,13 +53,23 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto> CreateTaskAsync(CreateTaskDto dto, string userId)
     {
+        if (dto.ProjectId.HasValue)
+        {
+            var project = await _projectRepository.GetByIdAsync(dto.ProjectId.Value, userId);
+            if (project == null)
+            {
+                throw new ArgumentException("The specified project does not exist or has been deleted.");
+            }
+        }
+
         var task = new TaskItem
         {
             Title = dto.Title,
             Content = dto.Content,
             UserId = userId,
             Status = dto.Status,
-            BlockedByTaskId = dto.BlockedByTaskId
+            BlockedByTaskId = dto.BlockedByTaskId,
+            ProjectId = dto.ProjectId
         };
 
         var created = await _repository.AddAsync(task);
@@ -66,6 +78,12 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto?> UpdateTaskAsync(int id, UpdateTaskDto dto, string userId)
     {
+        if (dto.ProjectId.HasValue)
+        {
+            var project = await _projectRepository.GetByIdAsync(dto.ProjectId.Value, userId);
+            if (project == null) throw new ArgumentException("The project is not available.");
+        }
+
         var task = new TaskItem
         {
             Id = id,
@@ -73,7 +91,8 @@ public class TaskService : ITaskService
             Content = dto.Content,
             UserId = userId,
             Status = dto.Status ?? default,
-            BlockedByTaskId = dto.BlockedByTaskId
+            BlockedByTaskId = dto.BlockedByTaskId,
+            ProjectId = dto.ProjectId
         };
 
         var updated = await _repository.UpdateAsync(task, userId);
@@ -153,6 +172,7 @@ public class TaskService : ITaskService
         Content = task.Content,
         Status = task.Status,
         BlockedByTaskId = task.BlockedByTaskId,
+        ProjectId = task.ProjectId,
         CreatedAt = task.CreatedAt,
         UpdatedAt = task.UpdatedAt
     };
