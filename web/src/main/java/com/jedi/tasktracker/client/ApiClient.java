@@ -2,6 +2,7 @@ package com.jedi.tasktracker.client;
 
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
+import com.jedi.tasktracker.client.dto.RoutineDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import java.util.List;
 
@@ -34,4 +35,12 @@ public interface ApiClient {
   ProjectDto updateProject(Long id, String name, String description);
 
   void deleteProject(Long id);
+
+  List<RoutineDto> getRoutines();
+
+  RoutineDto createRoutine(String name, int frequency);
+
+  RoutineDto updateRoutine(int id, String name, int frequency);
+
+  void deleteRoutine(int id);
 }

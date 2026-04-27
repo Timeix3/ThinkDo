@@ -521,7 +521,7 @@
                 <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
-                <button disabled class="px-3 py-1 rounded-full nav-disabled">🔄 Рутины</button>
+                <button data-page="routines" id="navRoutines" class="px-3 py-1 rounded-full">🔄 Рутины</button>
             </div>
         </div>
 
@@ -577,6 +577,14 @@
             </div>
         </div>
 
+        <!-- ====== Страница: Рутины ====== -->
+        <div id="pageRoutines" class="hidden">
+            <div class="task-list-container">
+                <h2 class="text-white font-bold text-lg mb-4">🔄 Рутины</h2>
+                <div id="routinesListContent"></div>
+            </div>
+        </div>
+
     </div>
 
     <!-- FAB: Создать задачу (Скрыта на Доске) -->
@@ -595,6 +603,11 @@
 
     <!-- FAB: Создать проект (Задача 9.4) -->
     <div class="fab hidden" id="fabAddProject" style="position:fixed;">
+        <i class="fas fa-plus"></i>
+    </div>
+
+    <!-- FAB: Создать рутину -->
+    <div class="fab hidden" id="fabAddRoutine" style="position:fixed;">
         <i class="fas fa-plus"></i>
     </div>
 
@@ -740,6 +753,59 @@
         </div>
     </div>
 
+    <!-- Модалка: Создание рутины -->
+    <div id="routineCreateModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">🔄 Новая рутина</h2>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
+                    <input type="text" id="routineCreateName" placeholder="Например: Зарядка" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Частота *</label>
+                    <select id="routineCreateFrequency" style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
+                        <option value="1">Ежедневно</option>
+                        <option value="2">Еженедельно</option>
+                        <option value="3">Ежемесячно</option>
+                    </select>
+                </div>
+                <p id="routineCreateError" class="text-red-500 text-xs hidden">Название обязательно!</p>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-ghost" id="routineCreateCancel">Отмена</button>
+                <button class="btn-primary" id="routineCreateSave">Создать рутину</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка: Редактирование рутины -->
+    <div id="routineEditModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать рутину</h2>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
+                    <input type="text" id="routineEditName" placeholder="Название рутины" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Частота *</label>
+                    <select id="routineEditFrequency" style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
+                        <option value="1">Ежедневно</option>
+                        <option value="2">Еженедельно</option>
+                        <option value="3">Ежемесячно</option>
+                    </select>
+                </div>
+                <p id="routineEditError" class="text-red-500 text-xs hidden">Название обязательно!</p>
+            </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-danger" id="routineEditDelete"><i class="fas fa-trash-alt mr-1.5"></i>Удалить</button>
+                <button class="btn-ghost" id="routineEditCancel">Отмена</button>
+                <button class="btn-primary" id="routineEditSave">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Undo-тост: удаление записи инбокса -->
     <div id="inboxUndoToast" class="inbox-undo-toast hidden">
         <span>Запись удалена</span>
@@ -750,12 +816,15 @@
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
         const PROJECTS_API_URL = '/api/projects';
+        const ROUTINES_API_URL = '/api/routines';
 
         let editingTaskId = null;
         let editingInboxId = null;
         let editingProjectId = null;
+        let editingRoutineId = null;
         let allTasks = []; // Общее состояние
         let allProjects = [];
+        let allRoutines = [];
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
@@ -1206,6 +1275,7 @@
             document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
+            document.getElementById('pageRoutines').classList.toggle('hidden', page !== 'routines');
 
             document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
                 btn.classList.toggle('active-page', btn.dataset.page === page);
@@ -1214,16 +1284,19 @@
             document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('fabAddProject').classList.toggle('hidden', page !== 'projects');
+            document.getElementById('fabAddRoutine').classList.toggle('hidden', page !== 'routines');
 
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
+            if (page === 'routines') loadRoutines();
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
         document.getElementById('navTasks').addEventListener('click', () => switchPage('tasks'));
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
+        document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
 
         // ── Инбокс ────────
         let inboxItems = [];
@@ -1408,6 +1481,142 @@
                 caches.keys().then(names => { names.forEach(name => caches.delete(name)); });
             }
         }
+
+        // ── Рутины ────────────────────────────────────────────
+        const FREQUENCY_LABELS = { 1: 'Ежедневно', 2: 'Еженедельно', 3: 'Ежемесячно' };
+
+        async function loadRoutines() {
+            try {
+                const res = await fetch(ROUTINES_API_URL);
+                if (!res.ok) throw new Error();
+                allRoutines = await res.json();
+            } catch {
+                allRoutines = [];
+            }
+            renderRoutinesList();
+        }
+
+        function renderRoutinesList() {
+            const container = document.getElementById('routinesListContent');
+            if (!allRoutines.length) {
+                container.innerHTML = '<div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Нет рутин. Нажмите + чтобы создать первую.</div>';
+                return;
+            }
+            container.innerHTML = allRoutines.map(r => {
+                const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
+                return `
+                    <div class="task-list-item" data-routine-id="${r.id}">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                    <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                </span>
+                            </div>
+                            <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.task-list-item').forEach(el => {
+                el.addEventListener('click', () => openRoutineEditModal(el.dataset.routineId));
+            });
+        }
+
+        function openRoutineCreateModal() {
+            document.getElementById('routineCreateName').value = '';
+            document.getElementById('routineCreateFrequency').value = '1';
+            document.getElementById('routineCreateError').classList.add('hidden');
+            document.getElementById('routineCreateModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('routineCreateName').focus(), 50);
+        }
+
+        function closeRoutineCreateModal() {
+            document.getElementById('routineCreateModal').classList.add('hidden');
+        }
+
+        function openRoutineEditModal(routineId) {
+            const r = allRoutines.find(x => String(x.id) === String(routineId));
+            if (!r) return;
+            editingRoutineId = routineId;
+            document.getElementById('routineEditName').value = r.name;
+            document.getElementById('routineEditFrequency').value = String(r.frequency);
+            document.getElementById('routineEditError').classList.add('hidden');
+            document.getElementById('routineEditModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('routineEditName').focus(), 50);
+        }
+
+        function closeRoutineEditModal() {
+            document.getElementById('routineEditModal').classList.add('hidden');
+            editingRoutineId = null;
+        }
+
+        document.getElementById('fabAddRoutine').addEventListener('click', openRoutineCreateModal);
+        document.getElementById('routineCreateCancel').addEventListener('click', closeRoutineCreateModal);
+        document.getElementById('routineCreateModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeRoutineCreateModal();
+        });
+
+        document.getElementById('routineCreateSave').addEventListener('click', async () => {
+            const name = document.getElementById('routineCreateName').value.trim();
+            if (!name) {
+                document.getElementById('routineCreateError').classList.remove('hidden');
+                document.getElementById('routineCreateName').focus();
+                return;
+            }
+            const frequency = parseInt(document.getElementById('routineCreateFrequency').value, 10);
+            const btn = document.getElementById('routineCreateSave');
+            btn.disabled = true;
+            try {
+                await fetch(ROUTINES_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, frequency })
+                });
+                closeRoutineCreateModal();
+                await loadRoutines();
+            } catch {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('routineEditCancel').addEventListener('click', closeRoutineEditModal);
+        document.getElementById('routineEditModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeRoutineEditModal();
+        });
+
+        document.getElementById('routineEditSave').addEventListener('click', async () => {
+            const name = document.getElementById('routineEditName').value.trim();
+            if (!name) {
+                document.getElementById('routineEditError').classList.remove('hidden');
+                document.getElementById('routineEditName').focus();
+                return;
+            }
+            const frequency = parseInt(document.getElementById('routineEditFrequency').value, 10);
+            const btn = document.getElementById('routineEditSave');
+            btn.disabled = true;
+            try {
+                await fetch(`${ROUTINES_API_URL}/${editingRoutineId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, frequency })
+                });
+                closeRoutineEditModal();
+                await loadRoutines();
+            } catch {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('routineEditDelete').addEventListener('click', async () => {
+            const id = editingRoutineId;
+            closeRoutineEditModal();
+            try {
+                await fetch(`${ROUTINES_API_URL}/${id}`, { method: 'DELETE' });
+            } catch { }
+            await loadRoutines();
+        });
 
         loadTasks();
     </script>
