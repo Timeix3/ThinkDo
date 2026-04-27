@@ -26,8 +26,10 @@ public class TaskApiController {
   }
 
   @PostMapping
-  public ResponseEntity<Void> createTask(@RequestBody Map<String, String> body) {
-    apiClient.createTask(body.get("title"), body.get("content"));
+  public ResponseEntity<Void> createTask(@RequestBody Map<String, Object> body) {
+    Object projectIdRaw = body.get("projectId");
+    Integer projectId = (projectIdRaw != null) ? (Integer) projectIdRaw : null;
+    apiClient.createTask((String) body.get("title"), (String) body.get("content"), projectId);
     return ResponseEntity.ok().build();
   }
 

@@ -4,6 +4,7 @@ import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import com.jedi.tasktracker.client.dto.TaskListResponseDto;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +38,17 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
-  public void createTask(String title, String description) {
+  public void createTask(String title, String description, Integer projectId) {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("title", title);
+    requestBody.put("content", description != null ? description : "");
+    requestBody.put("projectId", projectId);
+
     restClient
         .post()
         .uri("/api/tasks")
         .contentType(MediaType.APPLICATION_JSON)
-        .body(Map.of("title", title, "content", description != null ? description : ""))
+        .body(requestBody)
         .retrieve()
         .toBodilessEntity();
   }

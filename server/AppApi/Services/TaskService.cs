@@ -53,13 +53,18 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto> CreateTaskAsync(CreateTaskDto dto, string userId)
     {
+        string? projectName = null;
+
         if (dto.ProjectId.HasValue)
         {
             var project = await _projectRepository.GetByIdAsync(dto.ProjectId.Value, userId);
+
             if (project == null)
             {
-                throw new ArgumentException("The specified project does not exist or has been deleted.");
+                throw new KeyNotFoundException($"The specified project with ID {dto.ProjectId} does not exist or has been deleted.");
             }
+
+            projectName = project.Name;
         }
 
         var task = new TaskItem
@@ -73,7 +78,11 @@ public class TaskService : ITaskService
         };
 
         var created = await _repository.AddAsync(task);
-        return MapToDto(created);
+
+        var response = MapToDto(created);
+        response.ProjectName = projectName;
+
+        return response;
     }
 
     public async Task<TaskResponseDto?> UpdateTaskAsync(int id, UpdateTaskDto dto, string userId)
@@ -81,7 +90,8 @@ public class TaskService : ITaskService
         if (dto.ProjectId.HasValue)
         {
             var project = await _projectRepository.GetByIdAsync(dto.ProjectId.Value, userId);
-            if (project == null) throw new ArgumentException("The project is not available.");
+            if (project == null)
+                throw new ArgumentException("The project is not available.");
         }
 
         var task = new TaskItem

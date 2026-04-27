@@ -53,6 +53,7 @@ public class TaskResponseDto
     public TasksStatus Status { get; set; }
     public int? BlockedByTaskId { get; set; }
     public int? ProjectId { get; set; }
+    public string? ProjectName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

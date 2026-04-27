@@ -134,14 +134,30 @@ public class TasksController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
     {
         var userId = GetCurrentUserId();
 
-        _logger.LogInformation("User {UserId} creating new task with title: {Title}", userId, dto.Title);
-        var task = await _taskService.CreateTaskAsync(dto, userId);
+        _logger.LogInformation("User {UserId} creating new task with title: {Title} for project: {ProjectId}", userId, dto.Title, dto.ProjectId ?? 0);
+        try
+        {
+            var task = await _taskService.CreateTaskAsync(dto, userId);
 
-        return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
+            return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            // Краевой случай: проект чужой или не существует (404)
+            _logger.LogWarning("Project validation failed for user {UserId}: {Message}", userId, ex.Message);
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            // Краевой случай: проект удален или другие ошибки валидации (400)
+            _logger.LogWarning("Validation error for user {UserId}: {Message}", userId, ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

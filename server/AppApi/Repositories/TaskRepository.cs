@@ -85,7 +85,7 @@ public class TaskRepository : ITaskRepository
             existing.BlockedByTaskId = task.BlockedByTaskId;
 
         existing.ProjectId = task.ProjectId;
-        
+
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

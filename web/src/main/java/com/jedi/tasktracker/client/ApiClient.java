@@ -11,7 +11,7 @@ public interface ApiClient {
 
   List<TaskDto> getTodayTasks();
 
-  void createTask(String title, String description);
+  void createTask(String title, String description, Integer projectId);
 
   void updateTask(Long id, String title, String content);
 
