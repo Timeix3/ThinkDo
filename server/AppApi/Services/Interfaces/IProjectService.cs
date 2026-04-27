@@ -12,4 +12,5 @@ public interface IProjectService
     Task<ProjectResponseDto?> UpdateProjectAsync(int id, UpdateProjectDto dto, string userId);
     Task<bool> DeleteProjectAsync(int id, string userId);
     ProjectResponseDto MapToDto(ProjectItem p, bool includeTasks = false) => new();
+    Task<IEnumerable<TaskResponseDto>> GetProjectTasksAsync(int projectId, string userId);
 }

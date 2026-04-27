@@ -38,6 +38,15 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
+  public List<TaskDto> getProjectTasks(Long projectId) {
+    return restClient
+        .get()
+        .uri("/api/projects/{id}/tasks", projectId)
+        .retrieve()
+        .body(new ParameterizedTypeReference<List<TaskDto>>() {});
+  }
+
+  @Override
   public void createTask(String title, String description, Integer projectId) {
     Map<String, Object> requestBody = new HashMap<>();
     requestBody.put("title", title);

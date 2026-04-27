@@ -8,7 +8,13 @@ namespace AppApi.Services;
 public class ProjectService : IProjectService
 {
     private readonly IProjectRepository _repository;
-    public ProjectService(IProjectRepository repository) => _repository = repository;
+    private readonly ITaskRepository _taskRepository;
+    public ProjectService(IProjectRepository repository, ITaskRepository taskRepository)
+    {
+        _repository = repository;
+        _taskRepository = taskRepository;
+    }
+
 
     public async Task<IEnumerable<ProjectResponseDto>> GetProjectsAsync(string userId)
     {
@@ -61,6 +67,29 @@ public class ProjectService : IProjectService
         project.DeletedAt = DateTime.UtcNow;
         await _repository.UpdateAsync(project);
         return true;
+    }
+
+    public async Task<IEnumerable<TaskResponseDto>> GetProjectTasksAsync(int projectId, string userId)
+    {
+        var project = await _repository.GetByIdAsync(projectId, userId);
+
+        if (project == null)
+        {
+            // Краевой случай: проект чужой, удален или не существует -> 404
+            throw new KeyNotFoundException($"No project with ID {projectId} was found.");
+        }
+
+        var tasks = await _taskRepository.GetByProjectIdAsync(projectId, userId);
+
+        return tasks.Select(t => new TaskResponseDto
+        {
+            Id = t.Id,
+            Title = t.Title,
+            Content = t.Content,
+            Status = t.Status,
+            ProjectId = t.ProjectId,
+            CreatedAt = t.CreatedAt
+        });
     }
 
     private static ProjectResponseDto MapToDto(ProjectItem p, bool includeTasks = false) => new()

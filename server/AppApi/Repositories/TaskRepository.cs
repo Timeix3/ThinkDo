@@ -126,4 +126,14 @@ public class TaskRepository : ITaskRepository
             .Where(t => t.BlockedByTaskId == taskId && t.UserId == userId && t.DeletedAt == null)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<TaskItem>> GetByProjectIdAsync(int projectId, string userId)
+    {
+        return await _context.Tasks
+            .Where(t => t.ProjectId == projectId
+                     && t.UserId == userId
+                     && t.DeletedAt == null)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
 }
