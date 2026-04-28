@@ -13,4 +13,7 @@ public interface ITaskService
     Task<bool> DeleteTaskAsync(int id, string userId);
     Task<TaskResponseDto?> CompleteTaskAsync(int id, string userId);
     Task<TaskResponseDto?> CancelTaskAsync(int id, string userId);
+    Task<TaskResponseDto?> SelectTaskForSprintAsync(int id, string userId);
+    Task<TaskResponseDto?> DeselectTaskForSprintAsync(int id, string userId);
+    Task<IEnumerable<TaskResponseDto>> GetSprintTasksAsync(string userId);
 }

@@ -230,4 +230,26 @@ public class TasksControllerTests
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>();
     }
+
+    [Fact]
+    public async Task SelectForSprint_WhenTaskExists_ReturnsOk()
+    {
+        _serviceMock.Setup(s => s.SelectTaskForSprintAsync(1, TestUserId))
+            .ReturnsAsync(new TaskResponseDto { Id = 1, Title = "Task", IsSelectedForSprint = true });
+
+        var result = await _controller.SelectForSprint(1);
+
+        result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task DeselectFromSprint_WhenTaskNotFound_ReturnsNotFound()
+    {
+        _serviceMock.Setup(s => s.DeselectTaskForSprintAsync(999, TestUserId))
+            .ReturnsAsync((TaskResponseDto?)null);
+
+        var result = await _controller.DeselectFromSprint(999);
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
 }

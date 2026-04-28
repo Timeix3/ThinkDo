@@ -120,6 +120,31 @@ public class TaskRepository : ITaskRepository
         return task;
     }
 
+        public async Task<TaskItem?> UpdateSprintSelectionAsync(int id, string userId, bool isSelectedForSprint)
+    {
+        var task = await _context.Tasks
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId && t.DeletedAt == null);
+
+        if (task is null)
+            return null;
+
+        task.IsSelectedForSprint = isSelectedForSprint;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return task;
+    }
+
+    public async Task<IEnumerable<TaskItem>> GetSprintTasksAsync(string userId)
+    {
+        return await _context.Tasks
+            .Where(t => t.UserId == userId
+                     && t.DeletedAt == null
+                     && t.IsSelectedForSprint)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<TaskItem>> GetBlockedByTaskIdAsync(int taskId, string userId)
     {
         return await _context.Tasks

@@ -87,9 +87,41 @@ public class ProjectService : IProjectService
             Title = t.Title,
             Content = t.Content,
             Status = t.Status,
+            IsSelectedForSprint = t.IsSelectedForSprint,
             ProjectId = t.ProjectId,
             CreatedAt = t.CreatedAt
         });
+    }
+
+        public async Task<IEnumerable<PlanningProjectResponseDto>> GetPlanningProjectsAsync(string userId)
+    {
+        await EnsureDefaultProjectExistsAsync(userId);
+
+        var projects = await _repository.GetAllAsync(userId);
+        var result = new List<PlanningProjectResponseDto>();
+
+        foreach (var project in projects)
+        {
+            var tasks = await _taskRepository.GetByProjectIdAsync(project.Id, userId);
+
+            result.Add(new PlanningProjectResponseDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description,
+                IsDefault = project.IsDefault,
+                Tasks = tasks.Select(t => new PlanningTaskResponseDto
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Content = t.Content,
+                    Status = t.Status,
+                    IsSelected = t.IsSelectedForSprint
+                })
+            });
+        }
+
+        return result;
     }
 
     private static ProjectResponseDto MapToDto(ProjectItem p, bool includeTasks = false) => new()
@@ -105,6 +137,7 @@ public class ProjectService : IProjectService
             Title = t.Title,
             Content = t.Content,
             Status = t.Status,
+            IsSelectedForSprint = t.IsSelectedForSprint,
             CreatedAt = t.CreatedAt
         }) : null
     };

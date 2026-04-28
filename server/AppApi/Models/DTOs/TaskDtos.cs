@@ -51,6 +51,7 @@ public class TaskResponseDto
     public string Title { get; set; } = string.Empty;
     public string? Content { get; set; }
     public TasksStatus Status { get; set; }
+    public bool IsSelectedForSprint { get; set; }
     public int? BlockedByTaskId { get; set; }
     public int? ProjectId { get; set; }
     public string? ProjectName { get; set; }
