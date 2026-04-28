@@ -21,7 +21,7 @@ public class PlanningController : ControllerBase
     private string GetCurrentUserId() => User.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? throw new UnauthorizedAccessException();
 
-    
+
     /// <summary>
     /// Проекты с их задачами для отображения в Планировании
     /// </summary>

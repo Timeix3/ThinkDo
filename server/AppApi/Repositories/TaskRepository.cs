@@ -120,7 +120,7 @@ public class TaskRepository : ITaskRepository
         return task;
     }
 
-        public async Task<TaskItem?> UpdateSprintSelectionAsync(int id, string userId, bool isSelectedForSprint)
+    public async Task<TaskItem?> UpdateSprintSelectionAsync(int id, string userId, bool isSelectedForSprint)
     {
         var task = await _context.Tasks
             .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId && t.DeletedAt == null);

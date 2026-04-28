@@ -93,7 +93,7 @@ public class ProjectService : IProjectService
         });
     }
 
-        public async Task<IEnumerable<PlanningProjectResponseDto>> GetPlanningProjectsAsync(string userId)
+    public async Task<IEnumerable<PlanningProjectResponseDto>> GetPlanningProjectsAsync(string userId)
     {
         await EnsureDefaultProjectExistsAsync(userId);
 
