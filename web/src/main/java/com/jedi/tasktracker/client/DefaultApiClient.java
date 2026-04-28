@@ -2,6 +2,7 @@ package com.jedi.tasktracker.client;
 
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
+import com.jedi.tasktracker.client.dto.RoutineDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import com.jedi.tasktracker.client.dto.TaskListResponseDto;
 import java.util.List;
@@ -139,5 +140,41 @@ public class DefaultApiClient implements ApiClient {
   @Override
   public void deleteProject(Long id) {
     restClient.delete().uri("/api/projects/{id}", id).retrieve().toBodilessEntity();
+  }
+
+  @Override
+  public List<RoutineDto> getRoutines() {
+    return restClient
+        .get()
+        .uri("/api/routines")
+        .retrieve()
+        .body(new ParameterizedTypeReference<List<RoutineDto>>() {});
+  }
+
+  @Override
+  public RoutineDto createRoutine(String name, int frequency) {
+    return restClient
+        .post()
+        .uri("/api/routines")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of("name", name, "frequency", frequency))
+        .retrieve()
+        .body(RoutineDto.class);
+  }
+
+  @Override
+  public RoutineDto updateRoutine(int id, String name, int frequency) {
+    return restClient
+        .put()
+        .uri("/api/routines/{id}", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of("name", name, "frequency", frequency))
+        .retrieve()
+        .body(RoutineDto.class);
+  }
+
+  @Override
+  public void deleteRoutine(int id) {
+    restClient.delete().uri("/api/routines/{id}", id).retrieve().toBodilessEntity();
   }
 }
