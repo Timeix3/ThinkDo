@@ -19,6 +19,8 @@ public class CreateTaskDto
     public TasksStatus Status { get; set; } = TasksStatus.Available;
 
     public int? BlockedByTaskId { get; set; }
+
+    public int? ProjectId { get; set; }
 }
 
 /// <summary>
@@ -36,6 +38,8 @@ public class UpdateTaskDto
     public TasksStatus? Status { get; set; }
 
     public int? BlockedByTaskId { get; set; }
+
+    public int? ProjectId { get; set; }
 }
 
 /// <summary>
@@ -48,6 +52,8 @@ public class TaskResponseDto
     public string? Content { get; set; }
     public TasksStatus Status { get; set; }
     public int? BlockedByTaskId { get; set; }
+    public int? ProjectId { get; set; }
+    public string? ProjectName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

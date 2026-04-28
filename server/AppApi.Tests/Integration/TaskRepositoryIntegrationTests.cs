@@ -161,4 +161,107 @@ public class TaskRepositoryIntegrationTests : IAsyncLifetime
         result[1].Title.Should().Be("Second");
         result[2].Title.Should().Be("First");
     }
+
+    [Fact]
+    public async Task GetByProjectIdAsync_ShouldReturnOnlyTasksOfSpecificProject()
+    {
+        // Arrange
+        // Сначала создаем проекты, так как задачи ссылаются на них по FK
+        var p1 = new ProjectItem { Name = "Project 1", UserId = TestUserId };
+        var p2 = new ProjectItem { Name = "Project 2", UserId = TestUserId };
+        _context.Projects.AddRange(p1, p2);
+        await _context.SaveChangesAsync();
+
+        _context.Tasks.AddRange(
+            new TaskItem { Title = "Task P1", ProjectId = p1.Id, UserId = TestUserId },
+            new TaskItem { Title = "Another Task P1", ProjectId = p1.Id, UserId = TestUserId },
+            new TaskItem { Title = "Task P2", ProjectId = p2.Id, UserId = TestUserId }
+        );
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetByProjectIdAsync(p1.Id, TestUserId);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().OnlyContain(t => t.ProjectId == p1.Id);
+        result.Should().NotContain(t => t.Title == "Task P2");
+    }
+
+    [Fact]
+    public async Task GetByProjectIdAsync_ShouldRespectUserIsolation()
+    {
+        // Arrange
+        var p1 = new ProjectItem { Name = "User 1 Project", UserId = TestUserId };
+        _context.Projects.Add(p1);
+        await _context.SaveChangesAsync();
+
+        _context.Tasks.Add(new TaskItem { Title = "Secret Task", ProjectId = p1.Id, UserId = TestUserId });
+        await _context.SaveChangesAsync();
+
+        // Act: Другой пользователь пытается получить задачи этого проекта
+        var result = await _repository.GetByProjectIdAsync(p1.Id, OtherUserId);
+
+        // Assert: Должно быть пусто, так как UserId не совпадает
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetByProjectIdAsync_ShouldExcludeSoftDeletedTasks()
+    {
+        // Arrange
+        var p1 = new ProjectItem { Name = "Project Active", UserId = TestUserId };
+        _context.Projects.Add(p1);
+        await _context.SaveChangesAsync();
+
+        _context.Tasks.AddRange(
+            new TaskItem { Title = "Active Task", ProjectId = p1.Id, UserId = TestUserId, DeletedAt = null },
+            new TaskItem { Title = "Deleted Task", ProjectId = p1.Id, UserId = TestUserId, DeletedAt = DateTime.UtcNow }
+        );
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetByProjectIdAsync(p1.Id, TestUserId);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.Should().ContainSingle(t => t.Title == "Active Task");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldCorrectlyChangeTaskProject()
+    {
+        // Arrange
+        var p1 = new ProjectItem { Name = "P1", UserId = TestUserId };
+        var p2 = new ProjectItem { Name = "P2", UserId = TestUserId };
+        _context.Projects.AddRange(p1, p2);
+        await _context.SaveChangesAsync();
+
+        var task = new TaskItem { Title = "Moving Task", ProjectId = p1.Id, UserId = TestUserId };
+        _context.Tasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        // Очищаем трекер EF, чтобы эмулировать новый независимый запрос к API
+        _context.ChangeTracker.Clear();
+
+        var taskToUpdate = new TaskItem
+        {
+            Id = task.Id,
+            Title = "Moving Task Updated",
+            ProjectId = p2.Id,
+            UserId = TestUserId
+        };
+
+        // Act
+        var result = await _repository.UpdateAsync(taskToUpdate, TestUserId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.ProjectId.Should().Be(p2.Id);
+
+        // Дополнительная проверка: лезем в базу напрямую
+        var inDb = await _context.Tasks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == task.Id);
+        inDb.Should().NotBeNull();
+        inDb!.ProjectId.Should().Be(p2.Id);
+    }
 }

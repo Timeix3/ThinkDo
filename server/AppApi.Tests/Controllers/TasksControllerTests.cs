@@ -4,6 +4,7 @@ using AppApi.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
@@ -23,19 +24,27 @@ public class TasksControllerTests
         _loggerMock = new Mock<ILogger<TasksController>>();
         _controller = new TasksController(_serviceMock.Object, _loggerMock.Object);
 
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, TestUserId),
-            new Claim(ClaimTypes.Name, "testuser")
-        };
+        // var claims = new List<Claim>
+        // {
+        //     new Claim(ClaimTypes.NameIdentifier, TestUserId),
+        //     new Claim(ClaimTypes.Name, "testuser")
+        // };
 
-        var identity = new ClaimsIdentity(claims, "TestAuth");
-        var principal = new ClaimsPrincipal(identity);
+        // var identity = new ClaimsIdentity(claims, "TestAuth");
+        // var principal = new ClaimsPrincipal(identity);
 
-        _controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext { User = principal }
-        };
+        // _controller.ControllerContext = new ControllerContext
+        // {
+        //     HttpContext = new DefaultHttpContext { User = principal }
+        // };
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, TestUserId) }, "Test"));
+        _controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = user } };
+
+        // Мокаем IUrlHelper для CreatedAtAction
+        var urlHelperMock = new Mock<IUrlHelper>();
+        urlHelperMock.Setup(x => x.Action(It.IsAny<UrlActionContext>())).Returns("http://localhost/api/tasks/1");
+        _controller.Url = urlHelperMock.Object;
     }
 
     [Fact]
@@ -190,5 +199,35 @@ public class TasksControllerTests
         await _controller.GetAll();
 
         _serviceMock.Verify(s => s.GetAllTasksAsync(TestUserId, 0, 50), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_WithStrangerProject_ReturnsNotFound()
+    {
+        // Arrange: Симулируем, что сервис выбросил KeyNotFoundException (проект чужой)
+        var dto = new CreateTaskDto { Title = "Hack", ProjectId = 999 };
+        _serviceMock.Setup(s => s.CreateTaskAsync(dto, TestUserId))
+            .ThrowsAsync(new KeyNotFoundException("Проект не найден."));
+
+        // Act
+        var result = await _controller.Create(dto);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task Create_WithDeletedProject_ReturnsBadRequest()
+    {
+        // Arrange: Симулируем, что сервис выбросил ArgumentException (проект удален)
+        var dto = new CreateTaskDto { Title = "Bad Project", ProjectId = 5 };
+        _serviceMock.Setup(s => s.CreateTaskAsync(dto, TestUserId))
+            .ThrowsAsync(new ArgumentException("Проект удален."));
+
+        // Act
+        var result = await _controller.Create(dto);
+
+        // Assert
+        result.Should().BeOfType<BadRequestObjectResult>();
     }
 }

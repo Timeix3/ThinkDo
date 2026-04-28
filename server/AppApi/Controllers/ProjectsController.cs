@@ -73,4 +73,22 @@ public class ProjectsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("{id:int}/tasks")]
+    [ProducesResponseType(typeof(IEnumerable<TaskResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetProjectTasks(int id)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var tasks = await _projectService.GetProjectTasksAsync(id, userId);
+            return Ok(tasks);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning("Failed to get tasks: {Message}", ex.Message);
+            return NotFound(new { message = ex.Message });
+        }
+    }
 }

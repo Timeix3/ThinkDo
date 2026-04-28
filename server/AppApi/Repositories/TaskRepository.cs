@@ -84,6 +84,8 @@ public class TaskRepository : ITaskRepository
         if (task.BlockedByTaskId.HasValue)
             existing.BlockedByTaskId = task.BlockedByTaskId;
 
+        existing.ProjectId = task.ProjectId;
+
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -122,6 +124,16 @@ public class TaskRepository : ITaskRepository
     {
         return await _context.Tasks
             .Where(t => t.BlockedByTaskId == taskId && t.UserId == userId && t.DeletedAt == null)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<TaskItem>> GetByProjectIdAsync(int projectId, string userId)
+    {
+        return await _context.Tasks
+            .Where(t => t.ProjectId == projectId
+                     && t.UserId == userId
+                     && t.DeletedAt == null)
+            .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
     }
 }
