@@ -16,6 +16,7 @@ namespace AppApi.Tests.Controllers;
 public class InboxControllerTests
 {
     private readonly Mock<IInboxService> _serviceMock;
+    private readonly Mock<IInboxClassificationService> _classificationServiceMock;
     private readonly Mock<ILogger<InboxController>> _loggerMock;
     private readonly InboxController _controller;
     private const string TestUserId = "test-user-123";
@@ -23,8 +24,13 @@ public class InboxControllerTests
     public InboxControllerTests()
     {
         _serviceMock = new Mock<IInboxService>();
+        _classificationServiceMock = new Mock<IInboxClassificationService>();
         _loggerMock = new Mock<ILogger<InboxController>>();
-        _controller = new InboxController(_serviceMock.Object, _loggerMock.Object);
+
+        _controller = new InboxController(
+            _serviceMock.Object,
+            _classificationServiceMock.Object,
+            _loggerMock.Object);
 
         // Setup authenticated user
         var claims = new List<Claim>
@@ -265,7 +271,10 @@ public class InboxControllerTests
     public void GetCurrentUserId_NoUserId_ThrowsUnauthorizedAccessException()
     {
         // Arrange
-        var controller = new InboxController(_serviceMock.Object, _loggerMock.Object);
+        var controller = new InboxController(
+            _serviceMock.Object,
+            _classificationServiceMock.Object,
+            _loggerMock.Object);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal() }
