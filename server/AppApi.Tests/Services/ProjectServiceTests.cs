@@ -178,7 +178,7 @@ public class ProjectServiceTests
         // ФИКС: Используем It.IsAny<bool>(), так как сервис вызывает метод без 3-го параметра (default false)
         _repoMock.Setup(r => r.GetByIdAsync(1, UserId, It.IsAny<bool>()))
             .ReturnsAsync(new ProjectItem { Id = 1, UserId = UserId });
-        
+
         _taskRepoMock.Setup(r => r.GetByProjectIdAsync(1, UserId))
             .ReturnsAsync(new List<TaskItem> { new() { Id = 10, Title = "Task" } });
 

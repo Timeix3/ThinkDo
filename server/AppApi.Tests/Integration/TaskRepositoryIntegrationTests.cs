@@ -235,7 +235,7 @@ public class TaskRepositoryIntegrationTests : IAsyncLifetime
         var p1 = new ProjectItem { Name = "P1", UserId = TestUserId };
         var p2 = new ProjectItem { Name = "P2", UserId = TestUserId };
         _context.Projects.AddRange(p1, p2);
-        await _context.SaveChangesAsync(); 
+        await _context.SaveChangesAsync();
 
         var task = new TaskItem { Title = "Moving Task", ProjectId = p1.Id, UserId = TestUserId };
         _context.Tasks.Add(task);
