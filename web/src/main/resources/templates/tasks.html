@@ -1544,6 +1544,7 @@
             document.getElementById('routineEditName').value = r.name;
             document.getElementById('routineEditFrequency').value = String(r.frequency);
             document.getElementById('routineEditError').classList.add('hidden');
+            document.getElementById('routineEditSave').disabled = false;
             document.getElementById('routineEditModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('routineEditName').focus(), 50);
         }
