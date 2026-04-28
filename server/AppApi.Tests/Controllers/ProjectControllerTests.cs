@@ -90,4 +90,34 @@ public class ProjectsControllerTests
         string message = response.GetType().GetProperty("message").GetValue(response, null);
         message.Should().Be("Критическая ошибка бизнес-логики");
     }
+
+    [Fact]
+    public async Task GetProjectTasks_ValidProject_ReturnsOkWithTasks()
+    {
+        // Arrange
+        var tasks = new List<TaskResponseDto> { new() { Id = 1, Title = "Project Task" } };
+        _serviceMock.Setup(s => s.GetProjectTasksAsync(1, UserId)).ReturnsAsync(tasks);
+
+        // Act
+        var result = await _controller.GetProjectTasks(1);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        var value = okResult.Value as IEnumerable<TaskResponseDto>;
+        value.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetProjectTasks_StrangerProject_ReturnsNotFound()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.GetProjectTasksAsync(99, UserId))
+            .ThrowsAsync(new KeyNotFoundException("Project not found"));
+
+        // Act
+        var result = await _controller.GetProjectTasks(99);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
 }

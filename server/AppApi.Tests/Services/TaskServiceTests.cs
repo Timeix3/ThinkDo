@@ -10,13 +10,15 @@ namespace AppApi.Tests.Services;
 public class TaskServiceTests
 {
     private readonly Mock<ITaskRepository> _repositoryMock;
+    private readonly Mock<IProjectRepository> _projectRepositoryMock;
     private readonly TaskService _service;
     private const string TestUserId = "test-user-123";
 
     public TaskServiceTests()
     {
         _repositoryMock = new Mock<ITaskRepository>();
-        _service = new TaskService(_repositoryMock.Object);
+        _projectRepositoryMock = new Mock<IProjectRepository>();
+        _service = new TaskService(_repositoryMock.Object, _projectRepositoryMock.Object);
     }
 
     [Fact]
@@ -206,5 +208,111 @@ public class TaskServiceTests
 
         capturedTask.Should().NotBeNull();
         capturedTask!.UserId.Should().Be(TestUserId);
+    }
+
+    [Fact]
+    public async Task CreateTaskAsync_WithoutProject_ShouldSucceed()
+    {
+        var dto = new CreateTaskDto { Title = "No Project Task" };
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>())).ReturnsAsync((TaskItem t) => { t.Id = 1; return t; });
+
+        var result = await _service.CreateTaskAsync(dto, TestUserId);
+
+        result.ProjectId.Should().BeNull();
+        _projectRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateTaskAsync_WithValidProjectId_ShouldLinkSuccessfully()
+    {
+        // Arrange
+        var dto = new CreateTaskDto { Title = "Task in Project", ProjectId = 5 };
+        var project = new ProjectItem { Id = 5, Name = "My Project", UserId = TestUserId };
+
+        _projectRepositoryMock.Setup(r => r.GetByIdAsync(5, TestUserId, false)).ReturnsAsync(project);
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>())).ReturnsAsync((TaskItem t) => t);
+
+        // Act
+        var result = await _service.CreateTaskAsync(dto, TestUserId);
+
+        // Assert
+        result.ProjectId.Should().Be(5);
+        result.ProjectName.Should().Be("My Project");
+    }
+
+    [Fact]
+    public async Task CreateTaskAsync_WithStrangerProjectId_ShouldThrowKeyNotFoundException()
+    {
+        // Arrange
+        var dto = new CreateTaskDto { Title = "Hack", ProjectId = 99 };
+        _projectRepositoryMock.Setup(r => r.GetByIdAsync(99, TestUserId, false)).ReturnsAsync((ProjectItem?)null);
+
+        // Act & Assert
+        await _service.Invoking(s => s.CreateTaskAsync(dto, TestUserId))
+            .Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task UpdateTaskAsync_ClearingProject_ShouldSetProjectIdToNull()
+    {
+        // Arrange
+        var dto = new UpdateTaskDto { Title = "No more project", ProjectId = null };
+        var updatedTask = new TaskItem { Id = 1, Title = "No more project", ProjectId = null, UserId = TestUserId };
+
+        _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TaskItem>(), TestUserId)).ReturnsAsync(updatedTask);
+
+        // Act
+        var result = await _service.UpdateTaskAsync(1, dto, TestUserId);
+
+        // Assert
+        result!.ProjectId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateTaskAsync_ChangingProjectToValidOne_ShouldSucceed()
+    {
+        var dto = new UpdateTaskDto { Title = "Updated", ProjectId = 10 };
+        _projectRepositoryMock.Setup(r => r.GetByIdAsync(10, TestUserId, false))
+            .ReturnsAsync(new ProjectItem { Id = 10, UserId = TestUserId });
+
+        _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TaskItem>(), TestUserId))
+            .ReturnsAsync((TaskItem t, string uid) => t);
+
+        var result = await _service.UpdateTaskAsync(1, dto, TestUserId);
+
+        result.Should().NotBeNull();
+        result!.ProjectId.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task CreateTaskAsync_WithValidProject_LinksCorrectly()
+    {
+        var dto = new CreateTaskDto { Title = "T", ProjectId = 5 };
+        // Используем It.IsAny<bool>(), чтобы избежать ошибки несовпадения аргументов
+        _projectRepositoryMock.Setup(r => r.GetByIdAsync(5, TestUserId, It.IsAny<bool>()))
+            .ReturnsAsync(new ProjectItem { Id = 5, Name = "Pro", UserId = TestUserId });
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>())).ReturnsAsync((TaskItem t) => t);
+
+        var result = await _service.CreateTaskAsync(dto, TestUserId);
+        result.ProjectId.Should().Be(5);
+        result.ProjectName.Should().Be("Pro");
+    }
+
+    [Fact]
+    public async Task CreateTaskAsync_WithStrangerProject_ThrowsKeyNotFound()
+    {
+        var dto = new CreateTaskDto { Title = "T", ProjectId = 99 };
+        _projectRepositoryMock.Setup(r => r.GetByIdAsync(99, TestUserId, It.IsAny<bool>())).ReturnsAsync((ProjectItem?)null);
+
+        await _service.Invoking(s => s.CreateTaskAsync(dto, TestUserId)).Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task UpdateTaskAsync_ClearingProject_SetsProjectIdToNull()
+    {
+        var dto = new UpdateTaskDto { Title = "New", ProjectId = null };
+        _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TaskItem>(), TestUserId)).ReturnsAsync((TaskItem t, string u) => t);
+        var result = await _service.UpdateTaskAsync(1, dto, TestUserId);
+        result!.ProjectId.Should().BeNull();
     }
 }
