@@ -14,14 +14,18 @@ namespace AppApi.Controllers;
 public class InboxController : ControllerBase
 {
     private readonly IInboxService _inboxService;
+    private readonly IInboxClassificationService _classificationService;
     private readonly ILogger<InboxController> _logger;
 
-    public InboxController(IInboxService inboxService, ILogger<InboxController> logger)
+    public InboxController(
+        IInboxService inboxService,
+        IInboxClassificationService classificationService,
+        ILogger<InboxController> logger)
     {
         _inboxService = inboxService;
+        _classificationService = classificationService;
         _logger = logger;
     }
-
     /// <summary>
     /// Получить ID текущего пользователя из токена
     /// </summary>
@@ -159,5 +163,55 @@ public class InboxController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Классифицировать запись инбокса в задачу, проект или рутину
+    /// </summary>
+    [HttpPost("{id:int}/classify")]
+    [ProducesResponseType(typeof(ClassifyInboxItemResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Classify(int id, [FromBody] ClassifyInboxItemDto dto)
+    {
+        var userId = GetCurrentUserId();
+
+        _logger.LogInformation(
+            "User {UserId} classifying inbox item {InboxItemId} as {TargetType}",
+            userId, id, dto.TargetType);
+
+        try
+        {
+            var result = await _classificationService.ClassifyInboxItemAsync(id, dto, userId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(
+                "Inbox item {InboxItemId} not found for classification: {Message}",
+                id, ex.Message);
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already been classified"))
+        {
+            _logger.LogWarning(
+                "Inbox item {InboxItemId} already classified: {Message}",
+                id, ex.Message);
+            return Conflict(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(
+                "Invalid classification request for inbox item {InboxItemId}: {Message}",
+                id, ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex,
+                "Error classifying inbox item {InboxItemId}", id);
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
