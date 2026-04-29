@@ -30,7 +30,7 @@ public interface ApiClient {
   void deleteInboxItem(int id);
 
   void restoreInboxItem(int id);
-  
+
   void classifyInboxItem(int id, String targetType, Map<String, Object> data);
 
   List<ProjectDto> getProjects();
