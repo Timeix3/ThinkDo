@@ -18,6 +18,10 @@ public interface ApiClient {
 
   void updateTask(Long id, String title, String content);
 
+  void selectTask(Long id);
+
+  void deselectTask(Long id);
+
   void deleteTask(Long id);
 
   InboxListResponseDto getInboxItems();
