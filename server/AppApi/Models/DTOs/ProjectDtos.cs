@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Common.Enums;
 
 namespace AppApi.Models.DTOs;
 
@@ -39,4 +40,22 @@ public class ProjectResponseDto
     public bool IsDefault { get; set; }
     public DateTime CreatedAt { get; set; }
     public IEnumerable<TaskResponseDto>? Tasks { get; set; }
+}
+
+public class PlanningProjectResponseDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsDefault { get; set; }
+    public IEnumerable<PlanningTaskResponseDto> Tasks { get; set; } = Array.Empty<PlanningTaskResponseDto>();
+}
+
+public class PlanningTaskResponseDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Content { get; set; }
+    public TasksStatus Status { get; set; }
+    public bool IsSelected { get; set; }
 }

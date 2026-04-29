@@ -3,6 +3,7 @@ using AppApi.Repositories.Interfaces;
 using AppApi.Services;
 using Common.Models;
 using FluentAssertions;
+using Common.Enums;
 using Moq;
 
 namespace AppApi.Tests.Services;
@@ -314,5 +315,41 @@ public class TaskServiceTests
         _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TaskItem>(), TestUserId)).ReturnsAsync((TaskItem t, string u) => t);
         var result = await _service.UpdateTaskAsync(1, dto, TestUserId);
         result!.ProjectId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SelectTaskForSprintAsync_CompletedTask_ShouldThrow()
+    {
+        _repositoryMock.Setup(r => r.GetByIdAsync(1, TestUserId))
+            .ReturnsAsync(new TaskItem { Id = 1, UserId = TestUserId, Status = TasksStatus.Completed });
+
+        await _service.Invoking(s => s.SelectTaskForSprintAsync(1, TestUserId))
+            .Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task SelectTaskForSprintAsync_AlreadySelected_ShouldBeIdempotent()
+    {
+        _repositoryMock.Setup(r => r.GetByIdAsync(1, TestUserId))
+            .ReturnsAsync(new TaskItem { Id = 1, UserId = TestUserId, IsSelectedForSprint = true });
+
+        var result = await _service.SelectTaskForSprintAsync(1, TestUserId);
+
+        result.Should().NotBeNull();
+        result!.IsSelectedForSprint.Should().BeTrue();
+        _repositoryMock.Verify(r => r.UpdateSprintSelectionAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeselectTaskForSprintAsync_NotSelected_ShouldBeIdempotent()
+    {
+        _repositoryMock.Setup(r => r.GetByIdAsync(1, TestUserId))
+            .ReturnsAsync(new TaskItem { Id = 1, UserId = TestUserId, IsSelectedForSprint = false });
+
+        var result = await _service.DeselectTaskForSprintAsync(1, TestUserId);
+
+        result.Should().NotBeNull();
+        result!.IsSelectedForSprint.Should().BeFalse();
+        _repositoryMock.Verify(r => r.UpdateSprintSelectionAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
     }
 }

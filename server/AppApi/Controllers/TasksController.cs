@@ -273,4 +273,44 @@ public class TasksController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Выбрать в планирование/спринт
+    /// </summary>
+    [HttpPut("{id:int}/select")]
+    [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SelectForSprint(int id)
+    {
+        var userId = GetCurrentUserId();
+
+        try
+        {
+            var task = await _taskService.SelectTaskForSprintAsync(id, userId);
+            return task is null
+                ? NotFound(new { message = $"Task with id '{id}' not found" })
+                : Ok(task);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Убрать из планирования/спринта
+    /// </summary>
+    [HttpPut("{id:int}/deselect")]
+    [ProducesResponseType(typeof(TaskResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeselectFromSprint(int id)
+    {
+        var userId = GetCurrentUserId();
+        var task = await _taskService.DeselectTaskForSprintAsync(id, userId);
+
+        return task is null
+            ? NotFound(new { message = $"Task with id '{id}' not found" })
+            : Ok(task);
+    }
 }

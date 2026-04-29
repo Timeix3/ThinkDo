@@ -48,6 +48,11 @@ public class AppDbContext : DbContext
                 .IsRequired()
                 .HasDefaultValue(TasksStatus.Available);
 
+            entity.Property(e => e.IsSelectedForSprint)
+                .HasColumnName("is_selected_for_sprint")
+                .IsRequired()
+                .HasDefaultValue(false);
+
             entity.Property(e => e.BlockedByTaskId)
                 .HasColumnName("blocked_by_task_id");
 
@@ -79,6 +84,8 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => e.BlockedByTaskId)
                 .HasDatabaseName("ix_tasks_blocked_by_task_id");
+            entity.HasIndex(e => e.IsSelectedForSprint)
+                .HasDatabaseName("ix_tasks_is_selected_for_sprint");
         });
 
         modelBuilder.Entity<InboxItem>(entity =>

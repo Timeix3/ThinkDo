@@ -9,6 +9,7 @@ public class TaskItem
     public string? Content { get; set; }
     public string UserId { get; set; } = string.Empty;
     public TasksStatus Status { get; set; } = TasksStatus.Available;
+    public bool IsSelectedForSprint { get; set; }
     public int? BlockedByTaskId { get; set; }
     public int? ProjectId { get; set; }
     public virtual ProjectItem? Project { get; set; }

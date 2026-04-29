@@ -175,12 +175,53 @@ public class TaskService : ITaskService
         return cancelled is null ? null : MapToDto(cancelled);
     }
 
+    public async Task<TaskResponseDto?> SelectTaskForSprintAsync(int id, string userId)
+    {
+        var task = await _repository.GetByIdAsync(id, userId);
+
+        if (task is null)
+            return null;
+
+        if (task.Status == TasksStatus.Completed)
+            throw new InvalidOperationException("Cannot select a completed task for sprint");
+
+        if (task.Status == TasksStatus.Blocked)
+            throw new InvalidOperationException("Cannot select a blocked task for sprint");
+
+        if (task.IsSelectedForSprint)
+            return MapToDto(task);
+
+        var selected = await _repository.UpdateSprintSelectionAsync(id, userId, true);
+        return selected is null ? null : MapToDto(selected);
+    }
+
+    public async Task<TaskResponseDto?> DeselectTaskForSprintAsync(int id, string userId)
+    {
+        var task = await _repository.GetByIdAsync(id, userId);
+
+        if (task is null)
+            return null;
+
+        if (!task.IsSelectedForSprint)
+            return MapToDto(task);
+
+        var deselected = await _repository.UpdateSprintSelectionAsync(id, userId, false);
+        return deselected is null ? null : MapToDto(deselected);
+    }
+
+    public async Task<IEnumerable<TaskResponseDto>> GetSprintTasksAsync(string userId)
+    {
+        var tasks = await _repository.GetSprintTasksAsync(userId);
+        return tasks.Select(MapToDto);
+    }
+
     private static TaskResponseDto MapToDto(TaskItem task) => new()
     {
         Id = task.Id,
         Title = task.Title,
         Content = task.Content,
         Status = task.Status,
+        IsSelectedForSprint = task.IsSelectedForSprint,
         BlockedByTaskId = task.BlockedByTaskId,
         ProjectId = task.ProjectId,
         CreatedAt = task.CreatedAt,

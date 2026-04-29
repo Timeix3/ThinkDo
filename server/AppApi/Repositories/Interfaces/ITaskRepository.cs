@@ -13,6 +13,8 @@ public interface ITaskRepository
     Task<TaskItem?> UpdateAsync(TaskItem task, string userId);
     Task<bool> SoftDeleteAsync(int id, string userId);
     Task<TaskItem?> UpdateStatusAsync(int id, string userId, TasksStatus newStatus);
+    Task<TaskItem?> UpdateSprintSelectionAsync(int id, string userId, bool isSelectedForSprint);
+    Task<IEnumerable<TaskItem>> GetSprintTasksAsync(string userId);
     Task<IEnumerable<TaskItem>> GetBlockedByTaskIdAsync(int taskId, string userId);
     Task<IEnumerable<TaskItem>> GetByProjectIdAsync(int projectId, string userId);
 }
