@@ -19,6 +19,21 @@ public class DefaultApiClient implements ApiClient {
   private final RestClient restClient;
 
   @Override
+  public void classifyInboxItem(int id, String targetType, Map<String, Object> data) {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("targetType", targetType);
+    requestBody.put("data", data);
+
+    restClient
+        .post()
+        .uri("/api/inbox/{id}/classify", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(requestBody)
+        .retrieve()
+        .toBodilessEntity();
+  }
+
+  @Override
   public List<TaskDto> getTasks() {
     var resp =
         restClient
