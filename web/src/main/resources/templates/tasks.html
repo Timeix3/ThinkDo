@@ -509,6 +509,7 @@
             padding: 0.5rem;
             background: white;
         }
+
         .project-task-item {
             padding: 0.5rem 0.75rem;
             border-radius: 0.5rem;
@@ -520,9 +521,11 @@
             gap: 0.75rem;
             border-bottom: 1px solid #f1f5f9;
         }
+
         .project-task-item:last-child {
             border-bottom: none;
         }
+
         .project-task-status {
             font-size: 0.7rem;
             font-weight: 600;
@@ -531,25 +534,84 @@
             background: #f1f5f9;
             color: #475569;
         }
+
         .project-task-status.completed {
             background: #dcfce7;
             color: #15803d;
         }
+
         .project-task-status.active {
             background: #fee2e2;
             color: #b91c1c;
         }
+
         .project-tasks-loading {
             font-size: 0.85rem;
             color: #94a3b8;
             text-align: center;
             padding: 0.75rem 0;
         }
+
         .project-tasks-error {
             font-size: 0.85rem;
             color: #dc2626;
             text-align: center;
             padding: 0.75rem 0;
+        }
+
+        /* ── Стили для модалки классификации инбокса ────────── */
+        .classify-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .classify-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.1rem 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+
+        .classify-option:hover {
+            background: #eef2ff;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .classify-option .icon {
+            font-size: 1.7rem;
+            line-height: 1;
+        }
+
+        .classify-source {
+            background: #f1f5f9;
+            border-radius: 0.65rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            color: #475569;
+            word-break: break-word;
+        }
+
+        .classify-source .label {
+            display: block;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 0.15rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
     </style>
 </head>
@@ -585,7 +647,6 @@
                         Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                     </span>
                     <form th:action="@{/logout}" method="post" id="logoutForm">
-                        <!-- Кнопка с вызовом функции очистки данных -->
                         <button type="submit" onclick="clearAllData()"
                             class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                             <i class="fas fa-sign-out-alt text-xs"></i> Выйти
@@ -793,7 +854,6 @@
                 <div>
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Задачи проекта</label>
                     <div id="projectEditTasks" class="project-tasks-list">
-                        <!-- Сюда будет загружен список задач -->
                         <div class="project-tasks-loading">Загрузка задач...</div>
                     </div>
                 </div>
@@ -841,6 +901,44 @@
                 <div class="flex gap-2">
                     <button class="btn-ghost" id="inboxEditCancel">Отмена</button>
                     <button class="btn-primary" id="inboxEditSave">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Новая модалка: Классификация записи инбокса (выбор типа сущности) -->
+    <div id="inboxClassifyModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-1">🗂️ Классифицировать запись</h2>
+            <p class="text-sm text-slate-500 mb-3">Во что превратить эту запись инбокса?</p>
+
+            <div class="classify-source mb-4">
+                <span class="label">Запись инбокса</span>
+                <span id="inboxClassifySourceText"></span>
+            </div>
+
+            <div class="classify-options mb-2">
+                <div class="classify-option" data-classify="project">
+                    <span class="icon">📁</span>
+                    <span>Проект</span>
+                </div>
+                <div class="classify-option" data-classify="task">
+                    <span class="icon">📝</span>
+                    <span>Задача</span>
+                </div>
+                <div class="classify-option" data-classify="routine">
+                    <span class="icon">🔄</span>
+                    <span>Рутина</span>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-5">
+                <button class="btn-danger" id="inboxClassifyDelete"><i
+                        class="fas fa-trash-alt mr-1.5"></i>Удалить</button>
+                <div class="flex gap-2">
+                    <button class="btn-ghost" id="inboxClassifyEdit"><i
+                            class="fas fa-pencil-alt mr-1"></i>Редактировать</button>
+                    <button class="btn-ghost" id="inboxClassifyCancel">Отмена</button>
                 </div>
             </div>
         </div>
@@ -922,6 +1020,10 @@
         let allProjects = [];
         let allRoutines = [];
 
+        // Состояние для классификации инбокса
+        let classifyingInboxId = null;   // id записи, открытой в модалке классификации
+        let convertingInboxId = null;    // id записи, для которой сейчас открыто create-окно (после сохранения запись будет удалена)
+
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
             return String(str ?? '')
@@ -972,7 +1074,6 @@
                 return;
             }
 
-            // Для каждой задачи находим связанный проект
             container.innerHTML = tasks.sort((a, b) => b.id - a.id).map(t => {
                 let projectName = "Без проекта";
                 let isDefault = false;
@@ -990,7 +1091,6 @@
                         chipIcon = "fa-question-circle";
                     }
                 } else {
-                    // null — без проекта
                     projectName = "Без проекта";
                     chipIcon = "fa-ban";
                     chipClass = "project-chip";
@@ -1048,7 +1148,6 @@
 
                 return `
                 <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                    <!-- Кнопка редактирования: только для НЕ системных проектов -->
                     ${p.isDefault ? '' : `
                         <button class="project-edit-btn absolute top-2 right-2"
                                 data-project-id="${p.id}"
@@ -1078,7 +1177,7 @@
             return 'задач';
         }
 
-        // ── Load projects (обновлённая async версия) ──────────
+        // ── Load projects ─────────────────────────────────────
         async function loadProjects() {
             try {
                 const res = await fetch(PROJECTS_API_URL);
@@ -1086,7 +1185,6 @@
                 const data = await res.json();
                 allProjects = data;
                 renderProjectsList();
-                // После загрузки проектов перерисовываем список задач, чтобы чипы проектов обновились
                 if (currentPage === 'tasks') {
                     renderTaskList(allTasks);
                 }
@@ -1097,7 +1195,7 @@
             }
         }
 
-        // ── Load tasks (API) ───────────────────────────────────
+        // ── Load tasks ────────────────────────────────────────
         async function loadTasks() {
             try {
                 const res = await fetch(API_URL);
@@ -1113,9 +1211,7 @@
         // ── Вспомогательная функция заполнения select проектами ─
         function fillProjectSelect(selectEl, selectedValue = "") {
             if (!selectEl) return;
-            // Базовая опция "Без проекта"
             let options = '<option value="">— Без проекта —</option>';
-            // Добавляем все проекты, включая "Текучку"
             for (const p of allProjects) {
                 const displayName = p.isDefault ? `${p.name} ⭐` : p.name;
                 options += `<option value="${p.id}" ${String(p.id) === String(selectedValue) ? 'selected' : ''}>${escHtml(displayName)}</option>`;
@@ -1125,19 +1221,16 @@
 
         // ── Create Task (расширено: поле Проект) ────────────────
         async function openCreateModal() {
-            // Очищаем поля
             document.getElementById('createTitle').value = '';
             document.getElementById('createDesc').value = '';
             const projectSelect = document.getElementById('createProject');
-            // Показываем индикатор загрузки
             projectSelect.innerHTML = '<option disabled selected>Загрузка проектов...</option>';
             document.getElementById('createModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('createTitle').focus(), 50);
 
-            // Загружаем проекты с бэкенда (всегда свежие)
             try {
-                await loadProjects(); // обновляет allProjects
-                fillProjectSelect(projectSelect, ""); // по умолчанию "Без проекта"
+                await loadProjects();
+                fillProjectSelect(projectSelect, "");
             } catch (e) {
                 console.error('Failed to load projects', e);
                 projectSelect.innerHTML = '<option disabled>Ошибка загрузки проектов</option>';
@@ -1149,9 +1242,15 @@
         }
 
         document.getElementById('fabAddTask').addEventListener('click', openCreateModal);
-        document.getElementById('createCancel').addEventListener('click', closeCreateModal);
+        document.getElementById('createCancel').addEventListener('click', () => {
+            cancelInboxConversion();
+            closeCreateModal();
+        });
         document.getElementById('createModal').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeCreateModal();
+            if (e.target === e.currentTarget) {
+                cancelInboxConversion();
+                closeCreateModal();
+            }
         });
 
         document.getElementById('createSave').addEventListener('click', async () => {
@@ -1161,7 +1260,6 @@
 
             const projectSelect = document.getElementById('createProject');
             let projectId = projectSelect.value;
-            // Если выбрана пустая строка — передаём null
             if (projectId === "") projectId = null;
             else if (projectId) projectId = Number(projectId);
 
@@ -1175,12 +1273,11 @@
                     body: JSON.stringify({
                         title,
                         content: document.getElementById('createDesc').value.trim(),
-                        projectId: projectId   // добавляем projectId в тело запроса
+                        projectId: projectId
                     })
                 });
 
                 if (!response.ok) {
-                    // Обработка ошибок, связанных с проектом (например, 400 или 404)
                     let errorMsg = 'Ошибка при создании задачи';
                     try {
                         const errData = await response.json();
@@ -1188,7 +1285,6 @@
                     } catch (e) { }
                     if (response.status === 400 || response.status === 404) {
                         errorMsg += ' Возможно, выбранный проект был удалён. Пожалуйста, обновите список проектов и попробуйте снова.';
-                        // Предлагаем перезагрузить проекты и открыть модалку заново
                         if (confirm(errorMsg + '\nОбновить список проектов?')) {
                             await loadProjects();
                             openCreateModal();
@@ -1201,14 +1297,14 @@
 
                 closeCreateModal();
                 await loadTasks();
-                // После создания задачи обновляем проекты, чтобы актуальные счётчики задач
                 await loadProjects();
+                finalizeInboxConversion(); // Если задача создана из инбокса — удаляем запись
             } finally {
                 btn.disabled = false;
             }
         });
 
-        // ── Create Project (Задача 9.4) ──
+        // ── Create Project ────────────────────────────────────
         function openProjectCreateModal() {
             document.getElementById('projectCreateName').value = '';
             document.getElementById('projectCreateDesc').value = '';
@@ -1222,7 +1318,10 @@
         }
 
         document.getElementById('fabAddProject').addEventListener('click', openProjectCreateModal);
-        document.getElementById('projectCreateCancel').addEventListener('click', closeProjectCreateModal);
+        document.getElementById('projectCreateCancel').addEventListener('click', () => {
+            cancelInboxConversion();
+            closeProjectCreateModal();
+        });
 
         document.getElementById('projectCreateSave').addEventListener('click', async () => {
             const nameInput = document.getElementById('projectCreateName');
@@ -1251,6 +1350,7 @@
                 if (res.ok) {
                     closeProjectCreateModal();
                     await loadProjects();
+                    finalizeInboxConversion(); // Если проект создан из инбокса — удаляем запись
                 } else {
                     alert("Ошибка при создании проекта.");
                 }
@@ -1261,7 +1361,7 @@
             }
         });
 
-        // ── Edit Project (расширено: API-загрузка задач проекта) ──
+        // ── Edit Project ───────────────────────────────────────
         async function openProjectEditModal(projectId) {
             const project = allProjects.find(p => String(p.id) === String(projectId));
             if (!project) {
@@ -1278,7 +1378,6 @@
             document.getElementById('projectEditName').value = project.name;
             document.getElementById('projectEditDesc').value = project.description ?? '';
 
-            // Сброс содержимого списка задач с индикатором загрузки
             const tasksContainer = document.getElementById('projectEditTasks');
             tasksContainer.innerHTML = '<div class="project-tasks-loading"><i class="fas fa-spinner fa-pulse mr-1"></i> Загрузка задач...</div>';
 
@@ -1286,7 +1385,6 @@
             document.getElementById('projectEditModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('projectEditName').focus(), 50);
 
-            // Загружаем задачи проекта через API
             try {
                 const res = await fetch(`${PROJECTS_API_URL}/${projectId}/tasks`);
                 if (!res.ok) {
@@ -1297,9 +1395,7 @@
                 if (!projectTasks.length) {
                     tasksContainer.innerHTML = '<div class="project-tasks-list-empty">У проекта пока нет задач</div>';
                 } else {
-                    // Отображаем каждую задачу: название и статус
                     tasksContainer.innerHTML = projectTasks.map(task => {
-                        // Статус: предполагаем, что у задачи есть поле completed (boolean)
                         const isCompleted = task.completed === true;
                         const statusText = isCompleted ? 'Выполнена' : 'Активна';
                         const statusClass = isCompleted ? 'completed' : 'active';
@@ -1364,7 +1460,6 @@
                     return;
                 }
 
-                // Попытка показать сообщение от API
                 try {
                     const json = await res.json();
                     if (json && json.message) alert(json.message);
@@ -1398,8 +1493,6 @@
                 document.getElementById('projectDeleteConfirmModal').classList.add('hidden');
                 closeProjectEditModal();
                 await loadProjects();
-                // После удаления проекта задачи, которые на него ссылались, должны быть перенесены бэкендом,
-                // но перезагружаем задачи, чтобы отображение обновилось.
                 await loadTasks();
             } catch (e) {
                 console.error(e);
@@ -1462,7 +1555,7 @@
             loadTasks();
         });
 
-        // ── Complete  ────────────────────
+        // ── Complete  ─────────────────────────────────────────
         async function completeTask(id) {
             const row = document.getElementById(`task-row-${id}`);
             const card = document.querySelector(`.task-card[data-id="${id}"]`);
@@ -1473,7 +1566,7 @@
                 target.addEventListener('animationend', async () => {
                     await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
                     loadTasks();
-                    await loadProjects(); // обновим проекты, чтобы счётчики задач обновились
+                    await loadProjects();
                 }, { once: true });
             } else {
                 await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
@@ -1514,7 +1607,6 @@
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
             if (page === 'tasks') {
-                // При переходе на задачи дополнительно подгружаем проекты, если они ещё не загружены
                 if (!allProjects.length) loadProjects();
                 else renderTaskList(allTasks);
             }
@@ -1526,7 +1618,7 @@
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
         document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
 
-        // ── Инбокс (без изменений) ────────────────────────────
+        // ── Инбокс (с обновлением классификации) ───────────────
         let inboxItems = [];
         let inboxCounter = 0;
         let inboxOverflow = false;
@@ -1580,8 +1672,9 @@
                             </div>
                         `).join('');
 
+            // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
-                el.addEventListener('click', () => openInboxEditModal(el.dataset.inboxId));
+                el.addEventListener('click', () => openInboxClassifyModal(el.dataset.inboxId));
             });
         }
 
@@ -1622,6 +1715,85 @@
             }
         }
 
+        // ── Inbox Classify Modal ───────────────────────────────
+        function openInboxClassifyModal(itemId) {
+            const item = inboxItems.find(i => String(i.id) === String(itemId));
+            if (!item) return;
+            classifyingInboxId = itemId;
+            document.getElementById('inboxClassifySourceText').textContent = item.title;
+            document.getElementById('inboxClassifyModal').classList.remove('hidden');
+        }
+
+        function closeInboxClassifyModal() {
+            document.getElementById('inboxClassifyModal').classList.add('hidden');
+            classifyingInboxId = null;
+        }
+
+        document.getElementById('inboxClassifyCancel').addEventListener('click', closeInboxClassifyModal);
+        document.getElementById('inboxClassifyModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeInboxClassifyModal();
+        });
+
+        // Удалить запись инбокса
+        document.getElementById('inboxClassifyDelete').addEventListener('click', () => {
+            if (!classifyingInboxId) return;
+            inboxItems = inboxItems.filter(i => String(i.id) !== String(classifyingInboxId));
+            closeInboxClassifyModal();
+            renderInboxList();
+            updateInboxOverflowBadge();
+        });
+
+        // Редактировать запись инбокса
+        document.getElementById('inboxClassifyEdit').addEventListener('click', () => {
+            const id = classifyingInboxId;
+            closeInboxClassifyModal();
+            if (id) openInboxEditModal(id);
+        });
+
+        // Обработчики выбора типа сущности
+        document.querySelectorAll('#inboxClassifyModal .classify-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                const type = opt.dataset.classify;
+                const item = inboxItems.find(i => String(i.id) === String(classifyingInboxId));
+                if (!item) {
+                    closeInboxClassifyModal();
+                    return;
+                }
+                // Запоминаем, какую запись инбокса конвертируем
+                convertingInboxId = classifyingInboxId;
+                const sourceTitle = item.title;
+                closeInboxClassifyModal();
+
+                if (type === 'task') {
+                    openCreateModal();
+                    document.getElementById('createTitle').value = sourceTitle;
+                    setTimeout(() => document.getElementById('createTitle').focus(), 50);
+                } else if (type === 'project') {
+                    openProjectCreateModal();
+                    document.getElementById('projectCreateName').value = sourceTitle;
+                    setTimeout(() => document.getElementById('projectCreateName').focus(), 50);
+                } else if (type === 'routine') {
+                    openRoutineCreateModal();
+                    document.getElementById('routineCreateName').value = sourceTitle;
+                    setTimeout(() => document.getElementById('routineCreateName').focus(), 50);
+                }
+            });
+        });
+
+        // Хелперы для конвертации
+        function finalizeInboxConversion() {
+            if (!convertingInboxId) return;
+            inboxItems = inboxItems.filter(i => String(i.id) !== String(convertingInboxId));
+            convertingInboxId = null;
+            updateInboxOverflowBadge();
+            if (currentPage === 'inbox') renderInboxList();
+        }
+
+        function cancelInboxConversion() {
+            convertingInboxId = null;
+        }
+
+        // ── Inbox Edit Modal (оставлена для редактирования) ───
         function openInboxEditModal(itemId) {
             const item = inboxItems.find(i => String(i.id) === String(itemId));
             if (!item) return;
@@ -1633,9 +1805,13 @@
 
         function closeInboxEditModal() { document.getElementById('inboxEditModal').classList.add('hidden'); }
         document.getElementById('inboxEditCancel').addEventListener('click', closeInboxEditModal);
+        document.getElementById('inboxEditModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeInboxEditModal();
+        });
 
         document.getElementById('inboxEditSave').addEventListener('click', async () => {
             const title = document.getElementById('inboxEditTitle').value.trim();
+            if (!title) return;
             try {
                 const res = await fetch(`${INBOX_API_URL}/${editingInboxId}`, {
                     method: 'PUT',
@@ -1709,7 +1885,7 @@
             }
         }
 
-        // ── Рутины (без изменений) ────────────────────────────
+        // ── Рутины (без изменений, но добавлена finalize при создании) ──
         const FREQUENCY_LABELS = { 1: 'Ежедневно', 2: 'Еженедельно', 3: 'Ежемесячно' };
 
         async function loadRoutines() {
@@ -1764,27 +1940,16 @@
             document.getElementById('routineCreateModal').classList.add('hidden');
         }
 
-        function openRoutineEditModal(routineId) {
-            const r = allRoutines.find(x => String(x.id) === String(routineId));
-            if (!r) return;
-            editingRoutineId = routineId;
-            document.getElementById('routineEditName').value = r.name;
-            document.getElementById('routineEditFrequency').value = String(r.frequency);
-            document.getElementById('routineEditError').classList.add('hidden');
-            document.getElementById('routineEditSave').disabled = false;
-            document.getElementById('routineEditModal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('routineEditName').focus(), 50);
-        }
-
-        function closeRoutineEditModal() {
-            document.getElementById('routineEditModal').classList.add('hidden');
-            editingRoutineId = null;
-        }
-
         document.getElementById('fabAddRoutine').addEventListener('click', openRoutineCreateModal);
-        document.getElementById('routineCreateCancel').addEventListener('click', closeRoutineCreateModal);
+        document.getElementById('routineCreateCancel').addEventListener('click', () => {
+            cancelInboxConversion();
+            closeRoutineCreateModal();
+        });
         document.getElementById('routineCreateModal').addEventListener('click', e => {
-            if (e.target === e.currentTarget) closeRoutineCreateModal();
+            if (e.target === e.currentTarget) {
+                cancelInboxConversion();
+                closeRoutineCreateModal();
+            }
         });
 
         document.getElementById('routineCreateSave').addEventListener('click', async () => {
@@ -1805,10 +1970,28 @@
                 });
                 closeRoutineCreateModal();
                 await loadRoutines();
+                finalizeInboxConversion(); // Если рутина создана из инбокса — удаляем запись
             } catch {
                 btn.disabled = false;
             }
         });
+
+        function openRoutineEditModal(routineId) {
+            const r = allRoutines.find(x => String(x.id) === String(routineId));
+            if (!r) return;
+            editingRoutineId = routineId;
+            document.getElementById('routineEditName').value = r.name;
+            document.getElementById('routineEditFrequency').value = String(r.frequency);
+            document.getElementById('routineEditError').classList.add('hidden');
+            document.getElementById('routineEditSave').disabled = false;
+            document.getElementById('routineEditModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('routineEditName').focus(), 50);
+        }
+
+        function closeRoutineEditModal() {
+            document.getElementById('routineEditModal').classList.add('hidden');
+            editingRoutineId = null;
+        }
 
         document.getElementById('routineEditCancel').addEventListener('click', closeRoutineEditModal);
         document.getElementById('routineEditModal').addEventListener('click', e => {
@@ -1847,7 +2030,7 @@
             await loadRoutines();
         });
 
-        // Инициализация: загружаем задачи и проекты
+        // Инициализация
         loadTasks();
         loadProjects();
     </script>
