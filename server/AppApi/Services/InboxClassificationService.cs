@@ -115,7 +115,8 @@ public class InboxClassificationService : IInboxClassificationService
         {
             Title = createTaskDto.Title,
             Content = createTaskDto.Content ?? inboxItem.Title, // Используем title инбокса как контент если не указан
-            UserId = userId
+            UserId = userId,
+            ProjectId = createTaskDto.ProjectId 
         };
 
         var created = await _taskRepository.AddAsync(task);
