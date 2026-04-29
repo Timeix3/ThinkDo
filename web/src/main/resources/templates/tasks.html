@@ -1042,6 +1042,14 @@
             return `${d}.${m}.${y}`;
         }
 
+        function showError(message) {
+            alert(message);
+        }
+
+        function showSuccess(message) {
+            alert(message);
+        }
+
         // ── Render Dashboard (Канбан) ──────────────────────────
         function renderBoard(tasks) {
             const col = document.getElementById('colToday');
@@ -1267,38 +1275,88 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title,
-                        content: document.getElementById('createDesc').value.trim(),
-                        projectId: projectId
-                    })
-                });
-
-                if (!response.ok) {
-                    let errorMsg = 'Ошибка при создании задачи';
-                    try {
-                        const errData = await response.json();
-                        if (errData && errData.message) errorMsg = errData.message;
-                    } catch (e) { }
-                    if (response.status === 400 || response.status === 404) {
-                        errorMsg += ' Возможно, выбранный проект был удалён. Пожалуйста, обновите список проектов и попробуйте снова.';
-                        if (confirm(errorMsg + '\nОбновить список проектов?')) {
-                            await loadProjects();
-                            openCreateModal();
+                // Если создаём из инбокса (есть convertingInboxId) — используем classify endpoint
+                if (convertingInboxId) {
+                    const classifyPayload = {
+                        targetType: "task",
+                        data: {
+                            title: title,
+                            content: document.getElementById('createDesc').value.trim(),
+                            projectId: projectId
                         }
-                    } else {
-                        alert(errorMsg);
-                    }
-                    return;
-                }
+                    };
+                    const response = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(classifyPayload)
+                    });
 
-                closeCreateModal();
-                await loadTasks();
-                await loadProjects();
-                finalizeInboxConversion(); // Если задача создана из инбокса — удаляем запись
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            showError('Запись инбокса не найдена или уже была обработана.');
+                            closeCreateModal();
+                            await inboxLoad();
+                            cancelInboxConversion();
+                            return;
+                        } else if (response.status === 409) {
+                            showError('Запись инбокса уже классифицирована.');
+                            closeCreateModal();
+                            await inboxLoad();
+                            cancelInboxConversion();
+                            return;
+                        } else {
+                            let errorMsg = 'Ошибка при создании задачи';
+                            try {
+                                const errData = await response.json();
+                                if (errData && errData.message) errorMsg = errData.message;
+                            } catch (e) { }
+                            showError(errorMsg);
+                            // Не закрываем форму
+                            return;
+                        }
+                    }
+
+                    // Успех
+                    closeCreateModal();
+                    await loadTasks();
+                    await loadProjects();
+                    await inboxLoad();  // обновляем инбокс — запись исчезнет
+                    cancelInboxConversion(); // сброс флага
+                    showSuccess('Задача успешно создана из записи инбокса!');
+                } else {
+                    // Обычное создание задачи (не из инбокса)
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title,
+                            content: document.getElementById('createDesc').value.trim(),
+                            projectId: projectId
+                        })
+                    });
+
+                    if (!response.ok) {
+                        let errorMsg = 'Ошибка при создании задачи';
+                        try {
+                            const errData = await response.json();
+                            if (errData && errData.message) errorMsg = errData.message;
+                        } catch (e) { }
+                        if (response.status === 400 || response.status === 404) {
+                            errorMsg += ' Возможно, выбранный проект был удалён. Пожалуйста, обновите список проектов и попробуйте снова.';
+                            if (confirm(errorMsg + '\nОбновить список проектов?')) {
+                                await loadProjects();
+                                openCreateModal();
+                            }
+                        } else {
+                            showError(errorMsg);
+                        }
+                        return;
+                    }
+
+                    closeCreateModal();
+                    await loadTasks();
+                    await loadProjects();
+                }
             } finally {
                 btn.disabled = false;
             }
@@ -1338,24 +1396,71 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch(PROJECTS_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name,
-                        description: document.getElementById('projectCreateDesc').value.trim()
-                    })
-                });
+                if (convertingInboxId) {
+                    // Классификация в проект
+                    const classifyPayload = {
+                        targetType: "project",
+                        data: {
+                            title: name,
+                            description: document.getElementById('projectCreateDesc').value.trim()
+                        }
+                    };
+                    const response = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(classifyPayload)
+                    });
 
-                if (res.ok) {
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            showError('Запись инбокса не найдена или уже была обработана.');
+                            closeProjectCreateModal();
+                            await inboxLoad();
+                            cancelInboxConversion();
+                            return;
+                        } else if (response.status === 409) {
+                            showError('Запись инбокса уже классифицирована.');
+                            closeProjectCreateModal();
+                            await inboxLoad();
+                            cancelInboxConversion();
+                            return;
+                        } else {
+                            let errorMsg = 'Ошибка при создании проекта';
+                            try {
+                                const errData = await response.json();
+                                if (errData && errData.message) errorMsg = errData.message;
+                            } catch (e) { }
+                            showError(errorMsg);
+                            return;
+                        }
+                    }
+
                     closeProjectCreateModal();
                     await loadProjects();
-                    finalizeInboxConversion(); // Если проект создан из инбокса — удаляем запись
+                    await inboxLoad();
+                    cancelInboxConversion();
+                    showSuccess('Проект успешно создан из записи инбокса!');
                 } else {
-                    alert("Ошибка при создании проекта.");
+                    // Обычное создание проекта
+                    const res = await fetch(PROJECTS_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name,
+                            description: document.getElementById('projectCreateDesc').value.trim()
+                        })
+                    });
+
+                    if (!res.ok) {
+                        alert("Ошибка при создании проекта.");
+                        return;
+                    }
+                    closeProjectCreateModal();
+                    await loadProjects();
                 }
             } catch (e) {
                 console.error(e);
+                showError('Ошибка сети, попробуйте позже.');
             } finally {
                 btn.disabled = false;
             }
@@ -1734,7 +1839,7 @@
             if (e.target === e.currentTarget) closeInboxClassifyModal();
         });
 
-        // Удалить запись инбокса с поддержкой undo (как в inboxEditDelete)
+        // Удалить запись инбокса с поддержкой undo
         document.getElementById('inboxClassifyDelete').addEventListener('click', async () => {
             const idToDelete = classifyingInboxId;
             if (!idToDelete) return;
@@ -1750,7 +1855,6 @@
                 showInboxUndoToast(idToDelete);
             } catch (error) {
                 console.error('Ошибка удаления записи инбокса', error);
-                // Если API не отвечает, пробуем локальное удаление
                 inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
                 renderInboxList();
                 updateInboxOverflowBadge();
@@ -1795,13 +1899,12 @@
             });
         });
 
-        // Хелперы для конвертации
+        // Хелперы для конвертации (теперь не удаляют запись, а только сбрасывают флаг)
         function finalizeInboxConversion() {
-            if (!convertingInboxId) return;
-            inboxItems = inboxItems.filter(i => String(i.id) !== String(convertingInboxId));
-            convertingInboxId = null;
-            updateInboxOverflowBadge();
-            if (currentPage === 'inbox') renderInboxList();
+            // Этот метод больше не используется, оставлен для совместимости
+            if (convertingInboxId) {
+                convertingInboxId = null;
+            }
         }
 
         function cancelInboxConversion() {
@@ -1900,7 +2003,7 @@
             }
         }
 
-        // ── Рутины (без изменений, но добавлена finalize при создании) ──
+        // ── Рутины (с поддержкой классификации) ────────────────
         const FREQUENCY_LABELS = { 1: 'Ежедневно', 2: 'Еженедельно', 3: 'Ежемесячно' };
 
         async function loadRoutines() {
@@ -1977,15 +2080,62 @@
             const frequency = parseInt(document.getElementById('routineCreateFrequency').value, 10);
             const btn = document.getElementById('routineCreateSave');
             btn.disabled = true;
+
             try {
-                await fetch(ROUTINES_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, frequency })
-                });
-                closeRoutineCreateModal();
-                await loadRoutines();
-                finalizeInboxConversion(); // Если рутина создана из инбокса — удаляем запись
+                if (convertingInboxId) {
+                    // Классификация в рутину
+                    const classifyPayload = {
+                        targetType: "routine",
+                        data: {
+                            title: name,
+                            frequency: frequency
+                        }
+                    };
+                    const response = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(classifyPayload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            showError('Запись инбокса не найдена или уже была обработана.');
+                            closeRoutineCreateModal();
+                            await inboxLoad();
+                            cancelInboxConversion();
+                            return;
+                        } else if (response.status === 409) {
+                            showError('Запись инбокса уже классифицирована.');
+                            closeRoutineCreateModal();
+                            await inboxLoad();
+                            cancelInboxConversion();
+                            return;
+                        } else {
+                            let errorMsg = 'Ошибка при создании рутины';
+                            try {
+                                const errData = await response.json();
+                                if (errData && errData.message) errorMsg = errData.message;
+                            } catch (e) { }
+                            showError(errorMsg);
+                            return;
+                        }
+                    }
+
+                    closeRoutineCreateModal();
+                    await loadRoutines();
+                    await inboxLoad();
+                    cancelInboxConversion();
+                    showSuccess('Рутина успешно создана из записи инбокса!');
+                } else {
+                    // Обычное создание рутины
+                    await fetch(ROUTINES_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, frequency })
+                    });
+                    closeRoutineCreateModal();
+                    await loadRoutines();
+                }
             } catch {
                 btn.disabled = false;
             }
