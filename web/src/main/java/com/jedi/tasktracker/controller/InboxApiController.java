@@ -43,4 +43,13 @@ public class InboxApiController {
     apiClient.restoreInboxItem(id);
     return ResponseEntity.noContent().build();
   }
+
+  @PostMapping("/{id}/classify")
+  public ResponseEntity<Void> classifyInboxItem(
+      @PathVariable int id, @RequestBody Map<String, Object> classifyRequest) {
+    String targetType = (String) classifyRequest.get("targetType");
+    Map<String, Object> data = (Map<String, Object>) classifyRequest.get("data");
+    apiClient.classifyInboxItem(id, targetType, data);
+    return ResponseEntity.ok().build();
+  }
 }

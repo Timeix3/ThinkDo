@@ -47,7 +47,8 @@ public class ClassifyInboxItemDto
         return new CreateTaskDto
         {
             Title = data.Title,
-            Content = data.Content
+            Content = data.Content,
+            ProjectId = data.ProjectId
         };
     }
 
