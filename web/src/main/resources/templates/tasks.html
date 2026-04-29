@@ -1734,13 +1734,28 @@
             if (e.target === e.currentTarget) closeInboxClassifyModal();
         });
 
-        // Удалить запись инбокса
-        document.getElementById('inboxClassifyDelete').addEventListener('click', () => {
-            if (!classifyingInboxId) return;
-            inboxItems = inboxItems.filter(i => String(i.id) !== String(classifyingInboxId));
+        // Удалить запись инбокса с поддержкой undo (как в inboxEditDelete)
+        document.getElementById('inboxClassifyDelete').addEventListener('click', async () => {
+            const idToDelete = classifyingInboxId;
+            if (!idToDelete) return;
+
             closeInboxClassifyModal();
-            renderInboxList();
-            updateInboxOverflowBadge();
+
+            try {
+                const res = await fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error();
+                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
+                renderInboxList();
+                updateInboxOverflowBadge();
+                showInboxUndoToast(idToDelete);
+            } catch (error) {
+                console.error('Ошибка удаления записи инбокса', error);
+                // Если API не отвечает, пробуем локальное удаление
+                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
+                renderInboxList();
+                updateInboxOverflowBadge();
+                showInboxUndoToast(idToDelete);
+            }
         });
 
         // Редактировать запись инбокса
