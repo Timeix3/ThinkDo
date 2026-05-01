@@ -276,6 +276,83 @@
             opacity: 0.85;
         }
 
+        /* Планирование — колонки проектов (3 в ряд, с горизонтальным скроллом при переполнении) */
+        .planning-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 900px) {
+            .planning-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .planning-col {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .planning-col.is-default {
+            }
+
+        .planning-col-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            color: white;
+        }
+
+        .planning-col-title {
+            font-weight: 700;
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+
+        .planning-col-count {
+            background: rgba(255,255,255,0.2);
+            border-radius: 1rem;
+            padding: 0.15rem 0.55rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .planning-task {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.8rem;
+            margin-bottom: 0.55rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+
+        .planning-task-title {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.88rem;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .planning-empty {
+            color: rgba(255,255,255,0.35);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1.5rem 0.5rem;
+        }
+
         /* ── Кнопка редактирования проекта ── */
         .project-edit-btn {
             width: 26px;
@@ -630,10 +707,9 @@
                 <!-- Не авторизован -->
                 <div sec:authorize="isAnonymous()">
                     <a href="/oauth2/authorization/github"
-                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                       class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                         </svg>
                         Войти через GitHub
                     </a>
@@ -642,13 +718,13 @@
                 <!-- Авторизован -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
                     <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
-                        class="w-8 h-8 rounded-full border-2 border-white/50">
+                         class="w-8 h-8 rounded-full border-2 border-white/50">
                     <span class="text-sm opacity-90">
                         Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                     </span>
                     <form th:action="@{/logout}" method="post" id="logoutForm">
                         <button type="submit" onclick="clearAllData()"
-                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                                class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                             <i class="fas fa-sign-out-alt text-xs"></i> Выйти
                         </button>
                     </form>
@@ -660,8 +736,7 @@
         <!-- Навигация по центру -->
         <div class="flex justify-center mb-6">
             <div class="nav-pill flex gap-2 text-white">
-                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">🗂
-                    Доска</button>
+                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">📅 Планирование</button>
                 <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
@@ -669,28 +744,13 @@
             </div>
         </div>
 
-        <!-- ====== Страница: Доска ====== -->
+        <!-- ====== Страница: Планирование ====== -->
         <div id="pageDashboard">
-            <div class="grid md:grid-cols-3 gap-5">
-                <div class="kanban-col">
-                    <h2 class="text-white font-bold text-lg mb-3">⚡ На сегодня</h2>
-                    <div id="colToday"></div>
-                </div>
-                <div class="kanban-col">
-                    <h2 class="text-white font-bold text-lg mb-3">🔧 В работе / Бэклог</h2>
-                    <div id="colBacklog">
-                        <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">Пусто</div>
-                    </div>
-                </div>
-                <div class="kanban-col">
-                    <h2 class="text-white font-bold text-lg mb-3">🚧 Заблокировано</h2>
-                    <div id="colBlocked">
-                        <div class="flex items-center justify-center h-24 text-white/30 text-sm font-medium">—</div>
-                    </div>
-                </div>
+            <div class="task-list-container">
+                <h2 class="text-white font-bold text-lg mb-4">📅 Планирование по проектам</h2>
+                <div class="planning-grid" id="planningGrid"></div>
             </div>
         </div>
-
         <!-- ====== Страница: Задачи ====== -->
         <div id="pageTasks" class="hidden">
             <div class="task-list-container">
@@ -1041,8 +1101,8 @@
             const [y, m, d] = datePart.split('-');
             return `${d}.${m}.${y}`;
         }
-
-        function showError(message) {
+      
+      function showError(message) {
             alert(message);
         }
 
@@ -1050,28 +1110,90 @@
             alert(message);
         }
 
-        // ── Render Dashboard (Канбан) ──────────────────────────
-        function renderBoard(tasks) {
-            const col = document.getElementById('colToday');
-            if (!tasks.length) {
-                col.innerHTML = emptyPlaceholder();
-                return;
-            }
-            col.innerHTML = tasks.map(t => `
-                            <div class="task-card" data-id="${t.id}">
-                                <div class="flex items-start justify-between gap-2">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                                        ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
-                                    </div>
-                                    <i class="fas fa-pencil-alt text-slate-300 text-xs mt-1 shrink-0"></i>
-                                </div>
-                            </div>
-                        `).join('');
 
-            col.querySelectorAll('.task-card').forEach(card => {
-                card.addEventListener('click', () => openEditModal(card.dataset.id, tasks));
+        function GetProjectsWithTasks() {
+            return allProjects.map(project => {
+                const projectTasks = allTasks.filter(task => task.projectId === project.id);
+                return { project, projectTasks };
             });
+        }
+
+        function renderPlanning() {
+            const grid = document.getElementById('planningGrid');
+            const projectsWithTasks = GetProjectsWithTasks();
+            grid.innerHTML = projectsWithTasks.map(({ project, projectTasks }) => {
+                const defaultCls = project.isDefault ? ' is-default' : '';
+                const blockedStyle = project.blocked ? 'opacity:0.55;' : '';
+                const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
+
+
+                const blockBadge = project.blocked
+                    ? `<span class="project-badge-blocked" style="font-size:0.65rem;"><i class="fas fa-lock"></i>${escHtml(formatBlockReason(project.blocked))}</span>`
+                    : '';
+
+                const tasksHtml = projectTasks.length === 0
+                    ? '<div class="planning-empty">Нет задач</div>'
+                    : projectTasks.map(t => {
+                        const checkStyle = t.isSelectedForSprint
+                            ? 'border-color:#22c55e;background:#22c55e;color:#fff;'
+                            : '';
+                        return `
+            <div class="planning-task" data-id="${t.id}">
+                <div class="task-check shrink-0" data-complete-id="${t.id}" title="Отметить" style="${checkStyle}">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="planning-task-title" title="${escHtml(t.title)}">${escHtml(t.title)}</div>
+            </div>
+        `}).join('');
+
+                return `
+        <div class="planning-col${defaultCls}" style="${blockedStyle}">
+            <div class="planning-col-header">
+                <div class="planning-col-title">${icon} ${escHtml(project.name)}</div>
+                <span class="planning-col-count">${projectTasks.length}</span>
+            </div>
+            ${blockBadge ? `<div style="margin-bottom:0.6rem;">${blockBadge}</div>` : ''}
+            <div>${tasksHtml}</div>
+        </div>
+    `;
+            }).join('');
+            // Чекбокс в планировании — только визуальная отметка, задача не удаляется
+            grid.querySelectorAll('.task-check').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await togglePlanning(btn.dataset.completeId, btn);
+                });
+            });
+            // Клик по названию задачи — открыть редактирование
+            grid.querySelectorAll('.planning-task-title').forEach(el => {
+                el.addEventListener('click', () => {
+                    const wrap = el.closest('.planning-task');
+                    if (wrap) openEditModal(wrap.dataset.id, allTasks);
+                });
+            });
+        }
+
+        async function togglePlanning(taskId, checkEl) {
+            const task = allTasks.find(t => String(t.id) === String(taskId));
+            if (!task) return;
+            if (checkEl.dataset.loading === 'true') return;
+            checkEl.dataset.loading = 'true';
+            if (task.isSelectedForSprint) {
+                const res = await fetch(`${API_URL}/${taskId}/deselect`, { method: 'PUT' });
+                if (!res.ok) console.error(`HTTP ${res.status}`);
+                task.isSelectedForSprint = false;
+                checkEl.style.borderColor = '';
+                checkEl.style.background = '';
+                checkEl.style.color = 'transparent';
+            } else {
+                const res = await fetch(`${API_URL}/${taskId}/select`, { method: 'PUT' });
+                if (!res.ok) console.error(`HTTP ${res.status}`);
+                task.isSelectedForSprint = true;
+                checkEl.style.borderColor = '#22c55e';
+                checkEl.style.background = '#22c55e';
+                checkEl.style.color = '#fff';
+            }
+            checkEl.dataset.loading = 'false';
         }
 
         // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1 + ОТОБРАЖЕНИЕ КОНТЕНТА + ПРОЕКТ) ──
@@ -1192,6 +1314,7 @@
                 if (!res.ok) throw new Error('Projects API error');
                 const data = await res.json();
                 allProjects = data;
+                renderPlanning();
                 renderProjectsList();
                 if (currentPage === 'tasks') {
                     renderTaskList(allTasks);
@@ -1208,7 +1331,7 @@
             try {
                 const res = await fetch(API_URL);
                 allTasks = await res.json();
-                renderBoard(allTasks);
+                renderPlanning();
                 renderTaskList(allTasks);
             } catch (e) {
                 document.getElementById('colToday').innerHTML =

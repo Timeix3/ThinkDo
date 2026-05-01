@@ -90,6 +90,16 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
+  public void selectTask(Long id) {
+    restClient.put().uri("/api/tasks/{id}/select", id).retrieve().toBodilessEntity();
+  }
+
+  @Override
+  public void deselectTask(Long id) {
+    restClient.put().uri("/api/tasks/{id}/deselect", id).retrieve().toBodilessEntity();
+  }
+
+  @Override
   public void deleteTask(Long id) {
     restClient.delete().uri("/api/tasks/{id}", id).retrieve().toBodilessEntity();
   }

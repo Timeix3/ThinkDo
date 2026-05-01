@@ -40,6 +40,18 @@ public class TaskApiController {
     return ResponseEntity.ok().build();
   }
 
+  @PutMapping("/{id}/select")
+  public ResponseEntity<Void> selectTask(@PathVariable Long id) {
+    apiClient.selectTask(id);
+    return ResponseEntity.ok().build();
+  }
+
+  @PutMapping("/{id}/deselect")
+  public ResponseEntity<Void> deselectTask(@PathVariable Long id) {
+    apiClient.deselectTask(id);
+    return ResponseEntity.ok().build();
+  }
+
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
     apiClient.deleteTask(id);
