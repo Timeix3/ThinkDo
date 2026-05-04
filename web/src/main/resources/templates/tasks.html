@@ -690,6 +690,24 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
+        /* Кнопка + в заголовке секции */
+        .section-add-btn {
+            background: rgba(255,255,255,0.25);
+            border: 2px solid rgba(255,255,255,0.45);
+            color: white;
+            border-radius: 0.65rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+            line-height: 1;
+        }
+
+            .section-add-btn:hover {
+                background: rgba(255,255,255,0.4);
+            }
     </style>
 </head>
 
@@ -784,7 +802,10 @@
         <!-- ====== Страница: Рутины ====== -->
         <div id="pageRoutines" class="hidden">
             <div class="task-list-container">
-                <h2 class="text-white font-bold text-lg mb-4">🔄 Рутины</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-white font-bold text-lg">🔄 Рутины</h2>
+                    <button class="section-add-btn" id="btnAddRoutine"><i class="fas fa-plus"></i></button>
+                </div>
                 <div id="routinesListContent"></div>
             </div>
         </div>
@@ -807,11 +828,6 @@
 
     <!-- FAB: Создать проект (Задача 9.4) -->
     <div class="fab hidden" id="fabAddProject" style="position:fixed;">
-        <i class="fas fa-plus"></i>
-    </div>
-
-    <!-- FAB: Создать рутину -->
-    <div class="fab hidden" id="fabAddRoutine" style="position:fixed;">
         <i class="fas fa-plus"></i>
     </div>
 
@@ -1825,10 +1841,7 @@
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
-            document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'tasks');
-            document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox');
-            document.getElementById('fabAddProject').classList.toggle('hidden', page !== 'projects');
-            document.getElementById('fabAddRoutine').classList.toggle('hidden', page !== 'routines');
+            document.getElementById('fabAddInbox').classList.toggle('hidden', page === 'dashboard');
 
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
@@ -2181,7 +2194,10 @@
             document.getElementById('routineCreateModal').classList.add('hidden');
         }
 
-        document.getElementById('fabAddRoutine').addEventListener('click', openRoutineCreateModal);
+        document.getElementById('btnAddRoutine').addEventListener('click', () => {
+            openRoutineCreateModal();
+        })
+
         document.getElementById('routineCreateCancel').addEventListener('click', () => {
             cancelInboxConversion();
             closeRoutineCreateModal();
