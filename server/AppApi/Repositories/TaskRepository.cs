@@ -161,4 +161,11 @@ public class TaskRepository : ITaskRepository
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<List<TaskItem>> GetByIdsAsync(List<int> ids, string userId)
+    {
+        return await _context.Tasks
+            .Where(t => ids.Contains(t.Id) && t.UserId == userId && t.DeletedAt == null)
+            .ToListAsync();
+    }
 }

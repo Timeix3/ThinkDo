@@ -11,4 +11,5 @@ public interface IInboxRepository
     Task<bool> UpdateAsync(int id, string userId, string title);
     Task<bool> SoftDeleteAsync(int id, string userId);
     Task<bool> RestoreAsync(int id, string userId);
+    Task<int> GetCountAsync(string userId);
 }

@@ -17,4 +17,5 @@ public interface ITaskRepository
     Task<IEnumerable<TaskItem>> GetSprintTasksAsync(string userId);
     Task<IEnumerable<TaskItem>> GetBlockedByTaskIdAsync(int taskId, string userId);
     Task<IEnumerable<TaskItem>> GetByProjectIdAsync(int projectId, string userId);
+    Task<List<TaskItem>> GetByIdsAsync(List<int> ids, string userId);
 }

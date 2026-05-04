@@ -93,4 +93,10 @@ public class InboxRepository : IInboxRepository
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<int> GetCountAsync(string userId)
+    {
+        return await _context.InboxItems
+            .CountAsync(i => i.UserId == userId && i.DeletedAt == null);
+    }
 }

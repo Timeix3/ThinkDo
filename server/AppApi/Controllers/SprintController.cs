@@ -1,4 +1,5 @@
 using AppApi.Services.Interfaces;
+using AppApi.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -11,14 +12,18 @@ namespace AppApi.Controllers;
 public class SprintController : ControllerBase
 {
     private readonly ITaskService _taskService;
+    private readonly ILogger<SprintController> _logger;
+    private readonly ISprintService _sprintService;
 
-    public SprintController(ITaskService taskService)
+    public SprintController(ISprintService sprintService, ITaskService taskService, ILogger<SprintController> logger)
     {
+        _sprintService = sprintService;
         _taskService = taskService;
+        _logger = logger;
     }
 
     private string GetCurrentUserId() => User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-        ?? throw new UnauthorizedAccessException();
+        ?? throw new UnauthorizedAccessException("User ID not found in token");
 
     /// <summary>
     /// Получить все задачи текущего спринта
@@ -26,4 +31,77 @@ public class SprintController : ControllerBase
     [HttpGet("tasks")]
     public async Task<IActionResult> GetSprintTasks()
         => Ok(await _taskService.GetSprintTasksAsync(GetCurrentUserId()));
+
+    /// <summary>
+    /// Получить текущее состояние спринта и фазу пользователя
+    /// </summary>
+    [HttpGet("status")]
+    [ProducesResponseType(typeof(SprintStatusDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetStatus()
+    {
+        var userId = GetCurrentUserId();
+        _logger.LogInformation("Fetching sprint status for user {UserId}", userId);
+
+        var status = await _sprintService.GetStatusAsync(userId);
+        return Ok(status);
+    }
+
+    /// <summary>
+    /// Запустить новый спринт с выбранными задачами
+    /// </summary>
+    [HttpPost("start")]
+    [ProducesResponseType(typeof(StartSprintResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> StartSprint([FromBody] StartSprintRequestDto dto)
+    {
+        var userId = GetCurrentUserId();
+        _logger.LogInformation("User {UserId} attempting to start a sprint", userId);
+
+        try
+        {
+            var result = await _sprintService.StartSprintAsync(dto.TaskIds, userId);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Сюда попадем, если индекс в БД или проверка в сервисе нашли активный спринт
+            _logger.LogWarning("Sprint start conflict for user {UserId}: {Message}", userId, ex.Message);
+            return Conflict(new { message = ex.Message }); // 409
+        }
+        catch (ArgumentException ex)
+        {
+            // Сюда попадем при пустом списке задач
+            return BadRequest(new { message = ex.Message }); // 400
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // Если пытаемся добавить чужие задачи
+            return Forbid(); // 403
+        }
+    }
+
+    /// <summary>
+    /// Завершить текущий активный спринт
+    /// </summary>
+    [HttpPost("complete")]
+    [ProducesResponseType(typeof(CompleteSprintResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CompleteSprint()
+    {
+        var userId = GetCurrentUserId();
+        _logger.LogInformation("User {UserId} attempting to complete sprint", userId);
+
+        try
+        {
+            var result = await _sprintService.CompleteSprintAsync(userId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            // Если у пользователя нет активного спринта
+            _logger.LogWarning("Complete sprint failed for user {UserId}: {Message}", userId, ex.Message);
+            return NotFound(new { message = ex.Message }); // 404
+        }
+    }
 }

@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<InboxItem> InboxItems => Set<InboxItem>();
     public DbSet<Routine> Routines => Set<Routine>();
     public DbSet<ProjectItem> Projects => Set<ProjectItem>();
+    public DbSet<SprintItem> Sprints => Set<SprintItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -237,5 +238,40 @@ public class AppDbContext : DbContext
             .WithMany(p => p.Tasks)
             .HasForeignKey(t => t.ProjectId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<SprintItem>(entity =>
+        {
+            entity.ToTable("sprints");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id)
+                .HasColumnName("id")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .IsRequired();
+
+            entity.Property(e => e.Status)
+                .HasColumnName("status")
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.CompletedAt)
+                .HasColumnName("completed_at");
+
+            entity.HasIndex(e => new { e.UserId, e.Status })
+                .HasDatabaseName("ix_sprints_user_active_unique")
+                .HasFilter("status = 0") // 0 = Active
+                .IsUnique();
+
+            entity.HasMany(s => s.Tasks)
+                .WithMany()
+                .UsingEntity(j => j.ToTable("sprint_tasks"));
+        });
     }
 }
