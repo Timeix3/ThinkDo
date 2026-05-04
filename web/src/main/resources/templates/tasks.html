@@ -766,6 +766,24 @@
                     0 20px 55px rgba(0, 0, 0, 0.3);
             }
         }
+
+        /* ── Дополнительный стиль для инлайн-кнопки ── */
+        .section-add-btn {
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.45);
+            color: white;
+            border-radius: 0.65rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+            line-height: 1;
+        }
+
+        .section-add-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
     </style>
 </head>
 
@@ -854,7 +872,11 @@
         <!-- ====== Страница: Проекты (Задача 9.3) ====== -->
         <div id="pageProjects" class="hidden">
             <div class="task-list-container">
-                <h2 class="text-white font-bold text-lg mb-4">📁 Мои проекты</h2>
+                <!-- Заголовок с inline-кнопкой создания проекта -->
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-white font-bold text-lg">📁 Мои проекты</h2>
+                    <button class="section-add-btn" id="btnAddProjectInline">+</button>
+                </div>
                 <div id="projectsListContent"></div>
             </div>
         </div>
@@ -878,14 +900,9 @@
         🐒
     </a>
 
-    <!-- FAB: Добавить в инбокс -->
+    <!-- FAB: Добавить в инбокс (теперь также отображается в разделе Проекты) -->
     <div class="fab hidden" id="fabAddInbox" style="position:fixed;">
         <i class="fas fa-plus" id="fabAddInboxIcon"></i>
-    </div>
-
-    <!-- FAB: Создать проект (Задача 9.4) -->
-    <div class="fab hidden" id="fabAddProject" style="position:fixed;">
-        <i class="fas fa-plus"></i>
     </div>
 
     <!-- FAB: Создать рутину -->
@@ -1588,7 +1605,8 @@
             document.getElementById('projectCreateModal').classList.add('hidden');
         }
 
-        document.getElementById('fabAddProject').addEventListener('click', openProjectCreateModal);
+        // Обработчик для inline-кнопки создания проекта
+        document.getElementById('btnAddProjectInline').addEventListener('click', openProjectCreateModal);
         document.getElementById('projectCreateCancel').addEventListener('click', () => {
             cancelInboxConversion();
             closeProjectCreateModal();
@@ -1916,8 +1934,8 @@
             });
 
             document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'tasks');
-            document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox');
-            document.getElementById('fabAddProject').classList.toggle('hidden', page !== 'projects');
+            // FAB инбокса теперь показывается как на странице инбокса, так и на странице проектов
+            document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox' && page !== 'projects');
             document.getElementById('fabAddRoutine').classList.toggle('hidden', page !== 'routines');
 
             // Управление видимостью workflow-кнопок
