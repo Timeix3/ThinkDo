@@ -140,7 +140,9 @@ public class TaskRepository : ITaskRepository
         return await _context.Tasks
             .Where(t => t.UserId == userId
                      && t.DeletedAt == null
-                     && t.IsSelectedForSprint)
+                     && t.IsSelectedForSprint
+                     && t.Status != TasksStatus.Completed
+                     && t.Status != TasksStatus.Cancelled)
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
     }

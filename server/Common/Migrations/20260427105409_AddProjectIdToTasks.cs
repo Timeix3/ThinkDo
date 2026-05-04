@@ -19,10 +19,11 @@ namespace Common.Migrations
                 table: "tasks",
                 newName: "project_id");
 
-            migrationBuilder.RenameIndex(
-                name: "IX_tasks_ProjectId",
-                table: "tasks",
-                newName: "IX_tasks_project_id");
+            migrationBuilder.Sql(@"
+DROP INDEX IF EXISTS ""IX_tasks_ProjectId"";
+DROP INDEX IF EXISTS ""IX_tasks_project_id"";
+CREATE INDEX ""IX_tasks_project_id"" ON tasks (project_id);
+");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_tasks_projects_project_id",
@@ -45,10 +46,11 @@ namespace Common.Migrations
                 table: "tasks",
                 newName: "ProjectId");
 
-            migrationBuilder.RenameIndex(
-                name: "IX_tasks_project_id",
-                table: "tasks",
-                newName: "IX_tasks_ProjectId");
+            migrationBuilder.Sql(@"
+DROP INDEX IF EXISTS ""IX_tasks_project_id"";
+DROP INDEX IF EXISTS ""IX_tasks_ProjectId"";
+CREATE INDEX ""IX_tasks_ProjectId"" ON tasks (""ProjectId"");
+");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_tasks_projects_ProjectId",

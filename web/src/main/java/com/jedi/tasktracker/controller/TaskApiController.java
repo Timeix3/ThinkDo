@@ -57,4 +57,10 @@ public class TaskApiController {
     apiClient.deleteTask(id);
     return ResponseEntity.noContent().build();
   }
+
+  @PatchMapping("/{id}/complete")
+  public ResponseEntity<Void> completeTask(@PathVariable Long id) {
+    apiClient.completeTask(id);
+    return ResponseEntity.ok().build();
+  }
 }

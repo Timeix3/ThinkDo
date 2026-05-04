@@ -54,6 +54,20 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
+  public List<TaskDto> getSprintTasks() {
+    return restClient
+        .get()
+        .uri("/api/sprint/tasks")
+        .retrieve()
+        .body(new ParameterizedTypeReference<List<TaskDto>>() {});
+  }
+
+  @Override
+  public void completeTask(Long id) {
+    restClient.patch().uri("/api/tasks/{id}/complete", id).retrieve().toBodilessEntity();
+  }
+
+  @Override
   public List<TaskDto> getProjectTasks(Long projectId) {
     return restClient
         .get()

@@ -139,6 +139,13 @@ public class TaskService : ITaskService
         if (completed is null)
             return null;
 
+        // Убираем задачу из спринта при завершении
+        if (completed.IsSelectedForSprint)
+        {
+            await _repository.UpdateSprintSelectionAsync(id, userId, false);
+            completed.IsSelectedForSprint = false;
+        }
+
         // Каскадная разблокировка: находим все задачи, заблокированные текущей
         var blockedTasks = await _repository.GetBlockedByTaskIdAsync(id, userId);
 
