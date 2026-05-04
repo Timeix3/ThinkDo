@@ -38,7 +38,7 @@ public class SprintRepositoryIntegrationTests : IAsyncLifetime
 
         // Act: Пытаемся создать второй активный спринт для того же юзера
         var sprint2 = new SprintItem { UserId = uid, Status = SprintStatus.Active };
-        
+
         // Assert: База данных должна выкинуть ошибку (DbUpdateException)
         await repo.Invoking(r => r.AddAsync(sprint2))
             .Should().ThrowAsync<DbUpdateException>();

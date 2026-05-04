@@ -23,7 +23,7 @@ public class SprintService : ISprintService
     {
         var activeSprint = await _repository.GetActiveSprintAsync(userId);
         var inboxCount = await _inboxRepository.GetCountAsync(userId);
-        
+
         int pendingCount = activeSprint?.Tasks.Count(t => t.Status != TasksStatus.Completed) ?? 0;
         bool hasActive = activeSprint != null;
 
@@ -31,7 +31,8 @@ public class SprintService : ISprintService
         if (hasActive && pendingCount > 0) phase = "sprint";
         else if (inboxCount > 0) phase = "review";
 
-        return new SprintStatusDto {
+        return new SprintStatusDto
+        {
             HasActiveSprint = hasActive,
             PendingTasksCount = pendingCount,
             InboxCount = inboxCount,

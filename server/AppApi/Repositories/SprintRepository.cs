@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AppApi.Repositories;
 
-public class SprintRepository : ISprintRepository 
+public class SprintRepository : ISprintRepository
 {
     private readonly AppDbContext _context;
     public SprintRepository(AppDbContext context) => _context = context;

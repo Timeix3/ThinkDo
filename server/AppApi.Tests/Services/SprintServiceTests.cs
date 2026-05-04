@@ -30,10 +30,11 @@ public class SprintServiceTests
     public async Task GetStatus_ActiveSprintWithTasks_ReturnsSprintPhase()
     {
         // Arrange: Есть активный спринт с одной невыполненной задачей
-        var activeSprint = new SprintItem { 
-            UserId = UserId, 
+        var activeSprint = new SprintItem
+        {
+            UserId = UserId,
             Status = SprintStatus.Active,
-            Tasks = new List<TaskItem> { new() { Status = TasksStatus.Available } } 
+            Tasks = new List<TaskItem> { new() { Status = TasksStatus.Available } }
         };
         _sprintRepoMock.Setup(r => r.GetActiveSprintAsync(UserId)).ReturnsAsync(activeSprint);
 
@@ -83,7 +84,7 @@ public class SprintServiceTests
         _sprintRepoMock.Setup(r => r.GetActiveSprintAsync(UserId)).ReturnsAsync(new SprintItem());
 
         // Act & Assert
-        await _service.Invoking(s => s.StartSprintAsync(new List<int>{1}, UserId))
+        await _service.Invoking(s => s.StartSprintAsync(new List<int> { 1 }, UserId))
             .Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Спринт уже запущен.");
     }
@@ -93,9 +94,9 @@ public class SprintServiceTests
     {
         // Arrange
         var taskIds = new List<int> { 1, 2 };
-        var tasks = new List<TaskItem> { 
-            new() { Id = 1, UserId = UserId }, 
-            new() { Id = 2, UserId = UserId } 
+        var tasks = new List<TaskItem> {
+            new() { Id = 1, UserId = UserId },
+            new() { Id = 2, UserId = UserId }
         };
         _sprintRepoMock.Setup(r => r.GetActiveSprintAsync(UserId)).ReturnsAsync((SprintItem?)null);
         _taskRepoMock.Setup(r => r.GetByIdsAsync(taskIds, UserId)).ReturnsAsync(tasks);
