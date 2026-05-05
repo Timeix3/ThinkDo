@@ -352,7 +352,7 @@
 
     <script>
         const API_URL = '/api/tasks';
-        const MONKEY_API_URL = '/api/tasks/monkey/all';
+        const SPRINT_API_URL = '/api/sprint/tasks';
         const INBOX_API_URL = '/api/inbox';
 
         let remaining = [];
@@ -369,13 +369,18 @@
             const area = document.getElementById('focusArea');
             const doneBtn = document.getElementById('doneAllBtn');
             if (remaining.length === 0) {
-                area.innerHTML = `
-                                  <div class="empty-state task-entering">
-                                    <i class="fas fa-trophy"></i>
-                                    Все задачи выполнены! 🎉<br/>
-                                    <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
-                                  </div>
-                                `;
+                const allDone = completedCount > 0 || totalCount === 0;
+                area.innerHTML = allDone
+                    ? `<div class="empty-state task-entering">
+                         <i class="fas fa-trophy"></i>
+                         Все задачи выполнены! 🎉<br/>
+                         <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
+                       </div>`
+                    : `<div class="empty-state task-entering">
+                         <i class="fas fa-clipboard-list"></i>
+                         Нет задач в спринте<br/>
+                         <span style="font-size:0.85rem;opacity:0.7;">Выберите задачи в Планировании.</span>
+                       </div>`;
                 doneBtn.classList.remove('hidden');
                 return;
             }
@@ -409,7 +414,7 @@
             const area = document.getElementById('focusArea');
             area.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Загрузка задач...</div>`;
             try {
-                const res = await fetch(MONKEY_API_URL);
+                const res = await fetch(SPRINT_API_URL);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 remaining = await res.json();
                 totalCount = remaining.length;
@@ -442,9 +447,12 @@
 
                 card.addEventListener('animationend', async () => {
                     try {
-                        await fetch(`${API_URL}/${currentTask.id}`, { method: 'DELETE' });
+                        const res = await fetch(`${API_URL}/${currentTask.id}/complete`, { method: 'PATCH' });
+                        if (!res.ok && res.status !== 404) {
+                            console.warn(`Не удалось завершить задачу: HTTP ${res.status}`);
+                        }
                     } catch (e) {
-                        console.warn('Не удалось удалить задачу на сервере:', e);
+                        console.warn('Ошибка при завершении задачи:', e);
                     }
                     remaining.shift();
                     completedCount++;

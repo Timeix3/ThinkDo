@@ -1226,7 +1226,8 @@
 
         function GetProjectsWithTasks() {
             return allProjects.map(project => {
-                const projectTasks = allTasks.filter(task => task.projectId === project.id);
+                const projectTasks = allTasks.filter(task =>
+                    task.projectId === project.id && task.status !== 2 && task.status !== 3);
                 return { project, projectTasks };
             });
         }
@@ -1312,12 +1313,13 @@
         // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1 + ОТОБРАЖЕНИЕ КОНТЕНТА + ПРОЕКТ) ──
         function renderTaskList(tasks) {
             const container = document.getElementById('taskListContent');
-            if (!tasks.length) {
+            const activeTasks = tasks.filter(t => t.status !== 2 && t.status !== 3);
+            if (!activeTasks.length) {
                 container.innerHTML = '<div class="text-white/50 text-center py-10 font-medium">Нет задач. Создайте первую во вкладке "Задачи"!</div>';
                 return;
             }
 
-            container.innerHTML = tasks.sort((a, b) => b.id - a.id).map(t => {
+            container.innerHTML = activeTasks.sort((a, b) => b.id - a.id).map(t => {
                 let projectName = "Без проекта";
                 let isDefault = false;
                 let chipIcon = "fa-ban";
@@ -1380,7 +1382,7 @@
                     ? '<span class="project-badge-default"><i class="fas fa-star"></i>По умолчанию</span>'
                     : '';
 
-                const taskCount = allTasks.filter(t => t.projectId === p.id).length;
+                const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
                 const taskCountHtml = `
                         <span class="project-task-count mt-2 block">
                             <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
@@ -1734,13 +1736,13 @@
                 }
                 const projectTasks = await res.json();
 
-                if (!projectTasks.length) {
+                const activeTasks = projectTasks.filter(t => t.status !== 2 && t.status !== 3);
+                if (!activeTasks.length) {
                     tasksContainer.innerHTML = '<div class="project-tasks-list-empty">У проекта пока нет задач</div>';
                 } else {
-                    tasksContainer.innerHTML = projectTasks.map(task => {
-                        const isCompleted = task.completed === true;
-                        const statusText = isCompleted ? 'Выполнена' : 'Активна';
-                        const statusClass = isCompleted ? 'completed' : 'active';
+                    tasksContainer.innerHTML = activeTasks.map(task => {
+                        const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
+                        const statusClass = task.status === 4 ? 'active' : 'active';
                         return `
                                     <div class="project-task-item">
                                         <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
