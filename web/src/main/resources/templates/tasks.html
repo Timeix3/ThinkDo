@@ -801,10 +801,9 @@
                 <!-- Не авторизован -->
                 <div sec:authorize="isAnonymous()">
                     <a href="/oauth2/authorization/github"
-                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                       class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                         </svg>
                         Войти через GitHub
                     </a>
@@ -813,13 +812,13 @@
                 <!-- Авторизован -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
                     <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
-                        class="w-8 h-8 rounded-full border-2 border-white/50">
+                         class="w-8 h-8 rounded-full border-2 border-white/50">
                     <span class="text-sm opacity-90">
                         Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                     </span>
                     <form th:action="@{/logout}" method="post" id="logoutForm">
                         <button type="submit" onclick="clearAllData()"
-                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                                class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                             <i class="fas fa-sign-out-alt text-xs"></i> Выйти
                         </button>
                     </form>
@@ -831,8 +830,10 @@
         <!-- Навигация по центру -->
         <div class="flex justify-center mb-6">
             <div class="nav-pill flex gap-2 text-white">
-                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">📅
-                    Планирование</button>
+                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">
+                    📅
+                    Планирование
+                </button>
                 <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
@@ -903,9 +904,9 @@
         🐒
     </a>
 
-    <!-- FAB: Добавить в инбокс (теперь также отображается в разделе Проекты) -->
-    <div class="fab hidden" id="fabAddInbox" style="position:fixed;">
-        <i class="fas fa-plus" id="fabAddInboxIcon"></i>
+    <!-- FAB-инбокс: класс + data-target -->
+    <div class="fab hidden fab-add-inbox" data-fab="inbox" data-target="#inboxInputBar" style="position:fixed;">
+        <i class="fas fa-plus fab-add-inbox-icon"></i>
     </div>
 
     <!-- FAB: Создать рутину -->
@@ -1184,6 +1185,13 @@
         const PROJECTS_API_URL = '/api/projects';
         const ROUTINES_API_URL = '/api/routines';
 
+        if (!window.closeInboxInput) {
+            window.closeInboxInput = function (selector = '#inboxInputBar') {
+                const el = document.querySelector(selector);
+                if (el) el.classList.add('hidden');
+            };
+        }
+
         let editingTaskId = null;
         let editingInboxId = null;
         let editingProjectId = null;
@@ -1252,24 +1260,24 @@
                             ? 'border-color:#22c55e;background:#22c55e;color:#fff;'
                             : '';
                         return `
-                    <div class="planning-task" data-id="${t.id}">
-                        <div class="task-check shrink-0" data-complete-id="${t.id}" title="Отметить" style="${checkStyle}">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <div class="planning-task-title" title="${escHtml(t.title)}">${escHtml(t.title)}</div>
-                    </div>
-                `}).join('');
+                            <div class="planning-task" data-id="${t.id}">
+                                <div class="task-check shrink-0" data-complete-id="${t.id}" title="Отметить" style="${checkStyle}">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="planning-task-title" title="${escHtml(t.title)}">${escHtml(t.title)}</div>
+                            </div>
+                        `}).join('');
 
                 return `
-                <div class="planning-col${defaultCls}" style="${blockedStyle}">
-                    <div class="planning-col-header">
-                        <div class="planning-col-title">${icon} ${escHtml(project.name)}</div>
-                        <span class="planning-col-count">${projectTasks.length}</span>
-                    </div>
-                    ${blockBadge ? `<div style="margin-bottom:0.6rem;">${blockBadge}</div>` : ''}
-                    <div>${tasksHtml}</div>
-                </div>
-            `;
+                        <div class="planning-col${defaultCls}" style="${blockedStyle}">
+                            <div class="planning-col-header">
+                                <div class="planning-col-title">${icon} ${escHtml(project.name)}</div>
+                                <span class="planning-col-count">${projectTasks.length}</span>
+                            </div>
+                            ${blockBadge ? `<div style="margin-bottom:0.6rem;">${blockBadge}</div>` : ''}
+                            <div>${tasksHtml}</div>
+                        </div>
+                    `;
             }).join('');
             // Чекбокс в планировании — только визуальная отметка, задача не удаляется
             grid.querySelectorAll('.task-check').forEach(btn => {
@@ -1342,22 +1350,22 @@
                 }
 
                 return `
-                                    <div class="task-list-item" id="task-row-${t.id}">
-                                        <div class="flex items-center gap-3">
-                                            <div class="task-check shrink-0" onclick="completeTask(${t.id})" title="Выполнить">
-                                                <i class="fas fa-check"></i>
+                                            <div class="task-list-item" id="task-row-${t.id}">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="task-check shrink-0" onclick="completeTask(${t.id})" title="Выполнить">
+                                                        <i class="fas fa-check"></i>
+                                                    </div>
+                                                    <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
+                                                        <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
+                                                        ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
+                                                        <span class="${chipClass}" style="display:inline-flex; margin-top: 0.3rem;">
+                                                            <i class="fas ${chipIcon}"></i>
+                                                            ${escHtml(projectName)}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
-                                                <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                                                ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
-                                                <span class="${chipClass}" style="display:inline-flex; margin-top: 0.3rem;">
-                                                    <i class="fas ${chipIcon}"></i>
-                                                    ${escHtml(projectName)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
+                                        `;
             }).join('');
         }
 
@@ -1384,34 +1392,34 @@
 
                 const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
                 const taskCountHtml = `
-                        <span class="project-task-count mt-2 block">
-                            <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
-                        </span>
-                    `;
+                                <span class="project-task-count mt-2 block">
+                                    <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+                                </span>
+                            `;
 
                 const defaultClass = p.isDefault ? 'project-default' : '';
 
                 return `
-                        <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                            ${p.isDefault ? '' : `
-                                <button class="project-edit-btn absolute top-2 right-2"
-                                        data-project-id="${p.id}"
-                                        title="Редактировать проект"
-                                        onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                            `}
+                                <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                                    ${p.isDefault ? '' : `
+                                        <button class="project-edit-btn absolute top-2 right-2"
+                                                data-project-id="${p.id}"
+                                                title="Редактировать проект"
+                                                onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                    `}
 
-                            <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                    ${badgeHtml}
+                                    <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                            <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                            ${badgeHtml}
+                                        </div>
+                                        ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                                        ${taskCountHtml}
+                                    </div>
                                 </div>
-                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                                ${taskCountHtml}
-                            </div>
-                        </div>
-                    `;
+                            `;
             }).join('');
         }
 
@@ -1744,11 +1752,11 @@
                         const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
                         const statusClass = task.status === 4 ? 'active' : 'active';
                         return `
-                                    <div class="project-task-item">
-                                        <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
-                                        <span class="project-task-status ${statusClass}">${statusText}</span>
-                                    </div>
-                                `;
+                                            <div class="project-task-item">
+                                                <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
+                                                <span class="project-task-status ${statusClass}">${statusText}</span>
+                                            </div>
+                                        `;
                     }).join('');
                 }
             } catch (error) {
@@ -1974,24 +1982,26 @@
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
-            document.getElementById('fabAddInbox').classList.toggle('hidden', page === 'dashboard');
+            document.querySelectorAll('[data-fab="inbox"]').forEach(fab => {
+                const allowedPages = (fab.dataset.page || 'tasks,inbox,projects,routines').split(',');
+                fab.classList.toggle('hidden', !allowedPages.includes(page) || page === 'dashboard');
+            });
 
-            // Управление видимостью workflow-кнопок
             const startSprintBtn = document.getElementById('startSprintBtn');
             const toPlanningBtn = document.getElementById('toPlanningBtn');
 
             // Кнопка "Начать спринт!" — видна только в планировании
             if (page === 'dashboard') {
-                startSprintBtn.classList.remove('hidden');
+                startSprintBtn?.classList.remove('hidden');
             } else {
-                startSprintBtn.classList.add('hidden');
+                startSprintBtn?.classList.add('hidden');
             }
 
             // Кнопка "К планированию!" — видна только в инбоксе
             if (page === 'inbox') {
-                toPlanningBtn.classList.remove('hidden');
+                toPlanningBtn?.classList.remove('hidden');
             } else {
-                toPlanningBtn.classList.add('hidden');
+                toPlanningBtn?.classList.add('hidden');
             }
 
             closeInboxInput();
@@ -2054,49 +2064,21 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                                    <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                            <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                    </div>
+                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
+                                                </div>
                                             </div>
-                                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
-                                        </div>
-                                    </div>
-                                `).join('');
+                                        `).join('');
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
                 el.addEventListener('click', () => openInboxClassifyModal(el.dataset.inboxId));
             });
         }
-
-        async function toggleInboxInput() {
-            const bar = document.getElementById('inboxInputBar');
-            const icon = document.getElementById('fabAddInboxIcon');
-            if (bar.classList.contains('hidden')) {
-                bar.classList.remove('hidden');
-                icon.className = 'fas fa-check';
-                document.getElementById('inboxInputField').focus();
-            } else {
-                const val = document.getElementById('inboxInputField').value.trim();
-                if (val) {
-                    await inboxCreate(val);
-                }
-                closeInboxInput();
-            }
-        }
-
-        function closeInboxInput() {
-            document.getElementById('inboxInputBar').classList.add('hidden');
-            document.getElementById('fabAddInboxIcon').className = 'fas fa-plus';
-            document.getElementById('inboxInputField').value = '';
-        }
-
-        document.getElementById('fabAddInbox').addEventListener('click', toggleInboxInput);
-        document.getElementById('inboxInputField').addEventListener('keydown', e => {
-            if (e.key === 'Enter') toggleInboxInput();
-            if (e.key === 'Escape') closeInboxInput();
-        });
 
         function updateInboxOverflowBadge() {
             const badge = document.getElementById('inboxOverflowBadge');
@@ -2106,6 +2088,9 @@
                 document.getElementById('inboxOverflowText').textContent = `${inboxItems.length} записей!`;
             }
         }
+
+        window.inboxCreate = inboxCreate;
+        window.inboxLoad = inboxLoad;
 
         // ── Inbox Classify Modal ───────────────────────────────
         function openInboxClassifyModal(itemId) {
@@ -2301,18 +2286,18 @@
             container.innerHTML = allRoutines.map(r => {
                 const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
                 return `
-                            <div class="task-list-item" data-routine-id="${r.id}">
-                                <div class="flex items-center justify-between gap-3">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
-                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
-                                            <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
-                                        </span>
+                                    <div class="task-list-item" data-routine-id="${r.id}">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                                    <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                                </span>
+                                            </div>
+                                            <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
+                                        </div>
                                     </div>
-                                    <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
-                                </div>
-                            </div>
-                        `;
+                                `;
             }).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -2477,6 +2462,8 @@
         loadTasks();
         loadProjects();
     </script>
+
+    <script src="/js/inbox-fab.js"></script>
 </body>
 
 </html>

@@ -311,9 +311,10 @@
         </div>
     </div>
 
-    <!-- FAB: Добавить в инбокс -->
-    <div class="fab" id="fabAddInbox" style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
-        <i class="fas fa-plus" id="fabAddInboxIcon"></i>
+    <!-- FAB-инбокс: теперь по классу и data-target -->
+    <div class="fab fab-add-inbox" data-target="#inboxInputBar"
+         style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
+        <i class="fas fa-plus fab-add-inbox-icon"></i>
     </div>
 
     <!-- Инлайн-поле ввода инбокса -->
@@ -358,8 +359,13 @@
         let remaining = [];
         let completedCount = 0;
         let totalCount = 0;
-        let inboxInputOpen = false;
-        let isCreatingInbox = false;
+
+        if (!window.closeInboxInput) {
+            window.closeInboxInput = function (selector = '#inboxInputBar') {
+                const el = document.querySelector(selector);
+                if (el) el.classList.add('hidden');
+            };
+        }
 
         function updateCounter() {
             document.getElementById('taskCounter').textContent = `${completedCount} / ${totalCount}`;
@@ -372,15 +378,15 @@
                 const allDone = completedCount > 0 || totalCount === 0;
                 area.innerHTML = allDone
                     ? `<div class="empty-state task-entering">
-                         <i class="fas fa-trophy"></i>
-                         Все задачи выполнены! 🎉<br/>
-                         <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
-                       </div>`
+                                 <i class="fas fa-trophy"></i>
+                                 Все задачи выполнены! 🎉<br/>
+                                 <span style="font-size:0.85rem;opacity:0.7;">Можно выдохнуть.</span>
+                               </div>`
                     : `<div class="empty-state task-entering">
-                         <i class="fas fa-clipboard-list"></i>
-                         Нет задач в спринте<br/>
-                         <span style="font-size:0.85rem;opacity:0.7;">Выберите задачи в Планировании.</span>
-                       </div>`;
+                                 <i class="fas fa-clipboard-list"></i>
+                                 Нет задач в спринте<br/>
+                                 <span style="font-size:0.85rem;opacity:0.7;">Выберите задачи в Планировании.</span>
+                               </div>`;
                 doneBtn.classList.remove('hidden');
                 return;
             }
@@ -390,22 +396,22 @@
             const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
             area.innerHTML = `
-                                <div class="focus-card task-entering" id="focusCard">
-                                  <div class="flex items-start gap-4">
-                                    <div class="focus-check" id="focusCheck" title="Выполнить">
-                                      <i class="fas fa-check"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                      <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
-                                      <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
-                                    </div>
-                                  </div>
-                                  <!-- Прогресс-бар внизу карточки -->
-                                  <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
-                                  </div>
-                                </div>
-                              `;
+                                        <div class="focus-card task-entering" id="focusCard">
+                                          <div class="flex items-start gap-4">
+                                            <div class="focus-check" id="focusCheck" title="Выполнить">
+                                              <i class="fas fa-check"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                              <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
+                                              <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
+                                            </div>
+                                          </div>
+                                          <!-- Прогресс-бар внизу карточки -->
+                                          <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
+                                            <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                                          </div>
+                                        </div>
+                                      `;
 
             document.getElementById('focusCheck').addEventListener('click', () => completeCurrentTask());
         }
@@ -423,12 +429,12 @@
                 renderCurrentTask();
             } catch (e) {
                 area.innerHTML = `
-                      <div class="empty-state task-entering">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Ошибка загрузки задач<br/>
-                        <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
-                      </div>
-                    `;
+                              <div class="empty-state task-entering">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Ошибка загрузки задач<br/>
+                                <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
+                              </div>
+                            `;
             }
         }
 
@@ -469,13 +475,6 @@
             ring.addEventListener('animationend', () => ring.remove());
         }
 
-        function closeInboxInput() {
-            inboxInputOpen = false;
-            document.getElementById('inboxInputBar').classList.add('hidden');
-            document.getElementById('inboxInputField').value = '';
-            document.getElementById('fabAddInboxIcon').className = 'fas fa-plus';
-        }
-
         async function inboxCreate(title) {
             try {
                 const res = await fetch(INBOX_API_URL, {
@@ -484,46 +483,13 @@
                     body: JSON.stringify({ title })
                 });
                 if (!res.ok) throw new Error('API not ready');
-            } catch { }
-        }
-
-        async function toggleInboxInput() {
-            const fab = document.getElementById('fabAddInbox');
-            if (!inboxInputOpen) {
-                spawnFabRipple(fab);
-                inboxInputOpen = true;
-                document.getElementById('inboxInputBar').classList.remove('hidden');
-                document.getElementById('fabAddInboxIcon').className = 'fas fa-check';
-                setTimeout(() => document.getElementById('inboxInputField').focus(), 50);
-            } else {
-                if (isCreatingInbox) return;
-                const title = document.getElementById('inboxInputField').value.trim();
-                if (!title) { document.getElementById('inboxInputField').focus(); return; }
-                isCreatingInbox = true;
-                spawnFabRipple(fab);
-                await inboxCreate(title);
-                closeInboxInput();
-                isCreatingInbox = false;
+            } catch (e) {
+                console.warn('inboxCreate failed', e);
             }
         }
 
-        document.getElementById('fabAddInbox').addEventListener('click', toggleInboxInput);
-        document.getElementById('inboxInputField').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') toggleInboxInput();
-            if (e.key === 'Escape') closeInboxInput();
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!inboxInputOpen) return;
-
-            const isInsideInput = e.target.closest('#inboxInputBar');
-            const isInsideFab = e.target.closest('#fabAddInbox');
-
-            if (!isInsideInput && !isInsideFab) {
-                closeInboxInput();
-            }
-        });
-
+        window.spawnFabRipple = spawnFabRipple;
+        window.inboxCreate = inboxCreate;
 
         function escHtml(str) {
             return String(str ?? '')
@@ -684,7 +650,10 @@
             });
         })();
         // ── Init ──
-        loadTasks();
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTasks();
+        });
     </script>
+    <script src="/js/inbox-fab.js"></script>
 </body>
 </html>
