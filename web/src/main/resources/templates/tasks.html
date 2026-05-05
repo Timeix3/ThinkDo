@@ -321,6 +321,23 @@
             margin-top: 0.2rem;
         }
 
+        /* Воркфлоу-индикатор (Спринт / Разбор / Планирование) */
+        .workflow-breadcrumb {
+            display: flex; align-items: center; gap: 0.4rem;
+            background: rgba(255,255,255,0.12); border-radius: 2rem;
+            padding: 0.4rem 1rem; backdrop-filter: blur(4px);
+            flex-wrap: wrap; justify-content: center;
+        }
+        .wf-step {
+            font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.45);
+            padding: 0.2rem 0.6rem; border-radius: 1rem; transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .wf-step.wf-active {
+            background: rgba(255,255,255,0.3); color: white;
+        }
+        .wf-arrow { color: rgba(255,255,255,0.25); font-size: 0.65rem; }
+
         /* ── Кнопка редактирования проекта ── */
         .project-edit-btn {
             width: 26px;
@@ -804,6 +821,17 @@
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button data-page="routines" id="navRoutines" class="px-3 py-1 rounded-full">🔄 Рутины</button>
+            </div>
+        </div>
+
+        <!-- Воркфлоу-индикатор: Спринт → Разбор → Планирование -->
+        <div class="flex justify-center mb-6">
+            <div id="flowPhaseIndicator" class="workflow-breadcrumb">
+                <span class="wf-step" id="wfSprint" data-phase="sprint">🚀 Спринт</span>
+                <i class="fas fa-arrow-right wf-arrow"></i>
+                <span class="wf-step" id="wfReview" data-phase="review">📥 Разбор</span>
+                <i class="fas fa-arrow-right wf-arrow"></i>
+                <span class="wf-step" id="wfPlanning" data-phase="planning">📅 Планирование</span>
             </div>
         </div>
 
