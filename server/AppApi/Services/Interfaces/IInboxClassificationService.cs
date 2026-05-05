@@ -5,7 +5,7 @@ namespace AppApi.Services.Interfaces;
 
 public interface IInboxClassificationService
 {
-    Task<ClassifyInboxItemResponseDto> ClassifyInboxItemAsync(
+    Task<ClassifyResponseDto> ClassifyInboxItemAsync(
         int inboxItemId,
         ClassifyInboxItemDto request,
         string userId);
