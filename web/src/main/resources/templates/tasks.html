@@ -32,21 +32,6 @@
             flex-direction: column;
         }
 
-        .task-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
-            color: #1e293b;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-
         .fab {
             position: fixed;
             bottom: 2rem;
@@ -816,7 +801,6 @@
             <div class="nav-pill flex gap-2 text-white">
                 <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">📅
                     Планирование</button>
-                <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button data-page="routines" id="navRoutines" class="px-3 py-1 rounded-full">🔄 Рутины</button>
@@ -836,14 +820,6 @@
                     <button class="plan-cycle-btn" id="planNextBtn">Далее <i class="fas fa-chevron-right"></i></button>
                 </div>
                 <div class="plan-single-col" id="planTasksList"></div>
-            </div>
-        </div>
-
-        <!-- ====== Страница: Задачи ====== -->
-        <div id="pageTasks" class="hidden">
-            <div class="task-list-container">
-                <h2 class="text-white font-bold text-lg mb-4">📝 Список всех задач</h2>
-                <div id="taskListContent"></div>
             </div>
         </div>
 
@@ -885,9 +861,6 @@
         </div>
 
     </div>
-
-    <!-- FAB: Создать задачу (Скрыта на Доске) -->
-    <div class="fab hidden" id="fabAddTask"><i class="fas fa-plus"></i></div>
 
     <!-- FAB: Навигация на обезьяну -->
     <a href="/" class="fab" id="fabNavFocus"
@@ -1166,6 +1139,11 @@
     </a>
 
     <script>
+
+        if (window.location.pathname.endsWith('/tasks') || window.location.pathname.endsWith('/tasks/')) {
+            window.location.replace('/projects');
+        }
+
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
         const PROJECTS_API_URL = '/api/projects';
@@ -1275,57 +1253,6 @@
             checkEl.dataset.loading = 'false';
         }
 
-        // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1 + ОТОБРАЖЕНИЕ КОНТЕНТА + ПРОЕКТ) ──
-        function renderTaskList(tasks) {
-            const container = document.getElementById('taskListContent');
-            const activeTasks = tasks.filter(t => t.status !== 2 && t.status !== 3);
-            if (!activeTasks.length) {
-                container.innerHTML = '<div class="text-white/50 text-center py-10 font-medium">Нет задач. Создайте первую во вкладке "Задачи"!</div>';
-                return;
-            }
-
-            container.innerHTML = activeTasks.sort((a, b) => b.id - a.id).map(t => {
-                let projectName = "Без проекта";
-                let isDefault = false;
-                let chipIcon = "fa-ban";
-                let chipClass = "project-chip";
-                if (t.projectId) {
-                    const project = allProjects.find(p => p.id === t.projectId);
-                    if (project) {
-                        projectName = project.name;
-                        isDefault = project.isDefault || false;
-                        chipIcon = isDefault ? "fa-star" : "fa-folder";
-                        chipClass = isDefault ? "project-chip project-chip-default" : "project-chip";
-                    } else {
-                        projectName = "Неизвестный проект";
-                        chipIcon = "fa-question-circle";
-                    }
-                } else {
-                    projectName = "Без проекта";
-                    chipIcon = "fa-ban";
-                    chipClass = "project-chip";
-                }
-
-                return `
-                                    <div class="task-list-item" id="task-row-${t.id}">
-                                        <div class="flex items-center gap-3">
-                                            <div class="task-check shrink-0" onclick="completeTask(${t.id})" title="Выполнить">
-                                                <i class="fas fa-check"></i>
-                                            </div>
-                                            <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
-                                                <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                                                ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
-                                                <span class="${chipClass}" style="display:inline-flex; margin-top: 0.3rem;">
-                                                    <i class="fas ${chipIcon}"></i>
-                                                    ${escHtml(projectName)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-            }).join('');
-        }
-
         // ── Render ПРОЕКТОВ (Задача 9.3) ──
         function renderProjectsList() {
             const container = document.getElementById('projectsListContent');
@@ -1396,9 +1323,6 @@
                 allProjects = data;
                 renderPlanning();
                 renderProjectsList();
-                if (currentPage === 'tasks') {
-                    renderTaskList(allTasks);
-                }
                 return allProjects;
             } catch (e) {
                 console.error("Projects API error", e);
@@ -1451,7 +1375,6 @@
             document.getElementById('createModal').classList.add('hidden');
         }
 
-        document.getElementById('fabAddTask').addEventListener('click', openCreateModal);
         document.getElementById('createCancel').addEventListener('click', () => {
             cancelInboxConversion();
             closeCreateModal();
@@ -1929,7 +1852,6 @@
             currentPage = page;
 
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
-            document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
             document.getElementById('pageRoutines').classList.toggle('hidden', page !== 'routines');
@@ -1962,14 +1884,9 @@
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
-            if (page === 'tasks') {
-                if (!allProjects.length) loadProjects();
-                else renderTaskList(allTasks);
-            }
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
-        document.getElementById('navTasks').addEventListener('click', () => switchPage('tasks'));
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
         document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
