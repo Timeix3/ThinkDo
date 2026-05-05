@@ -14,7 +14,10 @@ public class AppDbContext : DbContext
     public DbSet<InboxItem> InboxItems => Set<InboxItem>();
     public DbSet<Routine> Routines => Set<Routine>();
     public DbSet<ProjectItem> Projects => Set<ProjectItem>();
+
     public DbSet<SprintItem> Sprints => Set<SprintItem>();
+
+    public DbSet<UserFlowPhase> UserFlowPhases => Set<UserFlowPhase>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -180,6 +183,29 @@ public class AppDbContext : DbContext
                     entity.HasIndex(e => e.Frequency)
                         .HasDatabaseName("ix_routines_frequency");
                 });
+
+        modelBuilder.Entity<UserFlowPhase>(entity =>
+        {
+            entity.ToTable("user_flow_phases");
+
+            entity.HasKey(e => e.UserId);
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id")
+                .HasMaxLength(450)
+                .IsRequired();
+
+            entity.Property(e => e.Phase)
+                .HasColumnName("flow_phase")
+                .HasMaxLength(20)
+                .IsRequired()
+                .HasDefaultValue("planning");
+
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnName("updated_at")
+                .IsRequired()
+                .HasDefaultValueSql("NOW()");
+        });
 
         modelBuilder.Entity<ProjectItem>(entity =>
         {

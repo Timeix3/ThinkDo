@@ -14,11 +14,17 @@ public class SprintController : ControllerBase
     private readonly ITaskService _taskService;
     private readonly ILogger<SprintController> _logger;
     private readonly ISprintService _sprintService;
+    private readonly IFlowPhaseService _flowPhaseService;
 
-    public SprintController(ISprintService sprintService, ITaskService taskService, ILogger<SprintController> logger)
+    public SprintController(
+        ISprintService sprintService,
+        ITaskService taskService,
+        IFlowPhaseService flowPhaseService,
+        ILogger<SprintController> logger)
     {
         _sprintService = sprintService;
         _taskService = taskService;
+        _flowPhaseService = flowPhaseService;
         _logger = logger;
     }
 
@@ -61,22 +67,23 @@ public class SprintController : ControllerBase
         try
         {
             var result = await _sprintService.StartSprintAsync(dto.TaskIds, userId);
+
+            // Обновляем flow-фазу только после успешного старта спринта
+            await _flowPhaseService.SetPhaseAsync(userId, "sprint");
+
             return Ok(result);
         }
         catch (InvalidOperationException ex)
         {
-            // Сюда попадем, если индекс в БД или проверка в сервисе нашли активный спринт
             _logger.LogWarning("Sprint start conflict for user {UserId}: {Message}", userId, ex.Message);
             return Conflict(new { message = ex.Message }); // 409
         }
         catch (ArgumentException ex)
         {
-            // Сюда попадем при пустом списке задач
             return BadRequest(new { message = ex.Message }); // 400
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
-            // Если пытаемся добавить чужие задачи
             return Forbid(); // 403
         }
     }
@@ -95,11 +102,14 @@ public class SprintController : ControllerBase
         try
         {
             var result = await _sprintService.CompleteSprintAsync(userId);
+
+            // Обновляем flow-фазу только после успешного завершения спринта
+            await _flowPhaseService.SetPhaseAsync(userId, "review");
+
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {
-            // Если у пользователя нет активного спринта
             _logger.LogWarning("Complete sprint failed for user {UserId}: {Message}", userId, ex.Message);
             return NotFound(new { message = ex.Message }); // 404
         }

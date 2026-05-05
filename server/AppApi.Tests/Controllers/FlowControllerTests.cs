@@ -1,16 +1,18 @@
 using AppApi.Controllers;
+using AppApi.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
 using System.Security.Claims;
 
 namespace AppApi.Tests.Controllers;
 
 public class FlowControllerTests
 {
-    private static FlowController CreateController(string userId)
+    private static FlowController CreateController(string userId, Mock<IFlowPhaseService> serviceMock)
     {
-        return new FlowController
+        return new FlowController(serviceMock.Object)
         {
             ControllerContext = new ControllerContext
             {
@@ -26,11 +28,13 @@ public class FlowControllerTests
     }
 
     [Fact]
-    public void GetPhase_ForFirstTimeUser_ReturnsPlanning()
+    public async Task GetPhase_ForFirstTimeUser_ReturnsPlanning()
     {
-        var controller = CreateController($"first-user-{Guid.NewGuid()}");
+        var serviceMock = new Mock<IFlowPhaseService>();
+        serviceMock.Setup(x => x.GetPhaseAsync(It.IsAny<string>())).ReturnsAsync("planning");
+        var controller = CreateController($"first-user-{Guid.NewGuid()}", serviceMock);
 
-        var result = controller.GetPhase();
+        var result = await controller.GetPhase();
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         var response = ok.Value.Should().BeOfType<FlowController.FlowPhaseResponse>().Subject;
@@ -38,30 +42,31 @@ public class FlowControllerTests
     }
 
     [Fact]
-    public void UpdatePhase_WithValidPhase_ReturnsOkAndSavesPhase()
+    public async Task UpdatePhase_WithValidPhase_ReturnsOk()
     {
-        var userId = $"test-user-{Guid.NewGuid()}";
-        var controller = CreateController(userId);
+        var serviceMock = new Mock<IFlowPhaseService>();
+        serviceMock.Setup(x => x.SetPhaseAsync(It.IsAny<string>(), "review")).ReturnsAsync("review");
 
-        var updateResult = controller.UpdatePhase(new FlowController.FlowPhaseUpdateRequest("review"));
+        var controller = CreateController($"test-user-{Guid.NewGuid()}", serviceMock);
+
+        var updateResult = await controller.UpdatePhase(new FlowController.FlowPhaseUpdateRequest("review"));
 
         var ok = updateResult.Should().BeOfType<OkObjectResult>().Subject;
         var updateResponse = ok.Value.Should().BeOfType<FlowController.FlowPhaseUpdateResponse>().Subject;
         updateResponse.Success.Should().BeTrue();
         updateResponse.Phase.Should().Be("review");
-
-        var getResult = controller.GetPhase();
-        var getOk = getResult.Should().BeOfType<OkObjectResult>().Subject;
-        var getResponse = getOk.Value.Should().BeOfType<FlowController.FlowPhaseResponse>().Subject;
-        getResponse.Phase.Should().Be("review");
     }
 
     [Fact]
-    public void UpdatePhase_WithInvalidPhase_ReturnsBadRequest()
+    public async Task UpdatePhase_WithInvalidPhase_ReturnsBadRequest()
     {
-        var controller = CreateController($"invalid-user-{Guid.NewGuid()}");
+        var serviceMock = new Mock<IFlowPhaseService>();
+        serviceMock.Setup(x => x.SetPhaseAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ThrowsAsync(new ArgumentException("Invalid phase"));
 
-        var result = controller.UpdatePhase(new FlowController.FlowPhaseUpdateRequest("invalid"));
+        var controller = CreateController($"invalid-user-{Guid.NewGuid()}", serviceMock);
+
+        var result = await controller.UpdatePhase(new FlowController.FlowPhaseUpdateRequest("invalid"));
 
         result.Should().BeOfType<BadRequestObjectResult>();
     }
