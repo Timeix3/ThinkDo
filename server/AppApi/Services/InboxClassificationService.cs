@@ -59,7 +59,7 @@ public class InboxClassificationService : IInboxClassificationService
         }
         else
         {
-            _logger.LogInformation("Inbox item {Id} used to create entity {Type} {CreatedId}, but kept in list", 
+            _logger.LogInformation("Inbox item {Id} used to create entity {Type} {CreatedId}, but kept in list",
                 inboxItemId, entityType, createdId);
         }
 
@@ -74,27 +74,34 @@ public class InboxClassificationService : IInboxClassificationService
     private async Task<TaskItem> CreateTaskInternal(ClassifyInboxItemDto req, string uid)
     {
         var dto = req.ToCreateTaskDto();
-        return await _taskRepository.AddAsync(new TaskItem 
-        { 
-            Title = dto.Title, Content = dto.Content, UserId = uid, ProjectId = dto.ProjectId 
+        return await _taskRepository.AddAsync(new TaskItem
+        {
+            Title = dto.Title,
+            Content = dto.Content,
+            UserId = uid,
+            ProjectId = dto.ProjectId
         });
     }
 
     private async Task<ProjectItem> CreateProjectInternal(ClassifyInboxItemDto req, string uid)
     {
         var dto = req.ToCreateProjectDto();
-        return await _projectRepository.AddAsync(new ProjectItem 
-        { 
-            Name = dto.Name, Description = dto.Description, UserId = uid 
+        return await _projectRepository.AddAsync(new ProjectItem
+        {
+            Name = dto.Name,
+            Description = dto.Description,
+            UserId = uid
         });
     }
 
     private async Task<Routine> CreateRoutineInternal(ClassifyInboxItemDto req, string uid)
     {
         var dto = req.ToCreateRoutineDto();
-        return await _routineRepository.AddAsync(new Routine 
-        { 
-            Name = dto.Name, Frequency = dto.Frequency, UserId = uid 
+        return await _routineRepository.AddAsync(new Routine
+        {
+            Name = dto.Name,
+            Frequency = dto.Frequency,
+            UserId = uid
         });
     }
 }

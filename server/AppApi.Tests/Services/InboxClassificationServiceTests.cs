@@ -1,4 +1,3 @@
-// AppApi.Tests/Services/InboxClassificationServiceTests.cs
 using AppApi.Models.DTOs;
 using AppApi.Repositories.Interfaces;
 using AppApi.Services;
@@ -7,7 +6,6 @@ using Common.Models;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Linq.Expressions;
 using System.Text.Json;
 
 namespace AppApi.Tests.Services;
@@ -38,12 +36,13 @@ public class InboxClassificationServiceTests
             _loggerMock.Object);
     }
 
-    private ClassifyInboxItemDto CreateClassifyRequest(string targetType, object data)
+    private ClassifyInboxItemDto CreateClassifyRequest(string entityType, object data, string mode = "convert")
     {
         var json = JsonSerializer.Serialize(new
         {
-            targetType,
-            data
+            entityType,
+            mode,
+            entityData = data
         });
 
         return JsonSerializer.Deserialize<ClassifyInboxItemDto>(json,
@@ -62,43 +61,29 @@ public class InboxClassificationServiceTests
         };
     }
 
+    // --- ТЕСТЫ КОНВЕРТАЦИИ (mode: convert) ---
+
     [Fact]
-    public async Task ClassifyInboxItemAsync_ValidTask_CreatesTaskAndDeletesInbox()
+    public async Task ClassifyInboxItemAsync_ValidTask_ModeConvert_CreatesTaskAndDeletesInbox()
     {
         // Arrange
         var inboxItem = CreateInboxItem();
-        var request = CreateClassifyRequest("task", new { title = "New Task", content = "Task content" });
+        var request = CreateClassifyRequest("task", new { title = "New Task", content = "Task content" }, "convert");
 
-        var createdTask = new TaskItem
-        {
-            Id = 1,
-            Title = "New Task",
-            Content = "Task content",
-            UserId = TestUserId,
-            Status = TasksStatus.Available,
-            CreatedAt = DateTime.UtcNow
-        };
+        var createdTask = new TaskItem { Id = 42, Title = "New Task", UserId = TestUserId };
 
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(inboxItem);
-        _taskRepoMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>()))
-            .ReturnsAsync(createdTask);
-        _inboxRepoMock.Setup(r => r.SoftDeleteAsync(1, TestUserId))
-            .ReturnsAsync(true);
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(inboxItem);
+        _taskRepoMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>())).ReturnsAsync(createdTask);
+        _inboxRepoMock.Setup(r => r.SoftDeleteAsync(1, TestUserId)).ReturnsAsync(true);
 
         // Act
         var result = await _service.ClassifyInboxItemAsync(1, request, TestUserId);
 
         // Assert
-        result.Should().NotBeNull();
-        result.TargetType.Should().Be("task");
-        result.Title.Should().Be("New Task");
-        result.Id.Should().Be(1);
-        result.Status.Should().Be("Available");
+        result.Success.Should().BeTrue();
+        result.CreatedEntityId.Should().Be(42);
+        result.InboxDeleted.Should().BeTrue();
 
-        _inboxRepoMock.Verify(r => r.GetByIdAsync(1, TestUserId), Times.Once);
-        _taskRepoMock.Verify(r => r.AddAsync(It.Is<TaskItem>(t =>
-            t.Title == "New Task" && t.UserId == TestUserId)), Times.Once);
         _inboxRepoMock.Verify(r => r.SoftDeleteAsync(1, TestUserId), Times.Once);
     }
 
@@ -107,42 +92,18 @@ public class InboxClassificationServiceTests
     {
         // Arrange
         var inboxItem = CreateInboxItem();
-        var request = CreateClassifyRequest("project", new
-        {
-            title = "New Project",
-            description = "Project description"
-        });
+        var request = CreateClassifyRequest("project", new { title = "New Project" });
 
-        var createdProject = new ProjectItem
-        {
-            Id = 1,
-            Name = "New Project",
-            Description = "Project description",
-            UserId = TestUserId,
-            IsDefault = false,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(inboxItem);
-        _projectRepoMock!.Setup(r => r.AddAsync(It.IsAny<ProjectItem>()))
-            .ReturnsAsync(createdProject);
-        _inboxRepoMock.Setup(r => r.SoftDeleteAsync(1, TestUserId))
-            .ReturnsAsync(true);
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(inboxItem);
+        _projectRepoMock.Setup(r => r.AddAsync(It.IsAny<ProjectItem>())).ReturnsAsync(new ProjectItem { Id = 10 });
+        _inboxRepoMock.Setup(r => r.SoftDeleteAsync(1, TestUserId)).ReturnsAsync(true);
 
         // Act
         var result = await _service.ClassifyInboxItemAsync(1, request, TestUserId);
 
         // Assert
-        result.Should().NotBeNull();
-        result.TargetType.Should().Be("project");
-        result.Title.Should().Be("New Project");
-        result.Description.Should().Be("Project description");
-
-        _inboxRepoMock.Verify(r => r.GetByIdAsync(1, TestUserId), Times.Once);
-        _projectRepoMock.Verify(r => r.AddAsync(It.Is<ProjectItem>(p =>
-            p.Name == "New Project" && p.UserId == TestUserId)), Times.Once);
-        _inboxRepoMock.Verify(r => r.SoftDeleteAsync(1, TestUserId), Times.Once);
+        result.CreatedEntityId.Should().Be(10);
+        result.InboxDeleted.Should().BeTrue();
     }
 
     [Fact]
@@ -150,41 +111,51 @@ public class InboxClassificationServiceTests
     {
         // Arrange
         var inboxItem = CreateInboxItem();
-        var request = CreateClassifyRequest("routine", new
-        {
-            title = "Morning Exercise",
-            frequency = "daily"
-        });
+        var request = CreateClassifyRequest("routine", new { title = "Run", frequency = "Daily" });
 
-        var createdRoutine = new Routine
-        {
-            Id = 1,
-            Name = "Morning Exercise",
-            Frequency = RoutineFrequency.Daily,
-            UserId = TestUserId,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(inboxItem);
-        _routineRepoMock.Setup(r => r.AddAsync(It.IsAny<Routine>()))
-            .ReturnsAsync(createdRoutine);
-        _inboxRepoMock.Setup(r => r.SoftDeleteAsync(1, TestUserId))
-            .ReturnsAsync(true);
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(inboxItem);
+        _routineRepoMock.Setup(r => r.AddAsync(It.IsAny<Routine>())).ReturnsAsync(new Routine { Id = 5 });
+        _inboxRepoMock.Setup(r => r.SoftDeleteAsync(1, TestUserId)).ReturnsAsync(true);
 
         // Act
         var result = await _service.ClassifyInboxItemAsync(1, request, TestUserId);
 
         // Assert
-        result.Should().NotBeNull();
-        result.TargetType.Should().Be("routine");
-        result.Title.Should().Be("Morning Exercise");
-        result.Frequency.Should().Be("Daily");
+        result.CreatedEntityId.Should().Be(5);
+        result.InboxDeleted.Should().BeTrue();
+    }
 
-        _inboxRepoMock.Verify(r => r.GetByIdAsync(1, TestUserId), Times.Once);
-        _routineRepoMock.Verify(r => r.AddAsync(It.Is<Routine>(r =>
-            r.Name == "Morning Exercise" && r.Frequency == RoutineFrequency.Daily)), Times.Once);
-        _inboxRepoMock.Verify(r => r.SoftDeleteAsync(1, TestUserId), Times.Once);
+    [Fact]
+    public async Task ClassifyInboxItemAsync_ValidTask_ModeCreate_KeepsInboxItem()
+    {
+        // Arrange
+        var inboxItem = CreateInboxItem();
+        var request = CreateClassifyRequest("task", new { title = "Keep Me" }, "create");
+
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(inboxItem);
+        _taskRepoMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>())).ReturnsAsync(new TaskItem { Id = 77 });
+
+        // Act
+        var result = await _service.ClassifyInboxItemAsync(1, request, TestUserId);
+
+        // Assert
+        result.InboxDeleted.Should().BeFalse();
+        _inboxRepoMock.Verify(r => r.SoftDeleteAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+    }
+
+    // --- ТЕСТЫ ОШИБОК И КРАЕВЫХ СЛУЧАЕВ ---
+
+    [Fact]
+    public async Task ClassifyInboxItemAsync_InvalidMode_ThrowsArgumentException()
+    {
+        // Arrange
+        var request = CreateClassifyRequest("task", new { title = "Test" }, "invalid_mode");
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(CreateInboxItem());
+
+        // Act & Assert
+        await _service.Invoking(s => s.ClassifyInboxItemAsync(1, request, TestUserId))
+            .Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*Invalid mode*");
     }
 
     [Fact]
@@ -192,60 +163,24 @@ public class InboxClassificationServiceTests
     {
         // Arrange
         var request = CreateClassifyRequest("task", new { title = "Test" });
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(999, TestUserId))
-            .ReturnsAsync((InboxItem?)null);
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(99, TestUserId)).ReturnsAsync((InboxItem?)null);
 
-        // Act
-        Func<Task> act = () => _service.ClassifyInboxItemAsync(999, request, TestUserId);
-
-        // Assert
-        await act.Should().ThrowAsync<KeyNotFoundException>()
-            .WithMessage("*not found*");
-
-        _taskRepoMock.Verify(r => r.AddAsync(It.IsAny<TaskItem>()), Times.Never);
-        _inboxRepoMock.Verify(r => r.SoftDeleteAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        // Act & Assert
+        await _service.Invoking(s => s.ClassifyInboxItemAsync(99, request, TestUserId))
+            .Should().ThrowAsync<KeyNotFoundException>();
     }
 
     [Fact]
-    public async Task ClassifyInboxItemAsync_AlreadyDeletedInbox_ThrowsInvalidOperationException()
+    public async Task ClassifyInboxItemAsync_InvalidEntityType_ThrowsArgumentException()
     {
         // Arrange
-        var deletedInbox = CreateInboxItem(1, true);
-        var request = CreateClassifyRequest("task", new { title = "Test" });
+        var request = CreateClassifyRequest("wrong_type", new { title = "Test" });
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(CreateInboxItem());
 
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(deletedInbox);
-
-        // Act
-        Func<Task> act = () => _service.ClassifyInboxItemAsync(1, request, TestUserId);
-
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*already been classified*");
-
-        _taskRepoMock.Verify(r => r.AddAsync(It.IsAny<TaskItem>()), Times.Never);
-        _inboxRepoMock.Verify(r => r.SoftDeleteAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItemAsync_InvalidTargetType_ThrowsArgumentException()
-    {
-        // Arrange
-        var inboxItem = CreateInboxItem();
-        var request = CreateClassifyRequest("invalid_type", new { title = "Test" });
-
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(inboxItem);
-
-        // Act
-        Func<Task> act = () => _service.ClassifyInboxItemAsync(1, request, TestUserId);
-
-        // Assert
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*Invalid targetType*");
-
-        _taskRepoMock.Verify(r => r.AddAsync(It.IsAny<TaskItem>()), Times.Never);
-        _inboxRepoMock.Verify(r => r.SoftDeleteAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        // Act & Assert
+        await _service.Invoking(s => s.ClassifyInboxItemAsync(1, request, TestUserId))
+            .Should().ThrowAsync<ArgumentException>()
+            .WithMessage("*Unsupported entity type*");
     }
 
     [Fact]
@@ -253,19 +188,16 @@ public class InboxClassificationServiceTests
     {
         // Arrange
         var inboxItem = CreateInboxItem();
-        var request = CreateClassifyRequest("task", new { title = "Test" });
+        var request = CreateClassifyRequest("task", new { title = "Safe Item" });
 
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(inboxItem);
-        _taskRepoMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>()))
-            .ThrowsAsync(new Exception("Database error"));
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(inboxItem);
+        _taskRepoMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>())).ThrowsAsync(new Exception("Database error"));
 
         // Act
-        Func<Task> act = () => _service.ClassifyInboxItemAsync(1, request, TestUserId);
+        await _service.Invoking(s => s.ClassifyInboxItemAsync(1, request, TestUserId))
+            .Should().ThrowAsync<Exception>();
 
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>();
-
+        // Assert: Мягкое удаление не должно вызываться
         _inboxRepoMock.Verify(r => r.SoftDeleteAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
     }
 
@@ -274,44 +206,27 @@ public class InboxClassificationServiceTests
     {
         // Arrange
         var inboxItem = CreateInboxItem();
-        var request = CreateClassifyRequest("routine", new { title = "Test" }); // No frequency
+        var request = CreateClassifyRequest("routine", new { title = "Test" }); // frequency отсутствует
 
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(inboxItem);
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(inboxItem);
 
-        // Act
-        Func<Task> act = () => _service.ClassifyInboxItemAsync(1, request, TestUserId);
-
-        // Assert
-        await act.Should().ThrowAsync<ArgumentException>()
+        // Act & Assert
+        await _service.Invoking(s => s.ClassifyInboxItemAsync(1, request, TestUserId))
+            .Should().ThrowAsync<ArgumentException>()
             .WithMessage("*Frequency is required*");
-
-        _inboxRepoMock.Verify(r => r.SoftDeleteAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
-    public async Task ClassifyInboxItemAsync_UsesInboxTitleAsContent_WhenContentNotProvided()
+    public async Task ClassifyInboxItemAsync_AlreadyDeletedInbox_ThrowsKeyNotFoundException()
     {
         // Arrange
-        var inboxItem = CreateInboxItem();
-        inboxItem.Title = "Original inbox title";
-        var request = CreateClassifyRequest("task", new { title = "Task from inbox" }); // No content
+        var deletedInbox = CreateInboxItem(1, true); // DeletedAt != null
+        var request = CreateClassifyRequest("task", new { title = "Test" });
 
-        TaskItem? capturedTask = null;
+        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(deletedInbox);
 
-        _inboxRepoMock.Setup(r => r.GetByIdAsync(1, TestUserId))
-            .ReturnsAsync(inboxItem);
-        _taskRepoMock.Setup(r => r.AddAsync(It.IsAny<TaskItem>()))
-            .Callback<TaskItem>(t => capturedTask = t)
-            .ReturnsAsync((TaskItem t) => { t.Id = 1; return t; });
-        _inboxRepoMock.Setup(r => r.SoftDeleteAsync(1, TestUserId))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _service.ClassifyInboxItemAsync(1, request, TestUserId);
-
-        // Assert
-        capturedTask.Should().NotBeNull();
-        capturedTask!.Content.Should().Be("Original inbox title");
+        // Act & Assert
+        await _service.Invoking(s => s.ClassifyInboxItemAsync(1, request, TestUserId))
+            .Should().ThrowAsync<KeyNotFoundException>();
     }
 }

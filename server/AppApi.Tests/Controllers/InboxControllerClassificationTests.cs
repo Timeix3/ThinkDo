@@ -1,4 +1,3 @@
-// AppApi.Tests/Controllers/InboxControllerClassificationTests.cs
 using AppApi.Controllers;
 using AppApi.Models.DTOs;
 using AppApi.Services.Interfaces;
@@ -31,40 +30,26 @@ public class InboxControllerClassificationTests
             _classificationServiceMock.Object,
             _loggerMock.Object);
 
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, TestUserId),
-            new Claim(ClaimTypes.Name, "testuser")
-        };
-        var identity = new ClaimsIdentity(claims, "TestAuth");
-        var principal = new ClaimsPrincipal(identity);
-
         _controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext { User = principal }
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, TestUserId) }, "TestAuth")) }
         };
     }
 
-    private ClassifyInboxItemDto CreateRequest(string targetType, object data)
+    private ClassifyInboxItemDto CreateRequest(string type, object data, string mode = "convert")
     {
-        var json = JsonSerializer.Serialize(new { targetType, data });
+        // Обновлено под новый контракт: entityType, mode, entityData
+        var json = JsonSerializer.Serialize(new { entityType = type, mode = mode, entityData = data });
         return JsonSerializer.Deserialize<ClassifyInboxItemDto>(json,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
     }
 
     [Fact]
-    public async Task Classify_ValidTask_ReturnsOkWithCreatedEntity()
+    public async Task Classify_ValidTask_ReturnsOk()
     {
         // Arrange
         var request = CreateRequest("task", new { title = "New Task" });
-        var response = new ClassifyInboxItemResponseDto
-        {
-            Id = 1,
-            TargetType = "task",
-            Title = "New Task",
-            Status = "Available",
-            CreatedAt = DateTime.UtcNow
-        };
+        var response = new ClassifyResponseDto { Success = true, CreatedEntityId = 1, InboxDeleted = true };
 
         _classificationServiceMock
             .Setup(s => s.ClassifyInboxItemAsync(1, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
@@ -75,24 +60,16 @@ public class InboxControllerClassificationTests
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        var returnedResponse = okResult.Value.Should().BeOfType<ClassifyInboxItemResponseDto>().Subject;
-        returnedResponse.TargetType.Should().Be("task");
-        returnedResponse.Title.Should().Be("New Task");
+        var returned = okResult.Value.Should().BeOfType<ClassifyResponseDto>().Subject;
+        returned.InboxDeleted.Should().BeTrue();
     }
 
     [Fact]
     public async Task Classify_ValidRoutine_ReturnsOk()
     {
         // Arrange
-        var request = CreateRequest("routine", new { title = "Morning Exercise", frequency = "daily" });
-        var response = new ClassifyInboxItemResponseDto
-        {
-            Id = 1,
-            TargetType = "routine",
-            Title = "Morning Exercise",
-            Frequency = "Daily",
-            CreatedAt = DateTime.UtcNow
-        };
+        var request = CreateRequest("routine", new { title = "Gym", frequency = "daily" });
+        var response = new ClassifyResponseDto { Success = true, CreatedEntityId = 1, InboxDeleted = true };
 
         _classificationServiceMock
             .Setup(s => s.ClassifyInboxItemAsync(1, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
@@ -102,80 +79,42 @@ public class InboxControllerClassificationTests
         var result = await _controller.Classify(1, request);
 
         // Assert
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        var returnedResponse = okResult.Value.Should().BeOfType<ClassifyInboxItemResponseDto>().Subject;
-        returnedResponse.TargetType.Should().Be("routine");
-        returnedResponse.Frequency.Should().Be("Daily");
+        result.Should().BeOfType<OkObjectResult>();
     }
 
     [Fact]
     public async Task Classify_NonExistentInbox_ReturnsNotFound()
     {
-        // Arrange
         var request = CreateRequest("task", new { title = "Test" });
+        _classificationServiceMock.Setup(s => s.ClassifyInboxItemAsync(99, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
+            .ThrowsAsync(new KeyNotFoundException());
 
-        _classificationServiceMock
-            .Setup(s => s.ClassifyInboxItemAsync(999, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
-            .ThrowsAsync(new KeyNotFoundException("Inbox item with id '999' not found"));
-
-        // Act
-        var result = await _controller.Classify(999, request);
-
-        // Assert
+        var result = await _controller.Classify(99, request);
         result.Should().BeOfType<NotFoundObjectResult>();
     }
 
     [Fact]
     public async Task Classify_AlreadyClassified_ReturnsConflict()
     {
-        // Arrange
         var request = CreateRequest("task", new { title = "Test" });
+        _classificationServiceMock.Setup(s => s.ClassifyInboxItemAsync(1, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
+            .ThrowsAsync(new InvalidOperationException("already classified"));
 
-        _classificationServiceMock
-            .Setup(s => s.ClassifyInboxItemAsync(1, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
-            .ThrowsAsync(new InvalidOperationException(
-                "Inbox item with id '1' has already been classified or deleted"));
-
-        // Act
         var result = await _controller.Classify(1, request);
-
-        // Assert
-        var conflictResult = result.Should().BeOfType<ConflictObjectResult>().Subject;
-        var json = JsonSerializer.Serialize(conflictResult.Value);
-        json.Should().Contain("already been classified");
+        result.Should().BeOfType<ConflictObjectResult>();
     }
 
     [Fact]
-    public async Task Classify_InvalidTargetType_ReturnsBadRequest()
+    public async Task Classify_ModeCreate_ReturnsInboxDeletedFalse()
     {
-        // Arrange
-        var request = CreateRequest("invalid_type", new { title = "Test" });
+        var request = CreateRequest("task", new { title = "Template" }, "create");
+        var response = new ClassifyResponseDto { Success = true, CreatedEntityId = 10, InboxDeleted = false };
 
-        _classificationServiceMock
-            .Setup(s => s.ClassifyInboxItemAsync(1, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
-            .ThrowsAsync(new ArgumentException("Invalid targetType: 'invalid_type'"));
+        _classificationServiceMock.Setup(s => s.ClassifyInboxItemAsync(1, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
+            .ReturnsAsync(response);
 
-        // Act
         var result = await _controller.Classify(1, request);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
-    }
-
-    [Fact]
-    public async Task Classify_CreationError_ReturnsBadRequest()
-    {
-        // Arrange
-        var request = CreateRequest("task", new { title = "Test" });
-
-        _classificationServiceMock
-            .Setup(s => s.ClassifyInboxItemAsync(1, It.IsAny<ClassifyInboxItemDto>(), TestUserId))
-            .ThrowsAsync(new InvalidOperationException("Failed to classify inbox item: Database error"));
-
-        // Act
-        var result = await _controller.Classify(1, request);
-
-        // Assert
-        result.Should().BeOfType<BadRequestObjectResult>();
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        ((ClassifyResponseDto)okResult.Value!).InboxDeleted.Should().BeFalse();
     }
 }

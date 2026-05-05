@@ -1,4 +1,3 @@
-// AppApi.Tests/Models/DTOs/InboxClassificationDtosTests.cs
 using AppApi.Models.DTOs;
 using Common.Enums;
 using FluentAssertions;
@@ -16,11 +15,12 @@ public class InboxClassificationDtosTests
     [Fact]
     public void ClassifyInboxItemDto_ValidTaskData_ConvertsToCreateTaskDto()
     {
-        // Arrange
+        // Arrange - Обновлены ключи: entityType, entityData
         var json = """
         {
-            "targetType": "task",
-            "data": {
+            "entityType": "task",
+            "mode": "convert",
+            "entityData": {
                 "title": "Test Task",
                 "content": "Task description"
             }
@@ -33,6 +33,8 @@ public class InboxClassificationDtosTests
         var createTaskDto = dto!.ToCreateTaskDto();
 
         // Assert
+        dto.EntityType.Should().Be("task");
+        dto.Mode.Should().Be("convert");
         createTaskDto.Title.Should().Be("Test Task");
         createTaskDto.Content.Should().Be("Task description");
     }
@@ -40,11 +42,12 @@ public class InboxClassificationDtosTests
     [Fact]
     public void ClassifyInboxItemDto_ValidProjectData_ConvertsToCreateProjectDto()
     {
-        // Arrange
+        // Arrange - Обновлены ключи: entityType, entityData
         var json = """
         {
-            "targetType": "project",
-            "data": {
+            "entityType": "project",
+            "mode": "create",
+            "entityData": {
                 "title": "New Project",
                 "description": "Project description"
             }
@@ -57,6 +60,8 @@ public class InboxClassificationDtosTests
         var createProjectDto = dto!.ToCreateProjectDto();
 
         // Assert
+        dto.EntityType.Should().Be("project");
+        dto.Mode.Should().Be("create");
         createProjectDto.Name.Should().Be("New Project");
         createProjectDto.Description.Should().Be("Project description");
     }
@@ -64,11 +69,11 @@ public class InboxClassificationDtosTests
     [Fact]
     public void ClassifyInboxItemDto_ValidRoutineData_ConvertsToCreateRoutineDto()
     {
-        // Arrange
+        // Arrange - Обновлены ключи: entityType, entityData
         var json = """
         {
-            "targetType": "routine",
-            "data": {
+            "entityType": "routine",
+            "entityData": {
                 "title": "Morning Exercise",
                 "frequency": "daily"
             }
@@ -81,6 +86,9 @@ public class InboxClassificationDtosTests
         var createRoutineDto = dto!.ToCreateRoutineDto();
 
         // Assert
+        dto.EntityType.Should().Be("routine");
+        // Проверка значения по умолчанию
+        dto.Mode.Should().Be("convert");
         createRoutineDto.Name.Should().Be("Morning Exercise");
         createRoutineDto.Frequency.Should().Be(RoutineFrequency.Daily);
     }
@@ -88,11 +96,11 @@ public class InboxClassificationDtosTests
     [Fact]
     public void ToCreateTaskDto_NullTitle_ThrowsArgumentException()
     {
-        // Arrange
+        // Arrange - Обновлены ключи
         var json = """
         {
-            "targetType": "task",
-            "data": {
+            "entityType": "task",
+            "entityData": {
                 "content": "No title here"
             }
         }
@@ -111,11 +119,11 @@ public class InboxClassificationDtosTests
     [Fact]
     public void ToCreateRoutineDto_MissingFrequency_ThrowsArgumentException()
     {
-        // Arrange
+        // Arrange - Обновлены ключи
         var json = """
         {
-            "targetType": "routine",
-            "data": {
+            "entityType": "routine",
+            "entityData": {
                 "title": "No frequency"
             }
         }
@@ -129,5 +137,23 @@ public class InboxClassificationDtosTests
         // Assert
         act.Should().Throw<ArgumentException>()
             .WithMessage("*Frequency is required*");
+    }
+
+    [Fact]
+    public void ClassifyInboxItemDto_DefaultMode_IsConvert()
+    {
+        // Arrange
+        var json = """
+        {
+            "entityType": "task",
+            "entityData": { "title": "Test" }
+        }
+        """;
+
+        // Act
+        var dto = JsonSerializer.Deserialize<ClassifyInboxItemDto>(json, JsonOptions);
+
+        // Assert
+        dto!.Mode.Should().Be("convert");
     }
 }

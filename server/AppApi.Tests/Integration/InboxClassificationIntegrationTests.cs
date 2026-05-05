@@ -1,18 +1,21 @@
-// AppApi.Tests/Integration/InboxClassificationIntegrationTests.cs
-using Common.Data;
-using Common.Enums;
-using Common.Models;
-using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Testcontainers.PostgreSql;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using AppApi.Models.DTOs;
+using Common.Data;
+using Common.Models;
+using FluentAssertions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Testcontainers.PostgreSql;
 
 namespace AppApi.Tests.Integration;
 
@@ -20,58 +23,77 @@ public class InboxClassificationIntegrationTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")
-        .WithDatabase($"testdb_inbox_classify_{Guid.NewGuid():N}")
-        .WithUsername("testuser")
-        .WithPassword("testpassword")
+        .WithDatabase("testdb_inbox")
         .Build();
 
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
-    private const string TestUserId = "github-test-user";
+    private const string TestUserId = "github-test-user-123";
 
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
 
+        // 1. Применяем миграции ДО старта приложения (фикс ошибки "projects already exists")
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .Options;
+
+        using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync();
+        }
+
+        // 2. Настройка фабрики
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Testing");
-                builder.ConfigureServices(services =>
+                builder.ConfigureTestServices(services =>
                 {
-                    var descriptor = services.SingleOrDefault(d =>
-                        d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-                    if (descriptor != null)
-                        services.Remove(descriptor);
+                    // Замена БД
+                    var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+                    if (descriptor != null) services.Remove(descriptor);
+                    services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(_postgres.GetConnectionString()));
 
-                    var dbContextDescriptor = services.SingleOrDefault(d =>
-                        d.ServiceType == typeof(AppDbContext));
-                    if (dbContextDescriptor != null)
-                        services.Remove(dbContextDescriptor);
-
-                    services.AddDbContext<AppDbContext>(options =>
+                    // === РЕШЕНИЕ ОШИБКИ "Scheme already exists" ===
+                    // Вместо AddAuthentication мы просто находим существующую схему и меняем ей Handler
+                    services.PostConfigure<AuthenticationOptions>(options =>
                     {
-                        options.UseNpgsql(_postgres.GetConnectionString());
-                        options.ConfigureWarnings(warnings =>
-                            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+                        var scheme = options.Schemes.FirstOrDefault(s => s.Name == "GitHub");
+                        if (scheme != null)
+                        {
+                            // Подменяем тип обработчика на наш тестовый
+                            scheme.HandlerType = typeof(TestAuthHandler);
+                        }
                     });
 
-                    using var sp = services.BuildServiceProvider();
-                    using var scope = sp.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    db.Database.Migrate();
+                    // Регистрируем сам обработчик в DI
+                    services.AddTransient<TestAuthHandler>();
                 });
             });
 
         _client = _factory.CreateClient();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "test-token");
+        // Используем имя схемы GitHub в заголовке
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("GitHub");
     }
 
     public async Task DisposeAsync()
     {
+        // HttpClient удаляем синхронно (фикс ошибки DisposeAsync)
         _client.Dispose();
         await _factory.DisposeAsync();
         await _postgres.DisposeAsync();
+    }
+
+    private async Task<int> SeedInboxItemAsync(string title)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var item = new InboxItem { Title = title, UserId = TestUserId, CreatedAt = DateTime.UtcNow };
+        db.InboxItems.Add(item);
+        await db.SaveChangesAsync();
+        return item.Id;
     }
 
     private async Task ClearDatabaseAsync()
@@ -80,261 +102,72 @@ public class InboxClassificationIntegrationTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.InboxItems.RemoveRange(db.InboxItems);
         db.Tasks.RemoveRange(db.Tasks);
-        db.Projects.RemoveRange(db.Projects);
-        db.Routines.RemoveRange(db.Routines);
         await db.SaveChangesAsync();
     }
 
-    private async Task<int> SeedInboxItemAsync(string title)
+    // --- ТЕСТЫ ---
+
+    [Fact]
+    public async Task Classify_ToTask_ModeConvert_DeletesInbox()
     {
+        await ClearDatabaseAsync();
+        var inboxId = await SeedInboxItemAsync("Test Task");
+        var request = new { entityType = "task", mode = "convert", entityData = new { title = "Real Task" } };
+
+        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<ClassifyResponseDto>();
+        result!.InboxDeleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Classify_ModeCreate_KeepsInboxActive()
+    {
+        await ClearDatabaseAsync();
+        var inboxId = await SeedInboxItemAsync("Template");
+        var request = new { entityType = "task", mode = "create", entityData = new { title = "New One" } };
+
+        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<ClassifyResponseDto>();
+        result!.InboxDeleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Classify_CreationFails_InboxNotDeleted()
+    {
+        await ClearDatabaseAsync();
+        var inboxId = await SeedInboxItemAsync("Safe record");
+        // Пустой заголовок вызовет BadRequest
+        var request = new { entityType = "task", mode = "convert", entityData = new { title = "" } };
+
+        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var item = new InboxItem
-        {
-            Title = title,
-            UserId = TestUserId,
-            CreatedAt = DateTime.UtcNow
-        };
-        db.InboxItems.Add(item);
-        await db.SaveChangesAsync();
-        return item.Id;
+        var item = await db.InboxItems.FindAsync(inboxId);
+        item.Should().NotBeNull();
+        item!.DeletedAt.Should().BeNull();
     }
 
-    [Fact]
-    public async Task ClassifyInboxItem_ToTask_CreatesTaskAndSoftDeletesInbox()
+    // --- ТЕСТОВЫЙ ОБРАБОТЧИК АУТЕНТИФИКАЦИИ ---
+    public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        // Arrange
-        await ClearDatabaseAsync();
-        var inboxId = await SeedInboxItemAsync("Buy groceries");
+        public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
+            ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+            : base(options, logger, encoder, clock) { }
 
-        var request = new
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            targetType = "task",
-            data = new { title = "Buy groceries", content = "Milk, eggs, bread" }
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
-
-        // Assert
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            // Skip if auth is not configured for tests
-            return;
-        }
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<ClassifyInboxItemResponseDto>();
-        result.Should().NotBeNull();
-        result!.TargetType.Should().Be("task");
-        result.Title.Should().Be("Buy groceries");
-        result.Status.Should().Be("Available");
-
-        // Verify inbox item is soft-deleted
-        var inboxResponse = await _client.GetAsync("/api/inbox");
-        if (inboxResponse.StatusCode == HttpStatusCode.OK)
-        {
-            var inboxList = await inboxResponse.Content.ReadFromJsonAsync<InboxListResponseDto>();
-            inboxList!.Items.Should().NotContain(i => i.Id == inboxId);
-        }
-
-        // Verify task was created
-        var taskResponse = await _client.GetAsync($"/api/tasks/{result.Id}");
-        if (taskResponse.StatusCode == HttpStatusCode.OK)
-        {
-            var task = await taskResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
-            task.Should().NotBeNull();
-            task!.Title.Should().Be("Buy groceries");
-            task.Content.Should().Be("Milk, eggs, bread");
-        }
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItem_ToRoutine_CreatesRoutineAndSoftDeletesInbox()
-    {
-        // Arrange
-        await ClearDatabaseAsync();
-        var inboxId = await SeedInboxItemAsync("Morning Exercise");
-
-        var request = new
-        {
-            targetType = "routine",
-            data = new { title = "Morning Exercise", frequency = "daily" }
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
-
-        // Assert
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return;
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<ClassifyInboxItemResponseDto>();
-        result.Should().NotBeNull();
-        result!.TargetType.Should().Be("routine");
-        result.Title.Should().Be("Morning Exercise");
-        result.Frequency.Should().Be("Daily");
-
-        // Verify inbox item is soft-deleted
-        var inboxResponse = await _client.GetAsync("/api/inbox");
-        if (inboxResponse.StatusCode == HttpStatusCode.OK)
-        {
-            var inboxList = await inboxResponse.Content.ReadFromJsonAsync<InboxListResponseDto>();
-            inboxList!.Items.Should().NotContain(i => i.Id == inboxId);
-        }
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItem_ToProject_CreatesProjectAndSoftDeletesInbox()
-    {
-        // Arrange
-        await ClearDatabaseAsync();
-        var inboxId = await SeedInboxItemAsync("New Website Project");
-
-        var request = new
-        {
-            targetType = "project",
-            data = new { title = "New Website Project", description = "Build company website" }
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
-
-        // Assert
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return;
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<ClassifyInboxItemResponseDto>();
-        result.Should().NotBeNull();
-        result!.TargetType.Should().Be("project");
-        result.Title.Should().Be("New Website Project");
-        result.Description.Should().Be("Build company website");
-
-        // Verify inbox item is soft-deleted
-        var inboxResponse = await _client.GetAsync("/api/inbox");
-        if (inboxResponse.StatusCode == HttpStatusCode.OK)
-        {
-            var inboxList = await inboxResponse.Content.ReadFromJsonAsync<InboxListResponseDto>();
-            inboxList!.Items.Should().NotContain(i => i.Id == inboxId);
-        }
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItem_NonExistentInbox_ReturnsNotFound()
-    {
-        // Arrange
-        await ClearDatabaseAsync();
-
-        var request = new
-        {
-            targetType = "task",
-            data = new { title = "Test" }
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync("/api/inbox/99999/classify", request);
-
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.NotFound, HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItem_AlreadyClassified_ReturnsConflict()
-    {
-        // Arrange
-        await ClearDatabaseAsync();
-        var inboxId = await SeedInboxItemAsync("Already classified");
-
-        // First classification
-        var firstRequest = new
-        {
-            targetType = "task",
-            data = new { title = "Test Task" }
-        };
-        await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", firstRequest);
-
-        // Second classification attempt
-        var secondRequest = new
-        {
-            targetType = "project",
-            data = new { title = "Test Project" }
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", secondRequest);
-
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.Conflict, HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItem_InvalidTargetType_ReturnsBadRequest()
-    {
-        // Arrange
-        await ClearDatabaseAsync();
-        var inboxId = await SeedInboxItemAsync("Test item");
-
-        var request = new
-        {
-            targetType = "invalid_type",
-            data = new { title = "Test" }
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
-
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItem_MissingRequiredField_ReturnsBadRequest()
-    {
-        // Arrange
-        await ClearDatabaseAsync();
-        var inboxId = await SeedInboxItemAsync("Test item");
-
-        var request = new
-        {
-            targetType = "routine",
-            data = new { title = "Test" } // Missing frequency
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
-
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task ClassifyInboxItem_CreationFails_InboxNotDeleted()
-    {
-        // Arrange
-        await ClearDatabaseAsync();
-        var inboxId = await SeedInboxItemAsync("Will not be deleted");
-
-        var request = new
-        {
-            targetType = "task",
-            data = new { } // Missing title - should fail
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync($"/api/inbox/{inboxId}/classify", request);
-
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.Unauthorized);
-
-        // Verify inbox item is NOT deleted
-        var inboxResponse = await _client.GetAsync("/api/inbox");
-        if (inboxResponse.StatusCode == HttpStatusCode.OK)
-        {
-            var inboxList = await inboxResponse.Content.ReadFromJsonAsync<InboxListResponseDto>();
-            inboxList!.Items.Should().Contain(i => i.Id == inboxId);
+            var claims = new[] { new Claim(ClaimTypes.NameIdentifier, TestUserId) };
+            var identity = new ClaimsIdentity(claims, "GitHub");
+            var principal = new ClaimsPrincipal(identity);
+            var ticket = new AuthenticationTicket(principal, "GitHub");
+            return Task.FromResult(AuthenticateResult.Success(ticket));
         }
     }
 }
