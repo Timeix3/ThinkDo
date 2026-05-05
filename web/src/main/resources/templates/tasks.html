@@ -32,6 +32,21 @@
             flex-direction: column;
         }
 
+        .task-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
         .fab {
             position: fixed;
             bottom: 2rem;
@@ -72,6 +87,34 @@
             padding: 1.75rem;
             width: 100%;
             max-width: 440px;
+        }
+
+        /* Расширенное модальное окно проекта */
+        .modal-box-large {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            width: 90vw;
+            max-width: 1200px;
+            height: 85vh;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* На мобильных устройствах — полноэкранный режим */
+        @media (max-width: 768px) {
+            .modal-box-large {
+                width: 100vw;
+                height: 100vh;
+                max-width: none;
+                max-height: none;
+                border-radius: 0;
+                padding: 1.25rem;
+            }
         }
 
         input[type="text"],
@@ -151,6 +194,34 @@
 
         .btn-success:hover {
             background: #16a34a;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.25rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-unblock {
+            background: #10b981;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.25rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-unblock:hover {
+            background: #059669;
         }
 
         .nav-disabled {
@@ -261,64 +332,80 @@
             opacity: 0.85;
         }
 
-        /* Планирование: одиночный проект */
-        .plan-single-col {
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 1.5rem;
-            padding: 1.25rem;
-            min-height: 200px;
+        /* Планирование — колонки проектов (3 в ряд, с горизонтальным скроллом при переполнении) */
+        .planning-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
         }
 
-        .plan-cycle-nav {
+        @media (max-width: 900px) {
+            .planning-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .planning-col {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .planning-col.is-default {}
+
+        .planning-col-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
-            gap: 0.75rem;
-        }
-
-        .plan-cycle-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
             color: white;
-            border-radius: 0.75rem;
-            padding: 0.55rem 1rem;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background 0.15s;
-            flex-shrink: 0;
         }
 
-            .plan-cycle-btn:hover {
-                background: rgba(255,255,255,0.35);
-            }
-
-            .plan-cycle-btn:disabled {
-                opacity: 0.3;
-                cursor: not-allowed;
-            }
-
-        .plan-cycle-info {
-            text-align: center;
-            color: white;
-            flex: 1;
-        }
-
-        .plan-cycle-title {
+        .planning-col-title {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            line-height: 1.2;
         }
 
-        .plan-cycle-counter {
+        .planning-col-count {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 0.15rem 0.55rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .planning-task {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.8rem;
+            margin-bottom: 0.55rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+
+        .planning-task-title {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.88rem;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .planning-empty {
+            color: rgba(255, 255, 255, 0.35);
             font-size: 0.8rem;
-            opacity: 0.65;
-        }
-
-        .plan-cycle-desc {
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-top: 0.2rem;
+            text-align: center;
+            padding: 1.5rem 0.5rem;
         }
 
         /* ── Кнопка редактирования проекта ── */
@@ -371,6 +458,73 @@
             font-weight: 600;
             background: #fef3c7;
             color: #b45309;
+        }
+
+        .project-badge-blocked {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fcd34d;
+        }
+
+        /* Стили для блокировки в модалке */
+        .block-section {
+            background: #fffbeb;
+            border: 1.5px solid #fcd34d;
+            border-radius: 0.85rem;
+            padding: 0.85rem 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .block-section .block-title {
+            font-weight: 600;
+            color: #92400e;
+            font-size: 0.9rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .block-reason-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .block-reason-row label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.88rem;
+            color: #1e293b;
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 130px;
+        }
+
+        .block-reason-row input[type="radio"] {
+            accent-color: #f59e0b;
+        }
+
+        .block-current-info {
+            background: #fff;
+            border: 1px solid #fcd34d;
+            border-radius: 0.6rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
         }
 
         .project-tasks-list-empty {
@@ -545,9 +699,9 @@
             font-size: 0.62rem;
         }
 
-        /* ── Стили для списка задач проекта в модалке редактирования ── */
+        /* ── Стили для списка задач проекта в модалке редактирования (точки слева, не кликабельно) ── */
         .project-tasks-list {
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             border: 1.5px solid #e2e8f0;
             border-radius: 0.75rem;
@@ -562,8 +716,7 @@
             color: #1e293b;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem;
+            gap: 0.65rem;
             border-bottom: 1px solid #f1f5f9;
         }
 
@@ -571,23 +724,10 @@
             border-bottom: none;
         }
 
-        .project-task-status {
+        .project-task-item i {
+            color: #cbd5e1;
             font-size: 0.7rem;
-            font-weight: 600;
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.5rem;
-            background: #f1f5f9;
-            color: #475569;
-        }
-
-        .project-task-status.completed {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .project-task-status.active {
-            background: #fee2e2;
-            color: #b91c1c;
+            width: 1rem;
         }
 
         .project-tasks-loading {
@@ -753,6 +893,15 @@
         .section-add-btn:hover {
             background: rgba(255, 255, 255, 0.4);
         }
+
+        /* Неактивная кнопка "+ Задача" */
+        .add-task-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f1f5f9;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+        }
     </style>
 </head>
 
@@ -770,9 +919,10 @@
                 <!-- Не авторизован -->
                 <div sec:authorize="isAnonymous()">
                     <a href="/oauth2/authorization/github"
-                       class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            <path
+                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                         </svg>
                         Войти через GitHub
                     </a>
@@ -781,13 +931,13 @@
                 <!-- Авторизован -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
                     <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
-                         class="w-8 h-8 rounded-full border-2 border-white/50">
+                        class="w-8 h-8 rounded-full border-2 border-white/50">
                     <span class="text-sm opacity-90">
                         Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                     </span>
                     <form th:action="@{/logout}" method="post" id="logoutForm">
                         <button type="submit" onclick="clearAllData()"
-                                class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                             <i class="fas fa-sign-out-alt text-xs"></i> Выйти
                         </button>
                     </form>
@@ -801,6 +951,7 @@
             <div class="nav-pill flex gap-2 text-white">
                 <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">📅
                     Планирование</button>
+                <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button data-page="routines" id="navRoutines" class="px-3 py-1 rounded-full">🔄 Рутины</button>
@@ -810,16 +961,15 @@
         <!-- ====== Страница: Планирование ====== -->
         <div id="pageDashboard">
             <div class="task-list-container">
-                <div class="plan-cycle-nav">
-                    <button class="plan-cycle-btn" id="planPrevBtn"><i class="fas fa-chevron-left"></i> Назад</button>
-                    <div class="plan-cycle-info">
-                        <div class="plan-cycle-title" id="planProjectTitle"><i class="fas fa-spinner fa-spin"></i> Загрузка проектов...</div>
-                        <div class="plan-cycle-counter" id="planProjectCounter"></div>
-                        <div class="plan-cycle-desc" id="planProjectDesc"></div>
-                    </div>
-                    <button class="plan-cycle-btn" id="planNextBtn">Далее <i class="fas fa-chevron-right"></i></button>
-                </div>
-                <div class="plan-single-col" id="planTasksList"></div>
+                <h2 class="text-white font-bold text-lg mb-4">📅 Планирование по проектам</h2>
+                <div class="planning-grid" id="planningGrid"></div>
+            </div>
+        </div>
+        <!-- ====== Страница: Задачи ====== -->
+        <div id="pageTasks" class="hidden">
+            <div class="task-list-container">
+                <h2 class="text-white font-bold text-lg mb-4">📝 Список всех задач</h2>
+                <div id="taskListContent"></div>
             </div>
         </div>
 
@@ -852,19 +1002,19 @@
         <!-- ====== Страница: Рутины ====== -->
         <div id="pageRoutines" class="hidden">
             <div class="task-list-container">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-white font-bold text-lg">🔄 Рутины</h2>
-                    <button class="section-add-btn" id="btnAddRoutine"><i class="fas fa-plus"></i></button>
-                </div>
+                <h2 class="text-white font-bold text-lg mb-4">🔄 Рутины</h2>
                 <div id="routinesListContent"></div>
             </div>
         </div>
 
     </div>
 
+    <!-- FAB: Создать задачу (Скрыта на Доске) -->
+    <div class="fab hidden" id="fabAddTask"><i class="fas fa-plus"></i></div>
+
     <!-- FAB: Навигация на обезьяну -->
     <a href="/" class="fab" id="fabNavFocus"
-       style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
+        style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
         🐒
     </a>
 
@@ -873,11 +1023,16 @@
         <i class="fas fa-plus" id="fabAddInboxIcon"></i>
     </div>
 
+    <!-- FAB: Создать рутину -->
+    <div class="fab hidden" id="fabAddRoutine" style="position:fixed;">
+        <i class="fas fa-plus"></i>
+    </div>
+
     <!-- Inline-поле ввода для инбокса -->
     <div id="inboxInputBar" class="inbox-inline-input hidden">
         <div class="inbox-input-box">
             <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
-                   style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
+                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
         </div>
     </div>
 
@@ -956,11 +1111,13 @@
         </div>
     </div>
 
-    <!-- Модалка: Редактирование проекта (добавлен список задач) -->
+    <!-- ====== РАСШИРЕННОЕ МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ПРОЕКТА (с блокировкой) ====== -->
     <div id="projectEditModal" class="modal-overlay hidden">
-        <div class="modal-box">
-            <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать проект</h2>
-            <div class="flex flex-col gap-3">
+        <div class="modal-box-large">
+            <h2 class="text-lg font-bold text-slate-800 mb-2">✏️ Редактировать проект</h2>
+
+            <!-- Верхняя часть: название + описание -->
+            <div class="flex flex-col gap-3 mb-2">
                 <div>
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
                     <input type="text" id="projectEditName" placeholder="Название проекта" />
@@ -969,35 +1126,89 @@
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Описание</label>
                     <textarea id="projectEditDesc" rows="3" placeholder="Описание проекта..."></textarea>
                 </div>
-                <div>
-                    <label class="text-sm font-medium text-slate-600 mb-1 block">Задачи проекта</label>
-                    <div id="projectEditTasks" class="project-tasks-list">
-                        <div class="project-tasks-loading">Загрузка задач...</div>
-                    </div>
-                </div>
-                <p id="projectEditError" class="text-red-500 text-xs hidden">Название обязательно!</p>
             </div>
-            <div class="flex justify-end gap-2 mt-5">
-                <button class="btn-danger" id="projectEditDelete">
-                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
+
+            <!-- Блок текущей блокировки (если проект уже заблокирован) -->
+            <div id="projectEditBlockedInfo" class="block-current-info hidden">
+                <i class="fas fa-lock"></i>
+                <span id="projectEditBlockedText"></span>
+            </div>
+
+            <!-- Секция выбора причины блокировки (раскрывается при нажатии "Заблокировать") -->
+            <div id="projectEditBlockSection" class="block-section hidden">
+                <div class="block-title">
+                    <i class="fas fa-lock"></i>
+                    Причина блокировки
+                </div>
+                <div class="block-reason-row">
+                    <label>
+                        <input type="radio" name="blockReason" value="project" id="blockReasonProject" checked>
+                        Другой проект
+                    </label>
+                    <select id="blockReasonProjectSelect" style="flex:1;"></select>
+                </div>
+                <div class="block-reason-row">
+                    <label>
+                        <input type="radio" name="blockReason" value="date" id="blockReasonDate">
+                        Дата
+                    </label>
+                    <input type="date" id="blockReasonDateInput" style="flex:1;">
+                </div>
+                <div class="flex justify-end gap-2 mt-2">
+                    <button class="btn-ghost" id="projectEditBlockCancel"
+                        style="padding:0.4rem 0.9rem;font-size:0.85rem;">Отмена</button>
+                    <button class="btn-warning" id="projectEditBlockConfirm"
+                        style="padding:0.4rem 0.9rem;font-size:0.85rem;"><i
+                            class="fas fa-lock mr-1"></i>Заблокировать</button>
+                </div>
+            </div>
+
+            <!-- Средняя часть: контейнер для списка задач (точки слева, не кликабельно) -->
+            <div>
+                <label class="text-sm font-medium text-slate-600 mb-1 block">Задачи проекта</label>
+                <div id="projectTaskListContainer" class="project-tasks-list">
+                    <div class="project-tasks-loading">Загрузка задач...</div>
+                </div>
+            </div>
+
+            <!-- Нижняя часть: кнопка + Задача (неактивная) -->
+            <div class="flex justify-start mt-2">
+                <button id="btnAddTaskToProject" class="add-task-btn" disabled>
+                    <i class="fas fa-plus"></i> Задача
                 </button>
-                <button class="btn-ghost" id="projectEditCancel">Отмена</button>
-                <button class="btn-primary" id="projectEditSave">Сохранить</button>
+            </div>
+
+            <!-- Ошибка валидации -->
+            <p id="projectEditError" class="text-red-500 text-xs hidden mt-1">Название обязательно!</p>
+
+            <!-- Кнопки управления: слева — Удалить, Заблокировать / Разблокировать; справа — Отмена, Сохранить -->
+            <div class="flex justify-between items-center mt-4 pt-2 border-t border-slate-200">
+                <div class="flex gap-2">
+                    <button class="btn-danger" id="projectEditDelete"><i
+                            class="fas fa-trash-alt mr-1.5"></i>Удалить</button>
+                    <button class="btn-warning" id="projectEditBlock"><i
+                            class="fas fa-lock mr-1.5"></i>Заблокировать</button>
+                    <button class="btn-unblock hidden" id="projectEditUnblock"><i
+                            class="fas fa-unlock mr-1.5"></i>Разблокировать</button>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn-ghost" id="projectEditCancel">Отмена</button>
+                    <button class="btn-primary" id="projectEditSave">Сохранить</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Модалка: Подтверждение удаления -->
-    <div id="deleteConfirmModal" class="modal-overlay hidden">
+    <div id="projectDeleteConfirmModal" class="modal-overlay hidden">
         <div class="modal-box">
             <h2 class="text-lg font-bold text-slate-800 mb-2">⚠️ Подтвердите действие</h2>
-            <p class="text-slate-600 mb-6">
-                Удалить <span id="deleteConfirmType"></span>
-                "<span class="font-semibold text-slate-800" id="deleteConfirmName"></span>"?
+            <p class="text-slate-600 mb-6" id="projectDeleteConfirmText">
+                Удалить проект "<span class="font-semibold text-slate-800" id="projectDeleteConfirmName"></span>"?
             </p>
             <div class="flex justify-end gap-2">
-                <button class="btn-ghost" id="deleteCancel">Отмена</button>
-                <button class="btn-danger" id="deleteConfirm">
+                <button class="btn-ghost" id="projectDeleteCancel">Отмена</button>
+                <button class="btn-danger" id="projectDeleteConfirm">
                     <i class="fas fa-trash-alt mr-1.5"></i>Удалить
                 </button>
             </div>
@@ -1015,6 +1226,9 @@
                 </div>
             </div>
             <div class="flex justify-between mt-5">
+                <button class="btn-danger" id="inboxEditDelete">
+                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
+                </button>
                 <div class="flex gap-2">
                     <button class="btn-ghost" id="inboxEditCancel">Отмена</button>
                     <button class="btn-primary" id="inboxEditSave">Сохранить</button>
@@ -1050,13 +1264,11 @@
             </div>
 
             <div class="flex justify-between items-center mt-5">
-                <button class="btn-danger" id="inboxClassifyDelete">
-                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
-                </button>
+                <button class="btn-danger" id="inboxClassifyDelete"><i
+                        class="fas fa-trash-alt mr-1.5"></i>Удалить</button>
                 <div class="flex gap-2">
-                    <button class="btn-ghost" id="inboxClassifyEdit">
-                        <i class="fas fa-pencil-alt mr-1"></i>Редактировать
-                    </button>
+                    <button class="btn-ghost" id="inboxClassifyEdit"><i
+                            class="fas fa-pencil-alt mr-1"></i>Редактировать</button>
                     <button class="btn-ghost" id="inboxClassifyCancel">Отмена</button>
                 </div>
             </div>
@@ -1075,7 +1287,7 @@
                 <div>
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Частота *</label>
                     <select id="routineCreateFrequency"
-                            style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
+                        style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
                         <option value="1">Ежедневно</option>
                         <option value="2">Еженедельно</option>
                         <option value="3">Ежемесячно</option>
@@ -1102,7 +1314,7 @@
                 <div>
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Частота *</label>
                     <select id="routineEditFrequency"
-                            style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
+                        style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
                         <option value="1">Ежедневно</option>
                         <option value="2">Еженедельно</option>
                         <option value="3">Ежемесячно</option>
@@ -1111,9 +1323,8 @@
                 <p id="routineEditError" class="text-red-500 text-xs hidden">Название обязательно!</p>
             </div>
             <div class="flex justify-end gap-2 mt-5">
-                <button class="btn-danger" id="routineEditDelete">
-                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
-                </button>
+                <button class="btn-danger" id="routineEditDelete"><i
+                        class="fas fa-trash-alt mr-1.5"></i>Удалить</button>
                 <button class="btn-ghost" id="routineEditCancel">Отмена</button>
                 <button class="btn-primary" id="routineEditSave">Сохранить</button>
             </div>
@@ -1139,11 +1350,6 @@
     </a>
 
     <script>
-
-        if (window.location.pathname.endsWith('/tasks') || window.location.pathname.endsWith('/tasks/')) {
-            window.location.replace('/projects');
-        }
-
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
         const PROJECTS_API_URL = '/api/projects';
@@ -1153,15 +1359,16 @@
         let editingInboxId = null;
         let editingProjectId = null;
         let editingRoutineId = null;
-        let allTasks = []; // Общее состояние
+        let allTasks = [];
         let allProjects = [];
         let allRoutines = [];
-        let deleteType = null;
-        let planningProjectIndex = 0;
+
+        // Флаг для создания задачи из модалки проекта (предустановленный проект)
+        let pendingProjectIdForTask = null;
 
         // Состояние для классификации инбокса
-        let classifyingInboxId = null;   // id записи, открытой в модалке классификации
-        let convertingInboxId = null;    // id записи, для которой сейчас открыто create-окно (после сохранения запись будет удалена)
+        let classifyingInboxId = null;
+        let convertingInboxId = null;
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
@@ -1189,46 +1396,79 @@
             alert(message);
         }
 
-        // ── Render: Планирование (перебор проектов по одному) ──
-
-        function renderPlanning() {
-            // Сбросить индекс если вышел за границы
-            if (planningProjectIndex >= allProjects.length) planningProjectIndex = allProjects.length - 1;
-            if (planningProjectIndex < 0) planningProjectIndex = 0;
-
-            const project = allProjects[planningProjectIndex];
-
-            // Заголовок и счётчик
-            const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
-            document.getElementById('planProjectTitle').textContent = icon + ' ' + project.name;
-            document.getElementById('planProjectCounter').textContent = (planningProjectIndex + 1) + ' из ' + allProjects.length;
-            const descEl = document.getElementById('planProjectDesc');
-            if (project.description) {
-                descEl.textContent = project.description;
-                descEl.style.display = 'block';
-            } else {
-                descEl.style.display = 'none';
+        function formatBlockReason(blocked) {
+            if (!blocked) return '';
+            if (blocked.type === 'project') {
+                const blockerProject = allProjects.find(p => p.id === blocked.value);
+                const projectName = blockerProject ? blockerProject.name : '(удалённый проект)';
+                return `Заблокирован проектом: ${projectName}`;
             }
-
-            // Кнопки навигации
-            document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
-            document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
-            document.getElementById('planNextBtn').textContent = planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
+            if (blocked.type === 'date') {
+                return `Заблокирован до: ${formatDateRu(blocked.value)}`;
+            }
+            return 'Заблокирован';
         }
 
-        document.getElementById('planPrevBtn').addEventListener('click', () => {
-            if (planningProjectIndex > 0) {
-                planningProjectIndex--;
-                renderPlanning();
-            }
-        });
-        document.getElementById('planNextBtn').addEventListener('click', () => {
-            if (planningProjectIndex < allProjects.length - 1) {
-                planningProjectIndex++;
-                renderPlanning();
-            }
-        });
+        function GetProjectsWithTasks() {
+            return allProjects.map(project => {
+                const projectTasks = allTasks.filter(task => task.projectId === project.id);
+                return { project, projectTasks };
+            });
+        }
 
+        function renderPlanning() {
+            const grid = document.getElementById('planningGrid');
+            const projectsWithTasks = GetProjectsWithTasks();
+            grid.innerHTML = projectsWithTasks.map(({ project, projectTasks }) => {
+                const defaultCls = project.isDefault ? ' is-default' : '';
+                const blockedStyle = project.blocked ? 'opacity:0.55;' : '';
+                const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
+
+                const blockBadge = project.blocked
+                    ? `<span class="project-badge-blocked" style="font-size:0.65rem;"><i class="fas fa-lock"></i>${escHtml(formatBlockReason(project.blocked))}</span>`
+                    : '';
+
+                const tasksHtml = projectTasks.length === 0
+                    ? '<div class="planning-empty">Нет задач</div>'
+                    : projectTasks.map(t => {
+                        const checkStyle = t.isSelectedForSprint
+                            ? 'border-color:#22c55e;background:#22c55e;color:#fff;'
+                            : '';
+                        return `
+            <div class="planning-task" data-id="${t.id}">
+                <div class="task-check shrink-0" data-complete-id="${t.id}" title="Отметить" style="${checkStyle}">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="planning-task-title" title="${escHtml(t.title)}">${escHtml(t.title)}</div>
+            </div>
+        `}).join('');
+
+                return `
+        <div class="planning-col${defaultCls}" style="${blockedStyle}">
+            <div class="planning-col-header">
+                <div class="planning-col-title">${icon} ${escHtml(project.name)}</div>
+                <span class="planning-col-count">${projectTasks.length}</span>
+            </div>
+            ${blockBadge ? `<div style="margin-bottom:0.6rem;">${blockBadge}</div>` : ''}
+            <div>${tasksHtml}</div>
+        </div>
+    `;
+            }).join('');
+            // Чекбокс в планировании — только визуальная отметка, задача не удаляется
+            grid.querySelectorAll('.task-check').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await togglePlanning(btn.dataset.completeId, btn);
+                });
+            });
+            // Клик по названию задачи — открыть редактирование
+            grid.querySelectorAll('.planning-task-title').forEach(el => {
+                el.addEventListener('click', () => {
+                    const wrap = el.closest('.planning-task');
+                    if (wrap) openEditModal(wrap.dataset.id, allTasks);
+                });
+            });
+        }
 
         async function togglePlanning(taskId, checkEl) {
             const task = allTasks.find(t => String(t.id) === String(taskId));
@@ -1253,6 +1493,56 @@
             checkEl.dataset.loading = 'false';
         }
 
+        // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1 + ОТОБРАЖЕНИЕ КОНТЕНТА + ПРОЕКТ) ──
+        function renderTaskList(tasks) {
+            const container = document.getElementById('taskListContent');
+            if (!tasks.length) {
+                container.innerHTML = '<div class="text-white/50 text-center py-10 font-medium">Нет задач. Создайте первую во вкладке "Задачи"!</div>';
+                return;
+            }
+
+            container.innerHTML = tasks.sort((a, b) => b.id - a.id).map(t => {
+                let projectName = "Без проекта";
+                let isDefault = false;
+                let chipIcon = "fa-ban";
+                let chipClass = "project-chip";
+                if (t.projectId) {
+                    const project = allProjects.find(p => p.id === t.projectId);
+                    if (project) {
+                        projectName = project.name;
+                        isDefault = project.isDefault || false;
+                        chipIcon = isDefault ? "fa-star" : "fa-folder";
+                        chipClass = isDefault ? "project-chip project-chip-default" : "project-chip";
+                    } else {
+                        projectName = "Неизвестный проект";
+                        chipIcon = "fa-question-circle";
+                    }
+                } else {
+                    projectName = "Без проекта";
+                    chipIcon = "fa-ban";
+                    chipClass = "project-chip";
+                }
+
+                return `
+                            <div class="task-list-item" id="task-row-${t.id}">
+                                <div class="flex items-center gap-3">
+                                    <div class="task-check shrink-0" onclick="completeTask(${t.id})" title="Выполнить">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
+                                        <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
+                                        ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
+                                        <span class="${chipClass}" style="display:inline-flex; margin-top: 0.3rem;">
+                                            <i class="fas ${chipIcon}"></i>
+                                            ${escHtml(projectName)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+            }).join('');
+        }
+
         // ── Render ПРОЕКТОВ (Задача 9.3) ──
         function renderProjectsList() {
             const container = document.getElementById('projectsListContent');
@@ -1274,36 +1564,36 @@
                     ? '<span class="project-badge-default"><i class="fas fa-star"></i>По умолчанию</span>'
                     : '';
 
-                const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
+                const taskCount = allTasks.filter(t => t.projectId === p.id).length;
                 const taskCountHtml = `
-                        <span class="project-task-count mt-2 block">
-                            <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
-                        </span>
-                    `;
+                <span class="project-task-count mt-2 block">
+                    <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+                </span>
+            `;
 
                 const defaultClass = p.isDefault ? 'project-default' : '';
 
                 return `
-                        <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                            ${p.isDefault ? '' : `
-                                <button class="project-edit-btn absolute top-2 right-2"
-                                        data-project-id="${p.id}"
-                                        title="Редактировать проект"
-                                        onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                            `}
+                <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                    ${p.isDefault ? '' : `
+                        <button class="project-edit-btn absolute top-2 right-2"
+                                data-project-id="${p.id}"
+                                title="Редактировать проект"
+                                onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    `}
 
-                            <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                    ${badgeHtml}
-                                </div>
-                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                                ${taskCountHtml}
-                            </div>
+                    <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                            ${badgeHtml}
                         </div>
-                    `;
+                        ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                        ${taskCountHtml}
+                    </div>
+                </div>
+            `;
             }).join('');
         }
 
@@ -1323,6 +1613,9 @@
                 allProjects = data;
                 renderPlanning();
                 renderProjectsList();
+                if (currentPage === 'tasks') {
+                    renderTaskList(allTasks);
+                }
                 return allProjects;
             } catch (e) {
                 console.error("Projects API error", e);
@@ -1335,6 +1628,7 @@
             try {
                 const res = await fetch(API_URL);
                 allTasks = await res.json();
+                renderPlanning();
                 renderTaskList(allTasks);
             } catch (e) {
                 document.getElementById('colToday').innerHTML =
@@ -1354,7 +1648,7 @@
         }
 
         // ── Create Task (расширено: поле Проект) ────────────────
-        async function openCreateModal() {
+        async function openCreateModal(preSelectedProjectId = null) {
             document.getElementById('createTitle').value = '';
             document.getElementById('createDesc').value = '';
             const projectSelect = document.getElementById('createProject');
@@ -1364,7 +1658,10 @@
 
             try {
                 await loadProjects();
-                fillProjectSelect(projectSelect, "");
+                fillProjectSelect(projectSelect, preSelectedProjectId);
+                if (preSelectedProjectId) {
+                    projectSelect.value = preSelectedProjectId;
+                }
             } catch (e) {
                 console.error('Failed to load projects', e);
                 projectSelect.innerHTML = '<option disabled>Ошибка загрузки проектов</option>';
@@ -1375,6 +1672,7 @@
             document.getElementById('createModal').classList.add('hidden');
         }
 
+        document.getElementById('fabAddTask').addEventListener('click', () => openCreateModal());
         document.getElementById('createCancel').addEventListener('click', () => {
             cancelInboxConversion();
             closeCreateModal();
@@ -1391,16 +1689,19 @@
             const title = titleInput.value.trim();
             if (!title) { titleInput.focus(); return; }
 
-            const projectSelect = document.getElementById('createProject');
-            let projectId = projectSelect.value;
+            let projectId = document.getElementById('createProject').value;
             if (projectId === "") projectId = null;
             else if (projectId) projectId = Number(projectId);
+
+            if (pendingProjectIdForTask) {
+                projectId = pendingProjectIdForTask;
+                pendingProjectIdForTask = null;
+            }
 
             const btn = document.getElementById('createSave');
             btn.disabled = true;
 
             try {
-                // Если создаём из инбокса (есть convertingInboxId) — используем classify endpoint
                 if (convertingInboxId) {
                     const classifyPayload = {
                         targetType: "task",
@@ -1436,20 +1737,17 @@
                                 if (errData && errData.message) errorMsg = errData.message;
                             } catch (e) { }
                             showError(errorMsg);
-                            // Не закрываем форму
                             return;
                         }
                     }
 
-                    // Успех
                     closeCreateModal();
                     await loadTasks();
                     await loadProjects();
-                    await inboxLoad();  // обновляем инбокс — запись исчезнет
-                    cancelInboxConversion(); // сброс флага
+                    await inboxLoad();
+                    cancelInboxConversion();
                     showSuccess('Задача успешно создана из записи инбокса!');
                 } else {
-                    // Обычное создание задачи (не из инбокса)
                     const response = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1500,7 +1798,6 @@
             document.getElementById('projectCreateModal').classList.add('hidden');
         }
 
-        // Обработчик для inline-кнопки создания проекта
         document.getElementById('btnAddProjectInline').addEventListener('click', openProjectCreateModal);
         document.getElementById('projectCreateCancel').addEventListener('click', () => {
             cancelInboxConversion();
@@ -1523,7 +1820,6 @@
 
             try {
                 if (convertingInboxId) {
-                    // Классификация в проект
                     const classifyPayload = {
                         targetType: "project",
                         data: {
@@ -1567,7 +1863,6 @@
                     cancelInboxConversion();
                     showSuccess('Проект успешно создан из записи инбокса!');
                 } else {
-                    // Обычное создание проекта
                     const res = await fetch(PROJECTS_API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1592,7 +1887,7 @@
             }
         });
 
-        // ── Edit Project ───────────────────────────────────────
+        // ── Edit Project (расширенная модалка с поддержкой блокировки) ──
         async function openProjectEditModal(projectId) {
             const project = allProjects.find(p => String(p.id) === String(projectId));
             if (!project) {
@@ -1609,7 +1904,27 @@
             document.getElementById('projectEditName').value = project.name;
             document.getElementById('projectEditDesc').value = project.description ?? '';
 
-            const tasksContainer = document.getElementById('projectEditTasks');
+            // Состояние блокировки
+            const blockedInfo = document.getElementById('projectEditBlockedInfo');
+            const blockedText = document.getElementById('projectEditBlockedText');
+            const blockSection = document.getElementById('projectEditBlockSection');
+            const blockBtn = document.getElementById('projectEditBlock');
+            const unblockBtn = document.getElementById('projectEditUnblock');
+
+            blockSection.classList.add('hidden');
+
+            if (project.blocked) {
+                blockedInfo.classList.remove('hidden');
+                blockedText.textContent = formatBlockReason(project.blocked);
+                blockBtn.classList.add('hidden');
+                unblockBtn.classList.remove('hidden');
+            } else {
+                blockedInfo.classList.add('hidden');
+                blockBtn.classList.remove('hidden');
+                unblockBtn.classList.add('hidden');
+            }
+
+            const tasksContainer = document.getElementById('projectTaskListContainer');
             tasksContainer.innerHTML = '<div class="project-tasks-loading"><i class="fas fa-spinner fa-pulse mr-1"></i> Загрузка задач...</div>';
 
             document.getElementById('projectEditError').classList.add('hidden');
@@ -1623,20 +1938,16 @@
                 }
                 const projectTasks = await res.json();
 
-                const activeTasks = projectTasks.filter(t => t.status !== 2 && t.status !== 3);
-                if (!activeTasks.length) {
+                if (!projectTasks.length) {
                     tasksContainer.innerHTML = '<div class="project-tasks-list-empty">У проекта пока нет задач</div>';
                 } else {
-                    tasksContainer.innerHTML = activeTasks.map(task => {
-                        const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
-                        const statusClass = task.status === 4 ? 'active' : 'active';
-                        return `
-                                    <div class="project-task-item">
-                                        <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
-                                        <span class="project-task-status ${statusClass}">${statusText}</span>
-                                    </div>
-                                `;
-                    }).join('');
+                    // Отображаем задачи с иконкой fa-circle, без статуса, не кликабельно
+                    tasksContainer.innerHTML = projectTasks.map(task => `
+                        <div class="project-task-item">
+                            <i class="fas fa-circle"></i>
+                            <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
+                        </div>
+                    `).join('');
                 }
             } catch (error) {
                 console.error('Ошибка загрузки задач проекта:', error);
@@ -1706,68 +2017,131 @@
             }
         });
 
-        // ── Confirm Delete ──────────────────────────────────────────
-
-        document.getElementById('projectEditDelete').addEventListener('click', () => {
+        document.getElementById('projectEditDelete').addEventListener('click', async () => {
             const project = allProjects.find(p => String(p.id) === String(editingProjectId));
             if (!project) return;
-            openDeleteConfirmModal(project.name, 'project');
+            document.getElementById('projectDeleteConfirmName').textContent = project.name;
+            document.getElementById('projectDeleteConfirmModal').classList.remove('hidden');
         });
 
-        function openDeleteConfirmModal(title, type) {
-            deleteType = type;
-            document.getElementById('deleteConfirmName').textContent = title;
-            switch (type) {
-                case 'project':
-                    document.getElementById('deleteConfirmType').textContent = 'проект';
-                    break;
-                case 'inbox':
-                    document.getElementById('deleteConfirmType').textContent = 'запись инбокса';
-                    break;
-            }
-            document.getElementById('deleteConfirmModal').classList.remove('hidden');
-            document.body.appendChild(document.getElementById('deleteConfirmModal'));
-        }
-
-        function closeDeleteConfirmModal() {
-            document.getElementById('deleteConfirmModal').classList.add('hidden');
-        }
-
-        document.getElementById('deleteCancel').addEventListener('click', () => {
-            closeDeleteConfirmModal();
+        document.getElementById('projectDeleteCancel').addEventListener('click', () => {
+            document.getElementById('projectDeleteConfirmModal').classList.add('hidden');
         });
 
-        async function deleteProject() {
-            const res = await fetch(`${PROJECTS_API_URL}/${editingProjectId}`, { method: 'DELETE' });
-            if (!res.ok) throw new Error();
-            await loadProjects();
-            await loadTasks();
-        }
-
-        document.getElementById('deleteConfirm').addEventListener('click', async () => {
+        document.getElementById('projectDeleteConfirm').addEventListener('click', async () => {
             try {
-                switch (deleteType) {
-                    case 'project':
-                        await deleteProject();
-                        closeProjectEditModal();
-                        break;
-                    case 'inbox':
-                        await deleteInboxItem();
-                        closeInboxClassifyModal();
-                        break;
-                }
+                const res = await fetch(`${PROJECTS_API_URL}/${editingProjectId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error();
+                document.getElementById('projectDeleteConfirmModal').classList.add('hidden');
+                closeProjectEditModal();
+                await loadProjects();
+                await loadTasks();
             } catch (e) {
                 console.error(e);
             }
-            closeDeleteConfirmModal();
-            deleteType = null;
         });
 
-        document.getElementById('deleteConfirmModal').addEventListener('click', (e) => {
-            if (e.target.id === 'deleteConfirmModal') {
-                document.getElementById('deleteConfirmModal').classList.add('hidden');
+        document.getElementById('projectDeleteConfirmModal').addEventListener('click', (e) => {
+            if (e.target.id === 'projectDeleteConfirmModal') {
+                document.getElementById('projectDeleteConfirmModal').classList.add('hidden');
             }
         });
+
+        // ── Логика блокировки (восстановлена) ──
+        document.getElementById('projectEditBlock').addEventListener('click', () => {
+            const blockSection = document.getElementById('projectEditBlockSection');
+            // Заполнить select других проектов
+            const blockSelect = document.getElementById('blockReasonProjectSelect');
+            const others = allProjects.filter(p =>
+                String(p.id) !== String(editingProjectId) &&
+                !p.isDefault &&
+                !p.blocked
+            );
+            if (others.length === 0) {
+                blockSelect.innerHTML = '<option value="">Нет других проектов</option>';
+                blockSelect.disabled = true;
+            } else {
+                blockSelect.innerHTML = others.map(p =>
+                    `<option value="${p.id}">${escHtml(p.name)}</option>`
+                ).join('');
+                blockSelect.disabled = false;
+            }
+            document.getElementById('blockReasonProject').checked = true;
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const y = tomorrow.getFullYear();
+            const m = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const d = String(tomorrow.getDate()).padStart(2, '0');
+            document.getElementById('blockReasonDateInput').value = `${y}-${m}-${d}`;
+            blockSection.classList.remove('hidden');
+        });
+
+        document.getElementById('projectEditBlockCancel').addEventListener('click', () => {
+            document.getElementById('projectEditBlockSection').classList.add('hidden');
+        });
+
+        document.getElementById('blockReasonProjectSelect').addEventListener('focus', () => {
+            document.getElementById('blockReasonProject').checked = true;
+        });
+        document.getElementById('blockReasonDateInput').addEventListener('focus', () => {
+            document.getElementById('blockReasonDate').checked = true;
+        });
+
+        document.getElementById('projectEditBlockConfirm').addEventListener('click', async () => {
+            const project = allProjects.find(p => String(p.id) === String(editingProjectId));
+            if (!project) return;
+            const reason = document.querySelector('input[name="blockReason"]:checked').value;
+            if (reason === 'project') {
+                const blockerId = document.getElementById('blockReasonProjectSelect').value;
+                if (!blockerId) {
+                    alert('Выберите проект-блокер или другой тип блокировки.');
+                    return;
+                }
+                project.blocked = { type: 'project', value: blockerId };
+                // Сохранить блокировку на сервере
+                try {
+                    await fetch(`${PROJECTS_API_URL}/${editingProjectId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: project.name, description: project.description, blocked: project.blocked })
+                    });
+                } catch (e) { console.error(e); }
+            } else if (reason === 'date') {
+                const dateVal = document.getElementById('blockReasonDateInput').value;
+                if (!dateVal) {
+                    alert('Укажите дату.');
+                    return;
+                }
+                project.blocked = { type: 'date', value: dateVal };
+                try {
+                    await fetch(`${PROJECTS_API_URL}/${editingProjectId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: project.name, description: project.description, blocked: project.blocked })
+                    });
+                } catch (e) { console.error(e); }
+            }
+            closeProjectEditModal();
+            await loadProjects();
+        });
+
+        document.getElementById('projectEditUnblock').addEventListener('click', async () => {
+            const project = allProjects.find(p => String(p.id) === String(editingProjectId));
+            if (!project) return;
+            delete project.blocked;
+            try {
+                await fetch(`${PROJECTS_API_URL}/${editingProjectId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: project.name, description: project.description, blocked: null })
+                });
+            } catch (e) { console.error(e); }
+            closeProjectEditModal();
+            await loadProjects();
+        });
+
+        // ── Кнопка "+ Задача" пока неактивна (ничего не делает)
+        // обработчик отсутствует – кнопка disabled
 
         // ── Edit Task ──────────────────────────────────────────
         function openEditModal(taskId, tasks) {
@@ -1852,6 +2226,7 @@
             currentPage = page;
 
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
+            document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
             document.getElementById('pageRoutines').classList.toggle('hidden', page !== 'routines');
@@ -1860,20 +2235,19 @@
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
-            document.getElementById('fabAddInbox').classList.toggle('hidden', page === 'dashboard');
+            document.getElementById('fabAddTask').classList.toggle('hidden', page !== 'tasks');
+            document.getElementById('fabAddInbox').classList.toggle('hidden', page !== 'inbox' && page !== 'projects');
+            document.getElementById('fabAddRoutine').classList.toggle('hidden', page !== 'routines');
 
-            // Управление видимостью workflow-кнопок
             const startSprintBtn = document.getElementById('startSprintBtn');
             const toPlanningBtn = document.getElementById('toPlanningBtn');
 
-            // Кнопка "Начать спринт!" — видна только в планировании
             if (page === 'dashboard') {
                 startSprintBtn.classList.remove('hidden');
             } else {
                 startSprintBtn.classList.add('hidden');
             }
 
-            // Кнопка "К планированию!" — видна только в инбоксе
             if (page === 'inbox') {
                 toPlanningBtn.classList.remove('hidden');
             } else {
@@ -1884,9 +2258,14 @@
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
+            if (page === 'tasks') {
+                if (!allProjects.length) loadProjects();
+                else renderTaskList(allTasks);
+            }
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
+        document.getElementById('navTasks').addEventListener('click', () => switchPage('tasks'));
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
         document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
@@ -1935,17 +2314,16 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                                    <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
-                                            </div>
-                                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
-                                        </div>
+                            <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
                                     </div>
-                                `).join('');
+                                    <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
+                                </div>
+                            </div>
+                        `).join('');
 
-            // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
                 el.addEventListener('click', () => openInboxClassifyModal(el.dataset.inboxId));
             });
@@ -2007,21 +2385,34 @@
             if (e.target === e.currentTarget) closeInboxClassifyModal();
         });
 
-        // Удалить запись инбокса с поддержкой undo
-        document.getElementById('inboxClassifyDelete').addEventListener('click', () => {
-            const inboxItem = inboxItems.find(i => String(i.id) === String(classifyingInboxId));
-            if (!inboxItem) return;
-            openDeleteConfirmModal(inboxItem.title, 'inbox');
+        document.getElementById('inboxClassifyDelete').addEventListener('click', async () => {
+            const idToDelete = classifyingInboxId;
+            if (!idToDelete) return;
+
+            closeInboxClassifyModal();
+
+            try {
+                const res = await fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error();
+                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
+                renderInboxList();
+                updateInboxOverflowBadge();
+                showInboxUndoToast(idToDelete);
+            } catch (error) {
+                console.error('Ошибка удаления записи инбокса', error);
+                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
+                renderInboxList();
+                updateInboxOverflowBadge();
+                showInboxUndoToast(idToDelete);
+            }
         });
 
-        // Редактировать запись инбокса
         document.getElementById('inboxClassifyEdit').addEventListener('click', () => {
             const id = classifyingInboxId;
             closeInboxClassifyModal();
             if (id) openInboxEditModal(id);
         });
 
-        // Обработчики выбора типа сущности
         document.querySelectorAll('#inboxClassifyModal .classify-option').forEach(opt => {
             opt.addEventListener('click', () => {
                 const type = opt.dataset.classify;
@@ -2030,7 +2421,6 @@
                     closeInboxClassifyModal();
                     return;
                 }
-                // Запоминаем, какую запись инбокса конвертируем
                 convertingInboxId = classifyingInboxId;
                 const sourceTitle = item.title;
                 closeInboxClassifyModal();
@@ -2051,9 +2441,7 @@
             });
         });
 
-        // Хелперы для конвертации (теперь не удаляют запись, а только сбрасывают флаг)
         function finalizeInboxConversion() {
-            // Этот метод больше не используется, оставлен для совместимости
             if (convertingInboxId) {
                 convertingInboxId = null;
             }
@@ -2063,7 +2451,7 @@
             convertingInboxId = null;
         }
 
-        // ── Inbox Edit Modal (оставлена для редактирования) ───
+        // ── Inbox Edit Modal ───────────────────────────────────
         function openInboxEditModal(itemId) {
             const item = inboxItems.find(i => String(i.id) === String(itemId));
             if (!item) return;
@@ -2098,8 +2486,9 @@
             closeInboxEditModal();
         });
 
-        async function deleteInboxItem() {
-            const idToDelete = classifyingInboxId;
+        document.getElementById('inboxEditDelete').addEventListener('click', async () => {
+            const idToDelete = editingInboxId;
+            closeInboxEditModal();
             try {
                 const res = await fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error();
@@ -2107,14 +2496,9 @@
                 renderInboxList();
                 updateInboxOverflowBadge();
                 showInboxUndoToast(idToDelete);
-            } catch (error) {
-                console.error('Ошибка удаления записи инбокса', error);
-                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
-                renderInboxList();
-                updateInboxOverflowBadge();
-                showInboxUndoToast(idToDelete);
-            }
-        }
+            } catch { }
+            await inboxLoad();
+        });
 
         function showInboxUndoToast(deletedId) {
             inboxUndoDeleteId = String(deletedId);
@@ -2182,18 +2566,18 @@
             container.innerHTML = allRoutines.map(r => {
                 const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
                 return `
-                            <div class="task-list-item" data-routine-id="${r.id}">
-                                <div class="flex items-center justify-between gap-3">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
-                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
-                                            <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
-                                        </span>
-                                    </div>
-                                    <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
-                                </div>
+                    <div class="task-list-item" data-routine-id="${r.id}">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                    <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                </span>
                             </div>
-                        `;
+                            <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
+                        </div>
+                    </div>
+                `;
             }).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -2214,10 +2598,7 @@
             document.getElementById('routineCreateModal').classList.add('hidden');
         }
 
-        document.getElementById('btnAddRoutine').addEventListener('click', () => {
-            openRoutineCreateModal();
-        })
-
+        document.getElementById('fabAddRoutine').addEventListener('click', openRoutineCreateModal);
         document.getElementById('routineCreateCancel').addEventListener('click', () => {
             cancelInboxConversion();
             closeRoutineCreateModal();
@@ -2242,7 +2623,6 @@
 
             try {
                 if (convertingInboxId) {
-                    // Классификация в рутину
                     const classifyPayload = {
                         targetType: "routine",
                         data: {
@@ -2286,7 +2666,6 @@
                     cancelInboxConversion();
                     showSuccess('Рутина успешно создана из записи инбокса!');
                 } else {
-                    // Обычное создание рутины
                     await fetch(ROUTINES_API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
