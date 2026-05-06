@@ -1423,8 +1423,10 @@
                 const resp = await fetch(`${PROJECTS_API_URL}/${projectId}/tasks`);
                 if (myToken !== _projInfoToken) return;
                 if (!resp.ok) throw new Error(resp.status);
-                const projectTasks = await resp.json();
+                const allProjectTasks = await resp.json();
                 if (myToken !== _projInfoToken) return;
+
+                const projectTasks = allProjectTasks.filter(t => t.status !== 2 && t.status !== 3);
 
                 const descHtml = project.description
                     ? `<div class="info-desc">${escHtml(project.description)}</div>` : '';
