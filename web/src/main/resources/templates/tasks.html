@@ -868,9 +868,9 @@
         🐒
     </a>
 
-    <!-- FAB: Добавить в инбокс (теперь также отображается в разделе Проекты) -->
-    <div class="fab hidden" id="fabAddInbox" style="position:fixed;">
-        <i class="fas fa-plus" id="fabAddInboxIcon"></i>
+    <!-- FAB-инбокс: класс + data-target -->
+    <div class="fab hidden fab-add-inbox" data-fab="inbox" data-target="#inboxInputBar" style="position:fixed;">
+        <i class="fas fa-plus fab-add-inbox-icon"></i>
     </div>
 
     <!-- Inline-поле ввода для инбокса -->
@@ -1149,6 +1149,13 @@
         const PROJECTS_API_URL = '/api/projects';
         const ROUTINES_API_URL = '/api/routines';
 
+        if (!window.closeInboxInput) {
+            window.closeInboxInput = function (selector = '#inboxInputBar') {
+                const el = document.querySelector(selector);
+                if (el) el.classList.add('hidden');
+            };
+        }
+
         let editingTaskId = null;
         let editingInboxId = null;
         let editingProjectId = null;
@@ -1276,34 +1283,34 @@
 
                 const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
                 const taskCountHtml = `
-                        <span class="project-task-count mt-2 block">
-                            <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
-                        </span>
-                    `;
+                                <span class="project-task-count mt-2 block">
+                                    <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+                                </span>
+                            `;
 
                 const defaultClass = p.isDefault ? 'project-default' : '';
 
                 return `
-                        <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                            ${p.isDefault ? '' : `
-                                <button class="project-edit-btn absolute top-2 right-2"
-                                        data-project-id="${p.id}"
-                                        title="Редактировать проект"
-                                        onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </button>
-                            `}
+                                <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                                    ${p.isDefault ? '' : `
+                                        <button class="project-edit-btn absolute top-2 right-2"
+                                                data-project-id="${p.id}"
+                                                title="Редактировать проект"
+                                                onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                    `}
 
-                            <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                    ${badgeHtml}
+                                    <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                            <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                            ${badgeHtml}
+                                        </div>
+                                        ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                                        ${taskCountHtml}
+                                    </div>
                                 </div>
-                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                                ${taskCountHtml}
-                            </div>
-                        </div>
-                    `;
+                            `;
             }).join('');
         }
 
@@ -1631,11 +1638,11 @@
                         const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
                         const statusClass = task.status === 4 ? 'active' : 'active';
                         return `
-                                    <div class="project-task-item">
-                                        <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
-                                        <span class="project-task-status ${statusClass}">${statusText}</span>
-                                    </div>
-                                `;
+                                            <div class="project-task-item">
+                                                <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
+                                                <span class="project-task-status ${statusClass}">${statusText}</span>
+                                            </div>
+                                        `;
                     }).join('');
                 }
             } catch (error) {
@@ -1860,24 +1867,26 @@
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
-            document.getElementById('fabAddInbox').classList.toggle('hidden', page === 'dashboard');
+            document.querySelectorAll('[data-fab="inbox"]').forEach(fab => {
+                const allowedPages = (fab.dataset.page || 'tasks,inbox,projects,routines').split(',');
+                fab.classList.toggle('hidden', !allowedPages.includes(page) || page === 'dashboard');
+            });
 
-            // Управление видимостью workflow-кнопок
             const startSprintBtn = document.getElementById('startSprintBtn');
             const toPlanningBtn = document.getElementById('toPlanningBtn');
 
             // Кнопка "Начать спринт!" — видна только в планировании
             if (page === 'dashboard') {
-                startSprintBtn.classList.remove('hidden');
+                startSprintBtn?.classList.remove('hidden');
             } else {
-                startSprintBtn.classList.add('hidden');
+                startSprintBtn?.classList.add('hidden');
             }
 
             // Кнопка "К планированию!" — видна только в инбоксе
             if (page === 'inbox') {
-                toPlanningBtn.classList.remove('hidden');
+                toPlanningBtn?.classList.remove('hidden');
             } else {
-                toPlanningBtn.classList.add('hidden');
+                toPlanningBtn?.classList.add('hidden');
             }
 
             closeInboxInput();
@@ -1935,49 +1944,21 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                                    <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                            <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                    </div>
+                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
+                                                </div>
                                             </div>
-                                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
-                                        </div>
-                                    </div>
-                                `).join('');
+                                        `).join('');
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
                 el.addEventListener('click', () => openInboxClassifyModal(el.dataset.inboxId));
             });
         }
-
-        async function toggleInboxInput() {
-            const bar = document.getElementById('inboxInputBar');
-            const icon = document.getElementById('fabAddInboxIcon');
-            if (bar.classList.contains('hidden')) {
-                bar.classList.remove('hidden');
-                icon.className = 'fas fa-check';
-                document.getElementById('inboxInputField').focus();
-            } else {
-                const val = document.getElementById('inboxInputField').value.trim();
-                if (val) {
-                    await inboxCreate(val);
-                }
-                closeInboxInput();
-            }
-        }
-
-        function closeInboxInput() {
-            document.getElementById('inboxInputBar').classList.add('hidden');
-            document.getElementById('fabAddInboxIcon').className = 'fas fa-plus';
-            document.getElementById('inboxInputField').value = '';
-        }
-
-        document.getElementById('fabAddInbox').addEventListener('click', toggleInboxInput);
-        document.getElementById('inboxInputField').addEventListener('keydown', e => {
-            if (e.key === 'Enter') toggleInboxInput();
-            if (e.key === 'Escape') closeInboxInput();
-        });
 
         function updateInboxOverflowBadge() {
             const badge = document.getElementById('inboxOverflowBadge');
@@ -1987,6 +1968,9 @@
                 document.getElementById('inboxOverflowText').textContent = `${inboxItems.length} записей!`;
             }
         }
+
+        window.inboxCreate = inboxCreate;
+        window.inboxLoad = inboxLoad;
 
         // ── Inbox Classify Modal ───────────────────────────────
         function openInboxClassifyModal(itemId) {
@@ -2182,18 +2166,18 @@
             container.innerHTML = allRoutines.map(r => {
                 const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
                 return `
-                            <div class="task-list-item" data-routine-id="${r.id}">
-                                <div class="flex items-center justify-between gap-3">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
-                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
-                                            <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
-                                        </span>
+                                    <div class="task-list-item" data-routine-id="${r.id}">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                                    <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                                </span>
+                                            </div>
+                                            <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
+                                        </div>
                                     </div>
-                                    <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
-                                </div>
-                            </div>
-                        `;
+                                `;
             }).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -2358,6 +2342,8 @@
         loadTasks();
         loadProjects();
     </script>
+
+    <script src="/js/inbox-fab.js"></script>
 </body>
 
 </html>
