@@ -32,21 +32,6 @@
             flex-direction: column;
         }
 
-        .task-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
-            color: #1e293b;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-
         .fab {
             position: fixed;
             bottom: 2rem;
@@ -276,80 +261,64 @@
             opacity: 0.85;
         }
 
-        /* Планирование — колонки проектов (3 в ряд, с горизонтальным скроллом при переполнении) */
-        .planning-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 1.25rem;
-        }
-
-        @media (max-width: 900px) {
-            .planning-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .planning-col {
-            background: rgba(255, 255, 255, 0.15);
+        /* Планирование: одиночный проект */
+        .plan-single-col {
+            background: rgba(255,255,255,0.15);
             backdrop-filter: blur(10px);
             border-radius: 1.5rem;
-            padding: 1rem;
-            min-height: 240px;
-            display: flex;
-            flex-direction: column;
+            padding: 1.25rem;
+            min-height: 200px;
         }
 
-        .planning-col.is-default {}
-
-        .planning-col-header {
+        .plan-cycle-nav {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            gap: 0.75rem;
+        }
+
+        .plan-cycle-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
             color: white;
-        }
-
-        .planning-col-title {
-            font-weight: 700;
-            font-size: 1rem;
-            line-height: 1.2;
-        }
-
-        .planning-col-count {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 1rem;
-            padding: 0.15rem 0.55rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .planning-task {
-            background: white;
             border-radius: 0.75rem;
-            padding: 0.65rem 0.8rem;
-            margin-bottom: 0.55rem;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 0.65rem;
+            padding: 0.55rem 1rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            flex-shrink: 0;
         }
 
-        .planning-task-title {
-            flex: 1;
-            min-width: 0;
-            font-size: 0.88rem;
-            font-weight: 500;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+            .plan-cycle-btn:hover {
+                background: rgba(255,255,255,0.35);
+            }
 
-        .planning-empty {
-            color: rgba(255, 255, 255, 0.35);
-            font-size: 0.8rem;
+            .plan-cycle-btn:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+            }
+
+        .plan-cycle-info {
             text-align: center;
-            padding: 1.5rem 0.5rem;
+            color: white;
+            flex: 1;
+        }
+
+        .plan-cycle-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .plan-cycle-counter {
+            font-size: 0.8rem;
+            opacity: 0.65;
+        }
+
+        .plan-cycle-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 0.2rem;
         }
 
         /* ── Кнопка редактирования проекта ── */
@@ -830,11 +799,8 @@
         <!-- Навигация по центру -->
         <div class="flex justify-center mb-6">
             <div class="nav-pill flex gap-2 text-white">
-                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">
-                    📅
-                    Планирование
-                </button>
-                <button data-page="tasks" id="navTasks" class="px-3 py-1 rounded-full">📝 Задачи</button>
+                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">📅
+                    Планирование</button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button data-page="routines" id="navRoutines" class="px-3 py-1 rounded-full">🔄 Рутины</button>
@@ -844,15 +810,16 @@
         <!-- ====== Страница: Планирование ====== -->
         <div id="pageDashboard">
             <div class="task-list-container">
-                <h2 class="text-white font-bold text-lg mb-4">📅 Планирование по проектам</h2>
-                <div class="planning-grid" id="planningGrid"></div>
-            </div>
-        </div>
-        <!-- ====== Страница: Задачи ====== -->
-        <div id="pageTasks" class="hidden">
-            <div class="task-list-container">
-                <h2 class="text-white font-bold text-lg mb-4">📝 Список всех задач</h2>
-                <div id="taskListContent"></div>
+                <div class="plan-cycle-nav">
+                    <button class="plan-cycle-btn" id="planPrevBtn"><i class="fas fa-chevron-left"></i> Назад</button>
+                    <div class="plan-cycle-info">
+                        <div class="plan-cycle-title" id="planProjectTitle"><i class="fas fa-spinner fa-spin"></i> Загрузка проектов...</div>
+                        <div class="plan-cycle-counter" id="planProjectCounter"></div>
+                        <div class="plan-cycle-desc" id="planProjectDesc"></div>
+                    </div>
+                    <button class="plan-cycle-btn" id="planNextBtn">Далее <i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="plan-single-col" id="planTasksList"></div>
             </div>
         </div>
 
@@ -895,9 +862,6 @@
 
     </div>
 
-    <!-- FAB: Создать задачу (Скрыта на Доске) -->
-    <div class="fab hidden" id="fabAddTask"><i class="fas fa-plus"></i></div>
-
     <!-- FAB: Навигация на обезьяну -->
     <a href="/" class="fab" id="fabNavFocus"
        style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
@@ -907,11 +871,6 @@
     <!-- FAB-инбокс: класс + data-target -->
     <div class="fab hidden fab-add-inbox" data-fab="inbox" data-target="#inboxInputBar" style="position:fixed;">
         <i class="fas fa-plus fab-add-inbox-icon"></i>
-    </div>
-
-    <!-- FAB: Создать рутину -->
-    <div class="fab hidden" id="fabAddRoutine" style="position:fixed;">
-        <i class="fas fa-plus"></i>
     </div>
 
     <!-- Inline-поле ввода для инбокса -->
@@ -1180,6 +1139,11 @@
     </a>
 
     <script>
+
+        if (window.location.pathname.endsWith('/tasks') || window.location.pathname.endsWith('/tasks/')) {
+            window.location.replace('/projects');
+        }
+
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
         const PROJECTS_API_URL = '/api/projects';
@@ -1200,6 +1164,7 @@
         let allProjects = [];
         let allRoutines = [];
         let deleteType = null;
+        let planningProjectIndex = 0;
 
         // Состояние для классификации инбокса
         let classifyingInboxId = null;   // id записи, открытой в модалке классификации
@@ -1231,69 +1196,46 @@
             alert(message);
         }
 
-
-        function GetProjectsWithTasks() {
-            return allProjects.map(project => {
-                const projectTasks = allTasks.filter(task =>
-                    task.projectId === project.id && task.status !== 2 && task.status !== 3);
-                return { project, projectTasks };
-            });
-        }
+        // ── Render: Планирование (перебор проектов по одному) ──
 
         function renderPlanning() {
-            const grid = document.getElementById('planningGrid');
-            const projectsWithTasks = GetProjectsWithTasks();
-            grid.innerHTML = projectsWithTasks.map(({ project, projectTasks }) => {
-                const defaultCls = project.isDefault ? ' is-default' : '';
-                const blockedStyle = project.blocked ? 'opacity:0.55;' : '';
-                const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
+            // Сбросить индекс если вышел за границы
+            if (planningProjectIndex >= allProjects.length) planningProjectIndex = allProjects.length - 1;
+            if (planningProjectIndex < 0) planningProjectIndex = 0;
 
+            const project = allProjects[planningProjectIndex];
 
-                const blockBadge = project.blocked
-                    ? `<span class="project-badge-blocked" style="font-size:0.65rem;"><i class="fas fa-lock"></i>${escHtml(formatBlockReason(project.blocked))}</span>`
-                    : '';
+            // Заголовок и счётчик
+            const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
+            document.getElementById('planProjectTitle').textContent = icon + ' ' + project.name;
+            document.getElementById('planProjectCounter').textContent = (planningProjectIndex + 1) + ' из ' + allProjects.length;
+            const descEl = document.getElementById('planProjectDesc');
+            if (project.description) {
+                descEl.textContent = project.description;
+                descEl.style.display = 'block';
+            } else {
+                descEl.style.display = 'none';
+            }
 
-                const tasksHtml = projectTasks.length === 0
-                    ? '<div class="planning-empty">Нет задач</div>'
-                    : projectTasks.map(t => {
-                        const checkStyle = t.isSelectedForSprint
-                            ? 'border-color:#22c55e;background:#22c55e;color:#fff;'
-                            : '';
-                        return `
-                            <div class="planning-task" data-id="${t.id}">
-                                <div class="task-check shrink-0" data-complete-id="${t.id}" title="Отметить" style="${checkStyle}">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                                <div class="planning-task-title" title="${escHtml(t.title)}">${escHtml(t.title)}</div>
-                            </div>
-                        `}).join('');
-
-                return `
-                        <div class="planning-col${defaultCls}" style="${blockedStyle}">
-                            <div class="planning-col-header">
-                                <div class="planning-col-title">${icon} ${escHtml(project.name)}</div>
-                                <span class="planning-col-count">${projectTasks.length}</span>
-                            </div>
-                            ${blockBadge ? `<div style="margin-bottom:0.6rem;">${blockBadge}</div>` : ''}
-                            <div>${tasksHtml}</div>
-                        </div>
-                    `;
-            }).join('');
-            // Чекбокс в планировании — только визуальная отметка, задача не удаляется
-            grid.querySelectorAll('.task-check').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    await togglePlanning(btn.dataset.completeId, btn);
-                });
-            });
-            // Клик по названию задачи — открыть редактирование
-            grid.querySelectorAll('.planning-task-title').forEach(el => {
-                el.addEventListener('click', () => {
-                    const wrap = el.closest('.planning-task');
-                    if (wrap) openEditModal(wrap.dataset.id, allTasks);
-                });
-            });
+            // Кнопки навигации
+            document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
+            document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
+            document.getElementById('planNextBtn').textContent = planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
         }
+
+        document.getElementById('planPrevBtn').addEventListener('click', () => {
+            if (planningProjectIndex > 0) {
+                planningProjectIndex--;
+                renderPlanning();
+            }
+        });
+        document.getElementById('planNextBtn').addEventListener('click', () => {
+            if (planningProjectIndex < allProjects.length - 1) {
+                planningProjectIndex++;
+                renderPlanning();
+            }
+        });
+
 
         async function togglePlanning(taskId, checkEl) {
             const task = allTasks.find(t => String(t.id) === String(taskId));
@@ -1316,57 +1258,6 @@
                 checkEl.style.color = '#fff';
             }
             checkEl.dataset.loading = 'false';
-        }
-
-        // ── Render списка задач (УДАЛЕНИЕ ОТОБРАЖЕНИЯ ДАТЫ ПО ЗАДАЧЕ 8.1 + ОТОБРАЖЕНИЕ КОНТЕНТА + ПРОЕКТ) ──
-        function renderTaskList(tasks) {
-            const container = document.getElementById('taskListContent');
-            const activeTasks = tasks.filter(t => t.status !== 2 && t.status !== 3);
-            if (!activeTasks.length) {
-                container.innerHTML = '<div class="text-white/50 text-center py-10 font-medium">Нет задач. Создайте первую во вкладке "Задачи"!</div>';
-                return;
-            }
-
-            container.innerHTML = activeTasks.sort((a, b) => b.id - a.id).map(t => {
-                let projectName = "Без проекта";
-                let isDefault = false;
-                let chipIcon = "fa-ban";
-                let chipClass = "project-chip";
-                if (t.projectId) {
-                    const project = allProjects.find(p => p.id === t.projectId);
-                    if (project) {
-                        projectName = project.name;
-                        isDefault = project.isDefault || false;
-                        chipIcon = isDefault ? "fa-star" : "fa-folder";
-                        chipClass = isDefault ? "project-chip project-chip-default" : "project-chip";
-                    } else {
-                        projectName = "Неизвестный проект";
-                        chipIcon = "fa-question-circle";
-                    }
-                } else {
-                    projectName = "Без проекта";
-                    chipIcon = "fa-ban";
-                    chipClass = "project-chip";
-                }
-
-                return `
-                                            <div class="task-list-item" id="task-row-${t.id}">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="task-check shrink-0" onclick="completeTask(${t.id})" title="Выполнить">
-                                                        <i class="fas fa-check"></i>
-                                                    </div>
-                                                    <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${t.id}, allTasks)">
-                                                        <div class="font-semibold text-slate-800 truncate">${escHtml(t.title)}</div>
-                                                        ${t.content ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${escHtml(t.content)}</p>` : ''}
-                                                        <span class="${chipClass}" style="display:inline-flex; margin-top: 0.3rem;">
-                                                            <i class="fas ${chipIcon}"></i>
-                                                            ${escHtml(projectName)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        `;
-            }).join('');
         }
 
         // ── Render ПРОЕКТОВ (Задача 9.3) ──
@@ -1439,9 +1330,6 @@
                 allProjects = data;
                 renderPlanning();
                 renderProjectsList();
-                if (currentPage === 'tasks') {
-                    renderTaskList(allTasks);
-                }
                 return allProjects;
             } catch (e) {
                 console.error("Projects API error", e);
@@ -1454,7 +1342,6 @@
             try {
                 const res = await fetch(API_URL);
                 allTasks = await res.json();
-                renderPlanning();
                 renderTaskList(allTasks);
             } catch (e) {
                 document.getElementById('colToday').innerHTML =
@@ -1495,7 +1382,6 @@
             document.getElementById('createModal').classList.add('hidden');
         }
 
-        document.getElementById('fabAddTask').addEventListener('click', openCreateModal);
         document.getElementById('createCancel').addEventListener('click', () => {
             cancelInboxConversion();
             closeCreateModal();
@@ -1973,7 +1859,6 @@
             currentPage = page;
 
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
-            document.getElementById('pageTasks').classList.toggle('hidden', page !== 'tasks');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
             document.getElementById('pageRoutines').classList.toggle('hidden', page !== 'routines');
@@ -2008,14 +1893,9 @@
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
-            if (page === 'tasks') {
-                if (!allProjects.length) loadProjects();
-                else renderTaskList(allTasks);
-            }
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
-        document.getElementById('navTasks').addEventListener('click', () => switchPage('tasks'));
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
         document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
