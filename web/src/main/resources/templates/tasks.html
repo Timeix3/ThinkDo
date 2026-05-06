@@ -447,7 +447,7 @@
         /* ── Undo-тост инбокса ──────────────────────────────── */
         .inbox-undo-toast {
             position: fixed;
-            bottom: 5.5rem;
+            bottom: 6.5rem;
             left: 50%;
             transform: translateX(-50%);
             background: #1e293b;
@@ -816,8 +816,10 @@
         <!-- Навигация по центру -->
         <div class="flex justify-center mb-6">
             <div class="nav-pill flex gap-2 text-white">
-                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">📅
-                    Планирование</button>
+                <button data-page="dashboard" id="navDashboard" class="px-3 py-1 rounded-full active-page">
+                    📅
+                    Планирование
+                </button>
                 <button data-page="inbox" id="navInbox" class="px-3 py-1 rounded-full">📥 Инбокс</button>
                 <button data-page="projects" id="navProjects" class="px-3 py-1 rounded-full">📁 Проекты</button>
                 <button data-page="routines" id="navRoutines" class="px-3 py-1 rounded-full">🔄 Рутины</button>
@@ -1160,11 +1162,11 @@
         Начать спринт!
     </a>
 
-    <!-- ── Кнопка "К планированию!" (видна только в инбоксе, неактивна) ── -->
-    <a href="#" id="toPlanningBtn" class="workflow-btn disabled hidden">
+    <!-- Workflow-кнопка: К планированию! (на странице Проекты) -->
+    <button id="toPlanningBtn" class="workflow-btn hidden">
         <i class="fas fa-calendar-alt"></i>
         К планированию!
-    </a>
+    </button>
 
     <script>
 
@@ -1176,6 +1178,7 @@
         const INBOX_API_URL = '/api/inbox';
         const PROJECTS_API_URL = '/api/projects';
         const ROUTINES_API_URL = '/api/routines';
+        const SPRINT_API_URL = '/api/sprint';
 
         if (!window.closeInboxInput) {
             window.closeInboxInput = function (selector = '#inboxInputBar') {
@@ -1311,34 +1314,34 @@
 
                 const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
                 const taskCountHtml = `
-                                <span class="project-task-count mt-2 block">
-                                    <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
-                                </span>
-                            `;
+                                    <span class="project-task-count mt-2 block">
+                                        <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+                                    </span>
+                                `;
 
                 const defaultClass = p.isDefault ? 'project-default' : '';
 
                 return `
-                                <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                                    ${p.isDefault ? '' : `
-                                        <button class="project-edit-btn absolute top-2 right-2"
-                                                data-project-id="${p.id}"
-                                                title="Редактировать проект"
-                                                onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
-                                            <i class="fas fa-pencil-alt"></i>
-                                        </button>
-                                    `}
+                                    <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                                        ${p.isDefault ? '' : `
+                                            <button class="project-edit-btn absolute top-2 right-2"
+                                                    data-project-id="${p.id}"
+                                                    title="Редактировать проект"
+                                                    onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                        `}
 
-                                    <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
-                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                            <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                            ${badgeHtml}
+                                        <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                                ${badgeHtml}
+                                            </div>
+                                            ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                                            ${taskCountHtml}
                                         </div>
-                                        ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                                        ${taskCountHtml}
                                     </div>
-                                </div>
-                            `;
+                                `;
             }).join('');
         }
 
@@ -1370,10 +1373,8 @@
             try {
                 const res = await fetch(API_URL);
                 allTasks = await res.json();
-                renderTaskList(allTasks);
             } catch (e) {
-                document.getElementById('colToday').innerHTML =
-                    '<div class="task-card text-red-400 text-sm cursor-default">⚠️ Бэкенд недоступен</div>';
+                console.log(e);
             }
         }
 
@@ -1666,11 +1667,11 @@
                         const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
                         const statusClass = task.status === 4 ? 'active' : 'active';
                         return `
-                                            <div class="project-task-item">
-                                                <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
-                                                <span class="project-task-status ${statusClass}">${statusText}</span>
-                                            </div>
-                                        `;
+                                                <div class="project-task-item">
+                                                    <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
+                                                    <span class="project-task-status ${statusClass}">${statusText}</span>
+                                                </div>
+                                            `;
                     }).join('');
                 }
             } catch (error) {
@@ -1901,7 +1902,6 @@
             });
 
             const startSprintBtn = document.getElementById('startSprintBtn');
-            const toPlanningBtn = document.getElementById('toPlanningBtn');
 
             // Кнопка "Начать спринт!" — видна только в планировании
             if (page === 'dashboard') {
@@ -1911,10 +1911,8 @@
             }
 
             // Кнопка "К планированию!" — видна только в инбоксе
-            if (page === 'inbox') {
-                toPlanningBtn?.classList.remove('hidden');
-            } else {
-                toPlanningBtn?.classList.add('hidden');
+            if (page !== 'inbox') {
+                document.getElementById('toPlanningBtn').classList.add('hidden');
             }
 
             closeInboxInput();
@@ -1964,7 +1962,26 @@
             }
         }
 
+        document.getElementById('toPlanningBtn').addEventListener('click', () => switchPage('dashboard'));
+
+        async function updateToPlanningBtn() {
+            let status = null;
+            try {
+                res = await fetch(`${SPRINT_API_URL}/status`);
+                if (!res.ok) throw new Error();
+                status = await res.json();
+            } catch (e) {
+                console.error(e);
+                return;
+            }
+            if (inboxItems.length === 0 && !status.hasActiveSprint) {
+                document.getElementById('toPlanningBtn').classList.remove('hidden');
+            }
+            else document.getElementById('toPlanningBtn').classList.add('hidden');
+        }
+
         function renderInboxList() {
+            updateToPlanningBtn();
             const container = document.getElementById('inboxListContent');
             const sorted = [...inboxItems].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
             if (sorted.length === 0) {
@@ -1972,15 +1989,15 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                                            <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                                                <div class="flex items-start justify-between gap-3">
-                                                    <div class="flex-1 min-w-0">
-                                                        <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                                                    <div class="flex items-start justify-between gap-3">
+                                                        <div class="flex-1 min-w-0">
+                                                            <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                        </div>
+                                                        <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                                                     </div>
-                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                                                 </div>
-                                            </div>
-                                        `).join('');
+                                            `).join('');
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -2194,18 +2211,18 @@
             container.innerHTML = allRoutines.map(r => {
                 const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
                 return `
-                                    <div class="task-list-item" data-routine-id="${r.id}">
-                                        <div class="flex items-center justify-between gap-3">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
-                                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
-                                                    <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
-                                                </span>
+                                        <div class="task-list-item" data-routine-id="${r.id}">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                                    <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                                        <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                                    </span>
+                                                </div>
+                                                <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
                                             </div>
-                                            <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
                                         </div>
-                                    </div>
-                                `;
+                                    `;
             }).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {

@@ -1,6 +1,7 @@
 package com.jedi.tasktracker.controller;
 
 import com.jedi.tasktracker.client.ApiClient;
+import com.jedi.tasktracker.client.dto.SprintStatusDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,5 +19,10 @@ public class SprintApiController {
   @GetMapping("/tasks")
   public List<TaskDto> getSprintTasks() {
     return apiClient.getSprintTasks();
+  }
+
+  @GetMapping("/status")
+  public SprintStatusDto getSprintStatus() {
+    return apiClient.getSprintStatus();
   }
 }
