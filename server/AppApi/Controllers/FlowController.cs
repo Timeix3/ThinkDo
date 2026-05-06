@@ -1,6 +1,6 @@
+using AppApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Concurrent;
 using System.Security.Claims;
 
 namespace AppApi.Controllers;
@@ -10,42 +10,38 @@ namespace AppApi.Controllers;
 [Authorize(AuthenticationSchemes = "GitHub")]
 public class FlowController : ControllerBase
 {
-    private static readonly ConcurrentDictionary<string, string> UserPhases = new();
-    private static readonly HashSet<string> AllowedPhases = new(StringComparer.OrdinalIgnoreCase)
+    private readonly IFlowPhaseService _flowPhaseService;
+
+    public FlowController(IFlowPhaseService flowPhaseService)
     {
-        "sprint",
-        "review",
-        "planning"
-    };
+        _flowPhaseService = flowPhaseService;
+    }
 
     private string GetCurrentUserId() => User.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? throw new UnauthorizedAccessException();
 
     [HttpGet("phase")]
     [ProducesResponseType(typeof(FlowPhaseResponse), StatusCodes.Status200OK)]
-    public IActionResult GetPhase()
+    public async Task<IActionResult> GetPhase()
     {
-        var userId = GetCurrentUserId();
-        var phase = UserPhases.GetValueOrDefault(userId) ?? "planning";
-
+        var phase = await _flowPhaseService.GetPhaseAsync(GetCurrentUserId());
         return Ok(new FlowPhaseResponse(phase));
     }
 
     [HttpPut("phase")]
     [ProducesResponseType(typeof(FlowPhaseUpdateResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IActionResult UpdatePhase([FromBody] FlowPhaseUpdateRequest request)
+    public async Task<IActionResult> UpdatePhase([FromBody] FlowPhaseUpdateRequest request)
     {
-        if (request is null || string.IsNullOrWhiteSpace(request.Phase) || !AllowedPhases.Contains(request.Phase))
+        try
+        {
+            var phase = await _flowPhaseService.SetPhaseAsync(GetCurrentUserId(), request.Phase);
+            return Ok(new FlowPhaseUpdateResponse(true, phase));
+        }
+        catch (ArgumentException)
         {
             return BadRequest(new { error = "Invalid phase" });
         }
-
-        var normalizedPhase = request.Phase.ToLowerInvariant();
-        var userId = GetCurrentUserId();
-        UserPhases[userId] = normalizedPhase;
-
-        return Ok(new FlowPhaseUpdateResponse(true, normalizedPhase));
     }
 
     public record FlowPhaseResponse(string Phase);
