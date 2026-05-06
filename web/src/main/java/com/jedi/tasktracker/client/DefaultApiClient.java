@@ -3,6 +3,7 @@ package com.jedi.tasktracker.client;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.RoutineDto;
+import com.jedi.tasktracker.client.dto.SprintStatusDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import com.jedi.tasktracker.client.dto.TaskListResponseDto;
 import java.util.HashMap;
@@ -60,6 +61,11 @@ public class DefaultApiClient implements ApiClient {
         .uri("/api/sprint/tasks")
         .retrieve()
         .body(new ParameterizedTypeReference<List<TaskDto>>() {});
+  }
+
+  @Override
+  public SprintStatusDto getSprintStatus() {
+    return restClient.get().uri("/api/sprint/status").retrieve().body(SprintStatusDto.class);
   }
 
   @Override
