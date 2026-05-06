@@ -1,10 +1,7 @@
-// AppApi/Services/InboxClassificationService.cs
 using AppApi.Models.DTOs;
 using AppApi.Repositories.Interfaces;
 using AppApi.Services.Interfaces;
-using Common.Enums;
 using Common.Models;
-using Microsoft.Extensions.Logging;
 
 namespace AppApi.Services;
 
@@ -20,8 +17,8 @@ public class InboxClassificationService : IInboxClassificationService
         IInboxRepository inboxRepository,
         ITaskRepository taskRepository,
         IRoutineRepository routineRepository,
-        IProjectRepository? projectRepository = null,
-        ILogger<InboxClassificationService> logger = null!)
+        IProjectRepository projectRepository,
+        ILogger<InboxClassificationService> logger)
     {
         _inboxRepository = inboxRepository;
         _taskRepository = taskRepository;
@@ -30,157 +27,81 @@ public class InboxClassificationService : IInboxClassificationService
         _logger = logger;
     }
 
-    public async Task<ClassifyInboxItemResponseDto> ClassifyInboxItemAsync(
-        int inboxItemId,
-        ClassifyInboxItemDto request,
-        string userId)
+    public async Task<ClassifyResponseDto> ClassifyInboxItemAsync(int inboxItemId, ClassifyInboxItemDto request, string userId)
     {
-        // 1. Валидация targetType
-        var targetType = request.TargetType.ToLowerInvariant();
-        var validTypes = new[] { "task", "project", "routine" };
+        // 1. Валидация режима и типа
+        string mode = request.Mode?.ToLowerInvariant() ?? "convert";
+        if (mode != "convert" && mode != "create")
+            throw new ArgumentException("Invalid mode. Use 'convert' or 'create'.");
 
-        if (!validTypes.Contains(targetType))
-        {
-            throw new ArgumentException($"Invalid targetType: '{request.TargetType}'. Must be one of: {string.Join(", ", validTypes)}");
-        }
+        string entityType = request.EntityType.ToLowerInvariant();
 
-        // 2. Проверяем существование и состояние записи инбокса
+        // 2. Проверка инбокса
         var inboxItem = await _inboxRepository.GetByIdAsync(inboxItemId, userId);
+        if (inboxItem == null || inboxItem.DeletedAt.HasValue)
+            throw new KeyNotFoundException("Inbox item not found or already deleted.");
 
-        if (inboxItem is null)
+        // 3. Создание сущности
+        int createdId = entityType switch
         {
-            throw new KeyNotFoundException($"Inbox item with id '{inboxItemId}' not found");
-        }
-
-        // Проверяем, не удалена ли уже запись (параллельная классификация)
-        if (inboxItem.DeletedAt.HasValue)
-        {
-            throw new InvalidOperationException($"Inbox item with id '{inboxItemId}' has already been classified or deleted");
-        }
-
-        // 3. Создаём целевую сущность в зависимости от типа
-        try
-        {
-            var result = targetType switch
-            {
-                "task" => await ClassifyAsTaskAsync(inboxItem, request, userId),
-                "project" => await ClassifyAsProjectAsync(inboxItem, request, userId),
-                "routine" => await ClassifyAsRoutineAsync(inboxItem, request, userId),
-                _ => throw new ArgumentException($"Unsupported target type: {targetType}")
-            };
-
-            // 4. Soft-delete запись инбокса
-            var deleted = await _inboxRepository.SoftDeleteAsync(inboxItemId, userId);
-
-            if (!deleted)
-            {
-                _logger.LogWarning(
-                    "Failed to soft-delete inbox item {InboxItemId} after classification to {TargetType}",
-                    inboxItemId, targetType);
-
-                // Запись могла быть удалена параллельно — это нормально
-                // Продолжаем, так как сущность уже создана
-            }
-
-            _logger.LogInformation(
-                "Successfully classified inbox item {InboxItemId} to {TargetType} with id {EntityId}",
-                inboxItemId, targetType, result.Id);
-
-            return result;
-        }
-        catch (ArgumentException)
-        {
-            // Пробрасываем ArgumentException как есть (ошибки валидации)
-            throw;
-        }
-        catch (Exception ex) when (ex is not KeyNotFoundException && ex is not InvalidOperationException)
-        {
-            _logger.LogError(ex,
-                "Error classifying inbox item {InboxItemId} to {TargetType}",
-                inboxItemId, targetType);
-
-            throw new InvalidOperationException(
-                $"Failed to classify inbox item: {ex.Message}", ex);
-        }
-    }
-
-    private async Task<ClassifyInboxItemResponseDto> ClassifyAsTaskAsync(
-        InboxItem inboxItem,
-        ClassifyInboxItemDto request,
-        string userId)
-    {
-        var createTaskDto = request.ToCreateTaskDto();
-
-        var task = new TaskItem
-        {
-            Title = createTaskDto.Title,
-            Content = createTaskDto.Content ?? inboxItem.Title, // Используем title инбокса как контент если не указан
-            UserId = userId,
-            ProjectId = createTaskDto.ProjectId
+            "task" => (await CreateTaskInternal(request, userId)).Id,
+            "project" => (await CreateProjectInternal(request, userId)).Id,
+            "routine" => (await CreateRoutineInternal(request, userId)).Id,
+            _ => throw new ArgumentException($"Unsupported entity type: {entityType}")
         };
 
-        var created = await _taskRepository.AddAsync(task);
-
-        return new ClassifyInboxItemResponseDto
+        // 4. Логика режима
+        bool wasDeleted = false;
+        if (mode == "convert")
         {
-            Id = created.Id,
-            TargetType = "task",
-            Title = created.Title,
-            Status = created.Status.ToString(),
-            CreatedAt = created.CreatedAt
+            wasDeleted = await _inboxRepository.SoftDeleteAsync(inboxItemId, userId);
+            _logger.LogInformation("Inbox item {Id} converted and deleted", inboxItemId);
+        }
+        else
+        {
+            _logger.LogInformation("Inbox item {Id} used to create entity {Type} {CreatedId}, but kept in list",
+                inboxItemId, entityType, createdId);
+        }
+
+        return new ClassifyResponseDto
+        {
+            Success = true,
+            CreatedEntityId = createdId,
+            InboxDeleted = wasDeleted
         };
     }
 
-    private async Task<ClassifyInboxItemResponseDto> ClassifyAsProjectAsync(
-        InboxItem inboxItem,
-        ClassifyInboxItemDto request,
-        string userId)
+    private async Task<TaskItem> CreateTaskInternal(ClassifyInboxItemDto req, string uid)
     {
-        var createProjectDto = request.ToCreateProjectDto();
-
-        var project = new ProjectItem
+        var dto = req.ToCreateTaskDto();
+        return await _taskRepository.AddAsync(new TaskItem
         {
-            Name = createProjectDto.Name,
-            Description = createProjectDto.Description,
-            UserId = userId,
-            IsDefault = false
-        };
-
-        var created = await _projectRepository.AddAsync(project);
-
-        return new ClassifyInboxItemResponseDto
-        {
-            Id = created.Id,
-            TargetType = "project",
-            Title = created.Name,
-            Description = created.Description,
-            CreatedAt = created.CreatedAt
-        };
+            Title = dto.Title,
+            Content = dto.Content,
+            UserId = uid,
+            ProjectId = dto.ProjectId
+        });
     }
 
-    private async Task<ClassifyInboxItemResponseDto> ClassifyAsRoutineAsync(
-        InboxItem inboxItem,
-        ClassifyInboxItemDto request,
-        string userId)
+    private async Task<ProjectItem> CreateProjectInternal(ClassifyInboxItemDto req, string uid)
     {
-        var createRoutineDto = request.ToCreateRoutineDto();
-
-        var routine = new Routine
+        var dto = req.ToCreateProjectDto();
+        return await _projectRepository.AddAsync(new ProjectItem
         {
-            Name = createRoutineDto.Name,
-            Frequency = createRoutineDto.Frequency,
-            UserId = userId
-        };
+            Name = dto.Name,
+            Description = dto.Description,
+            UserId = uid
+        });
+    }
 
-        var created = await _routineRepository.AddAsync(routine);
-
-        return new ClassifyInboxItemResponseDto
+    private async Task<Routine> CreateRoutineInternal(ClassifyInboxItemDto req, string uid)
+    {
+        var dto = req.ToCreateRoutineDto();
+        return await _routineRepository.AddAsync(new Routine
         {
-            Id = created.Id,
-            TargetType = "routine",
-            Title = created.Name,
-            Frequency = created.Frequency.ToString(),
-            CreatedAt = created.CreatedAt
-        };
+            Name = dto.Name,
+            Frequency = dto.Frequency,
+            UserId = uid
+        });
     }
 }

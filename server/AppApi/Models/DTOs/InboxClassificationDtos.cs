@@ -1,4 +1,3 @@
-// AppApi/Models/DTOs/InboxClassificationDtos.cs
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -14,16 +13,22 @@ public class ClassifyInboxItemDto
     /// <summary>
     /// Тип целевой сущности: task, project, routine
     /// </summary>
-    [Required(ErrorMessage = "TargetType is required")]
-    [JsonPropertyName("targetType")]
-    public string TargetType { get; set; } = string.Empty;
+    [Required(ErrorMessage = "EntityType is required")]
+    [JsonPropertyName("entityType")]
+    public string EntityType { get; set; } = string.Empty;
 
     /// <summary>
-    /// Данные для создания целевой сущности (полиморфные)
+    /// Режим: convert (с удалением) или create (без удаления). По умолчанию convert.
     /// </summary>
-    [Required(ErrorMessage = "Data is required")]
-    [JsonPropertyName("data")]
-    public JsonElement Data { get; set; }
+    [JsonPropertyName("mode")]
+    public string Mode { get; set; } = "convert";
+
+    /// <summary>
+    /// Данные для создания целевой сущности
+    /// </summary>
+    [Required(ErrorMessage = "EntityData is required")]
+    [JsonPropertyName("entityData")]
+    public JsonElement EntityData { get; set; }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -32,12 +37,12 @@ public class ClassifyInboxItemDto
     };
 
     /// <summary>
-    /// Получить DTO для создания задачи
+    /// Преобразование JSON-данных в DTO создания задачи
     /// </summary>
     public CreateTaskDto ToCreateTaskDto()
     {
-        var data = JsonSerializer.Deserialize<CreateTaskFromInboxDto>(
-            Data.GetRawText(), JsonOptions);
+        var rawJson = EntityData.GetRawText();
+        var data = JsonSerializer.Deserialize<CreateTaskFromInboxDto>(rawJson, JsonOptions);
 
         if (data is null || string.IsNullOrWhiteSpace(data.Title))
         {
@@ -53,12 +58,12 @@ public class ClassifyInboxItemDto
     }
 
     /// <summary>
-    /// Получить DTO для создания проекта
+    /// Преобразование JSON-данных в DTO создания проекта
     /// </summary>
     public CreateProjectDto ToCreateProjectDto()
     {
-        var data = JsonSerializer.Deserialize<CreateProjectFromInboxDto>(
-            Data.GetRawText(), JsonOptions);
+        var rawJson = EntityData.GetRawText();
+        var data = JsonSerializer.Deserialize<CreateProjectFromInboxDto>(rawJson, JsonOptions);
 
         if (data is null || string.IsNullOrWhiteSpace(data.Title))
         {
@@ -73,12 +78,12 @@ public class ClassifyInboxItemDto
     }
 
     /// <summary>
-    /// Получить DTO для создания рутины
+    /// Преобразование JSON-данных в DTO создания рутины
     /// </summary>
     public CreateRoutineDto ToCreateRoutineDto()
     {
-        var data = JsonSerializer.Deserialize<CreateRoutineFromInboxDto>(
-            Data.GetRawText(), JsonOptions);
+        var rawJson = EntityData.GetRawText();
+        var data = JsonSerializer.Deserialize<CreateRoutineFromInboxDto>(rawJson, JsonOptions);
 
         if (data is null || string.IsNullOrWhiteSpace(data.Title))
         {
@@ -99,7 +104,7 @@ public class ClassifyInboxItemDto
 }
 
 /// <summary>
-/// DTO для данных задачи из инбокса
+/// Вспомогательный класс для десериализации задачи из полиморфного поля
 /// </summary>
 public class CreateTaskFromInboxDto
 {
@@ -109,7 +114,7 @@ public class CreateTaskFromInboxDto
 }
 
 /// <summary>
-/// DTO для данных проекта из инбокса
+/// Вспомогательный класс для десериализации проекта из полиморфного поля
 /// </summary>
 public class CreateProjectFromInboxDto
 {
@@ -118,7 +123,7 @@ public class CreateProjectFromInboxDto
 }
 
 /// <summary>
-/// DTO для данных рутины из инбокса
+/// Вспомогательный класс для десериализации рутины из полиморфного поля
 /// </summary>
 public class CreateRoutineFromInboxDto
 {
@@ -129,21 +134,22 @@ public class CreateRoutineFromInboxDto
 }
 
 /// <summary>
-/// Ответ на классификацию
+/// Финальный ответ на классификацию согласно
 /// </summary>
-public class ClassifyInboxItemResponseDto
+public class ClassifyResponseDto
 {
-    public int Id { get; set; }
-    public string TargetType { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
+    /// <summary>
+    /// Флаг успешности операции
+    /// </summary>
+    public bool Success { get; set; }
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Frequency { get; set; }
+    /// <summary>
+    /// ID созданной сущности (задачи/проекта/рутины)
+    /// </summary>
+    public int CreatedEntityId { get; set; }
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Status { get; set; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Description { get; set; }
+    /// <summary>
+    /// Был ли удален исходный элемент инбокса
+    /// </summary>
+    public bool InboxDeleted { get; set; }
 }
