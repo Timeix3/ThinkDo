@@ -24,7 +24,7 @@ public class FlowControllerTests
 
         var user = new ClaimsPrincipal(new ClaimsIdentity(
             new[] { new Claim(ClaimTypes.NameIdentifier, TestUserId) }, "Test"));
-        
+
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext { User = user }
@@ -46,7 +46,7 @@ public class FlowControllerTests
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         var response = okResult.Value.Should().BeOfType<FlowController.FlowPhaseResponse>().Subject;
         response.Phase.Should().Be("sprint");
-        
+
         _serviceMock.Verify(s => s.GetPhaseAsync(TestUserId), Times.Once);
     }
 
