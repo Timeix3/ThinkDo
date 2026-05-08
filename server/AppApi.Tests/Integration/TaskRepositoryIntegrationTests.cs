@@ -1,6 +1,7 @@
 using AppApi.Repositories;
 using Common.Data;
 using Common.Models;
+using Common.Enums;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
@@ -263,5 +264,81 @@ public class TaskRepositoryIntegrationTests : IAsyncLifetime
         var inDb = await _context.Tasks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == task.Id);
         inDb.Should().NotBeNull();
         inDb!.ProjectId.Should().Be(p2.Id);
+    }
+
+    [Fact]
+    public async Task GetActiveSprintTaskIdsAsync_WithActiveSprint_ReturnsTaskIds()
+    {
+        // Arrange
+        var task1 = new TaskItem { Title = "Task 1", UserId = TestUserId };
+        var task2 = new TaskItem { Title = "Task 2", UserId = TestUserId };
+        _context.Tasks.AddRange(task1, task2);
+        await _context.SaveChangesAsync();
+
+        var sprint = new SprintItem
+        {
+            UserId = TestUserId,
+            Status = SprintStatus.Active,
+            Tasks = new List<TaskItem> { task1, task2 }
+        };
+        _context.Sprints.Add(sprint);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetActiveSprintTaskIdsAsync(TestUserId);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(2);
+        result.Should().Contain(task1.Id);
+        result.Should().Contain(task2.Id);
+    }
+
+    [Fact]
+    public async Task GetActiveSprintTaskIdsAsync_NoActiveSprint_ReturnsEmptySet()
+    {
+        // Arrange
+        var task = new TaskItem { Title = "Task 1", UserId = TestUserId };
+        _context.Tasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        var completedSprint = new SprintItem
+        {
+            UserId = TestUserId,
+            Status = SprintStatus.Completed,
+            Tasks = new List<TaskItem> { task }
+        };
+        _context.Sprints.Add(completedSprint);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetActiveSprintTaskIdsAsync(TestUserId);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetActiveSprintTaskIdsAsync_UserIsolation_Respected()
+    {
+        // Arrange
+        var task = new TaskItem { Title = "Other user task", UserId = OtherUserId };
+        _context.Tasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        var sprint = new SprintItem
+        {
+            UserId = OtherUserId,
+            Status = SprintStatus.Active,
+            Tasks = new List<TaskItem> { task }
+        };
+        _context.Sprints.Add(sprint);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetActiveSprintTaskIdsAsync(TestUserId);
+
+        // Assert (TestUserId не должен видеть чужие спринты)
+        result.Should().BeEmpty();
     }
 }

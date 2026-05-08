@@ -170,4 +170,12 @@ public class TaskRepository : ITaskRepository
             .Where(t => ids.Contains(t.Id) && t.UserId == userId && t.DeletedAt == null)
             .ToListAsync();
     }
+
+    public async Task<HashSet<int>> GetActiveSprintTaskIdsAsync(string userId)
+    {
+        return await _context.Sprints
+            .Where(s => s.UserId == userId && s.Status == SprintStatus.Active)
+            .SelectMany(s => s.Tasks.Select(t => t.Id))
+            .ToHashSetAsync();
+    }
 }
