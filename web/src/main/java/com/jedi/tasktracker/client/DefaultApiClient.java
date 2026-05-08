@@ -22,8 +22,8 @@ public class DefaultApiClient implements ApiClient {
   @Override
   public void classifyInboxItem(int id, String targetType, Map<String, Object> data) {
     Map<String, Object> requestBody = new HashMap<>();
-    requestBody.put("targetType", targetType);
-    requestBody.put("data", data);
+    requestBody.put("entityType", targetType);
+    requestBody.put("entityData", data);
 
     restClient
         .post()

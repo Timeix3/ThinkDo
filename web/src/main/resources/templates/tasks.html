@@ -1500,8 +1500,8 @@
                 // Если создаём из инбокса (есть convertingInboxId) — используем classify endpoint
                 if (convertingInboxId) {
                     const classifyPayload = {
-                        targetType: "task",
-                        data: {
+                        entityType: "task",
+                        entityData: {
                             title: title,
                             content: document.getElementById('createDesc').value.trim(),
                             projectId: projectId
@@ -1622,8 +1622,8 @@
                 if (convertingInboxId) {
                     // Классификация в проект
                     const classifyPayload = {
-                        targetType: "project",
-                        data: {
+                        entityType: "project",
+                        entityData: {
                             title: name,
                             description: document.getElementById('projectCreateDesc').value.trim()
                         }
@@ -2334,8 +2334,8 @@
                 if (convertingInboxId) {
                     // Классификация в рутину
                     const classifyPayload = {
-                        targetType: "routine",
-                        data: {
+                        entityType: "routine",
+                        entityData: {
                             title: name,
                             frequency: frequency
                         }
