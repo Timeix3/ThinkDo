@@ -1963,6 +1963,26 @@
             completeTask(id);
         });
 
+        // ── Flow Phase Indicator ───────────────────────────────
+        function updateFlowPhaseIndicator(phase) {
+            document.querySelectorAll('#flowPhaseIndicator .wf-step').forEach(el => {
+                el.classList.toggle('wf-active', el.dataset.phase === phase);
+            });
+        }
+
+        async function syncFlowPhase(page) {
+            if (page === 'dashboard') { updateFlowPhaseIndicator('planning'); return; }
+            if (page === 'inbox')     { updateFlowPhaseIndicator('review');   return; }
+            try {
+                const res = await fetch(`${SPRINT_API_URL}/status`);
+                if (!res.ok) throw new Error(res.status);
+                const data = await res.json();
+                updateFlowPhaseIndicator((data.phase ?? '').toLowerCase());
+            } catch (e) {
+                console.error('Flow phase fetch failed', e);
+            }
+        }
+
         // ── Navigation ─────────────────────────────────────────
         let currentPage = 'dashboard';
 
@@ -2001,6 +2021,7 @@
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
+            syncFlowPhase(page);
         }
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
@@ -2473,6 +2494,7 @@
         // Инициализация
         loadTasks();
         loadProjects();
+        updateFlowPhaseIndicator('planning');
     </script>
 
     <script src="/js/inbox-fab.js"></script>
