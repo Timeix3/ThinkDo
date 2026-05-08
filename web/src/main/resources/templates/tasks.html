@@ -74,6 +74,28 @@
             max-width: 440px;
         }
 
+        .modal-box-project-edit {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            width: 90vw;
+            max-width: 1200px;
+            height: 85vh;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        @media (max-width: 640px) {
+            .modal-box-project-edit {
+                width: 100vw;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                padding: 1rem;
+            }
+        }
+
         input[type="text"],
         textarea,
         input[type="date"],
@@ -141,22 +163,41 @@
 
         /* Описание проекта в createModal */
         .create-project-info {
-            background: #f0f4ff; border: 1.5px solid #c7d2fe;
-            border-radius: 0.75rem; padding: 0.65rem 0.85rem;
+            background: #f0f4ff;
+            border: 1.5px solid #c7d2fe;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.85rem;
             margin-top: 0.35rem;
         }
+
         .create-project-info .info-desc {
-            font-size: 0.83rem; color: #475569; margin-bottom: 0.4rem;
+            font-size: 0.83rem;
+            color: #475569;
+            margin-bottom: 0.4rem;
         }
+
         .create-project-info .info-tasks-label {
-            font-size: 0.75rem; font-weight: 600; color: #94a3b8;
-            text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.3rem;
         }
+
         .create-project-info .info-task {
-            font-size: 0.82rem; color: #334155;
-            display: flex; align-items: center; gap: 0.4rem; padding: 0.15rem 0;
+            font-size: 0.82rem;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.15rem 0;
         }
-        .create-project-info .info-task i { color: #a5b4fc; font-size: 0.65rem; }
+
+        .create-project-info .info-task i {
+            color: #a5b4fc;
+            font-size: 0.65rem;
+        }
 
         .btn-success {
             background: #22c55e;
@@ -179,6 +220,47 @@
 
         .active-page {
             background: rgba(255, 255, 255, 0.35) !important;
+        }
+
+        /* Стили для списка задач в модалке проекта */
+        .project-tasks-list-large {
+            overflow-y: auto;
+            max-height: 340px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+            background: white;
+        }
+
+        .project-task-item-large {
+            padding: 0.65rem 0.85rem;
+            border-radius: 0.65rem;
+            font-size: 0.88rem;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-bottom: 0.25rem;
+        }
+
+        .project-task-item-large:hover {
+            background: #f0f4ff;
+            color: #4338ca;
+        }
+
+        .project-task-item-large i {
+            color: #94a3b8;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .project-tasks-list-empty-large {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-align: center;
+            padding: 0.75rem 0;
         }
 
         /* ── Список задач / инбокса ─────────────────────────── */
@@ -1074,7 +1156,7 @@
 
     <!-- Модалка: Редактирование проекта (добавлен список задач) -->
     <div id="projectEditModal" class="modal-overlay hidden">
-        <div class="modal-box">
+        <div class="modal-box modal-box-project-edit">
             <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать проект</h2>
             <div class="flex flex-col gap-3">
                 <div>
@@ -1085,20 +1167,28 @@
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Описание</label>
                     <textarea id="projectEditDesc" rows="3" placeholder="Описание проекта..."></textarea>
                 </div>
+
+                <!-- НОВЫЙ КОНТЕЙНЕР ДЛЯ СПИСКА ЗАДАЧ + КНОПКА -->
                 <div>
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Задачи проекта</label>
-                    <div id="projectEditTasks" class="project-tasks-list">
+                    <div id="projectTaskListContainer" class="project-tasks-list-large">
                         <div class="project-tasks-loading">Загрузка задач...</div>
                     </div>
+                    <button type="button" id="projectAddTaskBtn" class="btn-primary mt-3">
+                        <i class="fas fa-plus mr-1"></i> Задача
+                    </button>
                 </div>
+
                 <p id="projectEditError" class="text-red-500 text-xs hidden">Название обязательно!</p>
             </div>
-            <div class="flex justify-end gap-2 mt-5">
+            <div class="flex justify-between items-center mt-5">
                 <button class="btn-danger" id="projectEditDelete">
                     <i class="fas fa-trash-alt mr-1.5"></i>Удалить
                 </button>
-                <button class="btn-ghost" id="projectEditCancel">Отмена</button>
-                <button class="btn-primary" id="projectEditSave">Сохранить</button>
+                <div class="flex gap-2">
+                    <button class="btn-ghost" id="projectEditCancel">Отмена</button>
+                    <button class="btn-primary" id="projectEditSave">Сохранить</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1521,7 +1611,7 @@
                 const tasksHtml = projectTasks.length === 0
                     ? '<div style="font-size:0.8rem;color:#94a3b8;">Задач пока нет</div>'
                     : `<div class="info-tasks-label">Задачи в проекте</div>` +
-                      projectTasks.map(t => `<div class="info-task"><i class="fas fa-circle"></i>${escHtml(t.title)}</div>`).join('');
+                    projectTasks.map(t => `<div class="info-task"><i class="fas fa-circle"></i>${escHtml(t.title)}</div>`).join('');
 
                 container.innerHTML = descHtml + tasksHtml;
                 container.classList.remove('hidden');
@@ -1727,7 +1817,7 @@
             document.getElementById('projectEditName').value = project.name;
             document.getElementById('projectEditDesc').value = project.description ?? '';
 
-            const tasksContainer = document.getElementById('projectEditTasks');
+            const tasksContainer = document.getElementById('projectTaskListContainer');
             tasksContainer.innerHTML = '<div class="project-tasks-loading"><i class="fas fa-spinner fa-pulse mr-1"></i> Загрузка задач...</div>';
 
             document.getElementById('projectEditError').classList.add('hidden');
@@ -1743,18 +1833,14 @@
 
                 const activeTasks = projectTasks.filter(t => t.status !== 2 && t.status !== 3);
                 if (!activeTasks.length) {
-                    tasksContainer.innerHTML = '<div class="project-tasks-list-empty">У проекта пока нет задач</div>';
+                    tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
                 } else {
-                    tasksContainer.innerHTML = activeTasks.map(task => {
-                        const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
-                        const statusClass = task.status === 4 ? 'active' : 'active';
-                        return `
-                                                <div class="project-task-item">
-                                                    <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
-                                                    <span class="project-task-status ${statusClass}">${statusText}</span>
-                                                </div>
-                                            `;
-                    }).join('');
+                    tasksContainer.innerHTML = activeTasks.map(task => `
+                        <div class="project-task-item-large" data-task-id="${task.id}">
+                            <i class="fas fa-circle"></i>
+                            <span>${escHtml(task.title)}</span>
+                        </div>
+                    `).join('');
                 }
             } catch (error) {
                 console.error('Ошибка загрузки задач проекта:', error);
@@ -1884,6 +1970,19 @@
         document.getElementById('deleteConfirmModal').addEventListener('click', (e) => {
             if (e.target.id === 'deleteConfirmModal') {
                 document.getElementById('deleteConfirmModal').classList.add('hidden');
+            }
+        });
+
+        //ЗАГЛУШКА ДЛЯ КНОПКИ "+ЗАДАЧА" В МОДАЛКЕ ПРОЕКТА
+        document.getElementById('projectAddTaskBtn').addEventListener('click', () => {
+            // Открываем createModal с уже выбранным проектом
+            openCreateModal();
+            // TODO: автоматически выбрать текущий проект в селекте
+            const projectSelect = document.getElementById('createProject');
+            if (editingProjectId && projectSelect) {
+                projectSelect.value = editingProjectId;
+                // триггернем обновление информации о проекте
+                projectSelect.dispatchEvent(new Event('change'));
             }
         });
 
