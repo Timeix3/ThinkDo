@@ -1,6 +1,7 @@
 package com.jedi.tasktracker.controller;
 
 import com.jedi.tasktracker.client.ApiClient;
+import com.jedi.tasktracker.client.dto.ClassifyResponse;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -45,11 +46,16 @@ public class InboxApiController {
   }
 
   @PostMapping("/{id}/classify")
-  public ResponseEntity<Void> classifyInboxItem(
+  public ResponseEntity<ClassifyResponse> classifyInboxItem(
       @PathVariable int id, @RequestBody Map<String, Object> classifyRequest) {
-    String targetType = (String) classifyRequest.get("entityType");
-    Map<String, Object> data = (Map<String, Object>) classifyRequest.get("entityData");
-    apiClient.classifyInboxItem(id, targetType, data);
-    return ResponseEntity.ok().build();
+
+    String entityType = (String) classifyRequest.get("entityType");
+    String mode = (String) classifyRequest.get("mode");
+    Map<String, Object> entityData = (Map<String, Object>) classifyRequest.get("entityData");
+
+    // Вызываем обновленный клиент
+    ClassifyResponse response = apiClient.classifyInboxItem(id, entityType, mode, entityData);
+
+    return ResponseEntity.ok(response);
   }
 }

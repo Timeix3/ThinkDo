@@ -1,5 +1,6 @@
 package com.jedi.tasktracker.client;
 
+import com.jedi.tasktracker.client.dto.ClassifyResponse;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.RoutineDto;
@@ -20,18 +21,21 @@ public class DefaultApiClient implements ApiClient {
   private final RestClient restClient;
 
   @Override
-  public void classifyInboxItem(int id, String targetType, Map<String, Object> data) {
+  public ClassifyResponse classifyInboxItem(
+      int id, String entityType, String mode, Map<String, Object> entityData) {
+    // Формируем тело запроса согласно контракту Story 20.1
     Map<String, Object> requestBody = new HashMap<>();
-    requestBody.put("entityType", targetType);
-    requestBody.put("entityData", data);
+    requestBody.put("entityType", entityType);
+    requestBody.put("mode", mode != null ? mode : "convert"); // Fallback на старое поведение
+    requestBody.put("entityData", entityData);
 
-    restClient
+    return restClient
         .post()
         .uri("/api/inbox/{id}/classify", id)
         .contentType(MediaType.APPLICATION_JSON)
         .body(requestBody)
         .retrieve()
-        .toBodilessEntity();
+        .body(ClassifyResponse.class); // Теперь возвращаем DTO с результатом
   }
 
   @Override
