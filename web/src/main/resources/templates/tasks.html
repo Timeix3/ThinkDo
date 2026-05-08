@@ -190,6 +190,20 @@
             overflow: hidden;
         }
 
+        /* Задача в planning (кликабельная) */
+        .planning-task-clickable {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.8rem;
+            margin-bottom: 0.55rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            cursor: pointer;
+            transition: box-shadow 0.15s;
+        }
+
         .task-list-item {
             background: white;
             border-radius: 1rem;
@@ -1272,6 +1286,39 @@
             document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
             document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
             document.getElementById('planNextBtn').textContent = planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
+
+            // Задачи текущего проекта
+            const projectTasks = allTasks.filter(t => t.projectId === project.id);
+            const container = document.getElementById('planTasksList');
+            if (projectTasks.length === 0) {
+                container.innerHTML = '<div class="planning-empty" style="color:rgba(255,255,255,0.4);text-align:center;padding:1.5rem 0.5rem;font-size:0.85rem;">Нет задач в проекте</div>';
+            } else {
+                container.innerHTML = projectTasks.map(t => {
+                    const isDone = t.isSelectedForSprint;
+                    const checkStyle = isDone ? 'border-color:#22c55e;background:#22c55e;color:#fff;' : '';
+                    return `
+            <div class="planning-task-clickable" data-id="${t.id}">
+                <div class="task-check shrink-0" data-complete-id="${t.id}" style="${checkStyle}">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="planning-task-title" style="flex:1;min-width:0;font-size:0.9rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                     data-edit-id="${t.id}">${escHtml(t.title)}</div>
+            </div>
+        `;
+                }).join('');
+
+                // Чекбокс — отметить задачу
+                container.querySelectorAll('.task-check').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        togglePlanningDone(btn.dataset.completeId, btn);
+                    });
+                });
+                // Клик по названию — открыть редактирование
+                container.querySelectorAll('[data-edit-id]').forEach(el => {
+                    el.addEventListener('click', () => openEditModal(el.dataset.editId));
+                });
+            }
         }
 
         document.getElementById('planPrevBtn').addEventListener('click', () => {
@@ -1866,6 +1913,39 @@
             }
         });
 
+        // ── Load planning projects (tasks + selected flags) ───
+        async function loadPlanningProjects() {
+            try {
+                const res = await fetch(PLANNING_API_URL);
+                if (!res.ok) throw new Error('Planning API error');
+                const data = await res.json();
+                // API может вернуть { projects: [...] } или { Projects: [...] } либо сам массив
+                planningProjects = data.Projects ?? data.projects ?? data;
+
+                // Инициализируем selections по данным с сервера
+                planningSelections = planningSelections || {};
+                planningProjects.forEach(p => {
+                    const pid = p.Id ?? p.id ?? p.Id;
+                    planningSelections[pid] = planningSelections[pid] || {};
+                    const tasks = p.Tasks ?? p.tasks ?? [];
+                    tasks.forEach(t => {
+                        const tid = t.Id ?? t.id ?? t.Id;
+                        if (t.Selected === true || t.selected === true || t.IsSelectedForSprint === true || t.isSelectedForSprint === true) {
+                            planningSelections[pid][tid] = true;
+                        }
+                    });
+                });
+
+                // Отрисовываем — renderPlanning теперь использует planningProjects при наличии
+                renderPlanning();
+                return planningProjects;
+            } catch (e) {
+                console.warn('Planning API not available', e);
+                planningProjects = [];
+                return [];
+            }
+        }
+
         // ── Edit Task ──────────────────────────────────────────
         function openEditModal(taskId, tasks) {
             const task = tasks.find(t => String(t.id) === String(taskId));
@@ -1909,7 +1989,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title,
-                    content: document.getElementById('editDesc').value.trim()
+                    content: document.getElementById('editDesc').value.trim(),
+                    projectId: allProjects.find(p => String(p.id) === String(editingTaskId))
                 })
             });
             closeEditModal();

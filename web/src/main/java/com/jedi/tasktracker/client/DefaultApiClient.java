@@ -3,9 +3,9 @@ package com.jedi.tasktracker.client;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.RoutineDto;
-import com.jedi.tasktracker.client.dto.SprintStatusDto;
 import com.jedi.tasktracker.client.dto.TaskDto;
 import com.jedi.tasktracker.client.dto.TaskListResponseDto;
+import com.jedi.tasktracker.client.dto.SprintStatusDto;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,12 +99,16 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
-  public void updateTask(Long id, String title, String content) {
+  public void updateTask(Long id, String title, String content, Integer projectId) {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("title", title);
+    requestBody.put("content", content != null ? content : "");
+    requestBody.put("projectId", projectId);
     restClient
         .put()
         .uri("/api/tasks/{id}", id)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(Map.of("title", title, "content", content != null ? content : ""))
+        .body(requestBody)
         .retrieve()
         .toBodilessEntity();
   }
