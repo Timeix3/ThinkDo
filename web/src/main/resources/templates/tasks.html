@@ -263,7 +263,7 @@
 
         /* Планирование: одиночный проект */
         .plan-single-col {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
             border-radius: 1.5rem;
             padding: 1.25rem;
@@ -279,7 +279,7 @@
         }
 
         .plan-cycle-btn {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
             border-radius: 0.75rem;
@@ -290,14 +290,14 @@
             flex-shrink: 0;
         }
 
-            .plan-cycle-btn:hover {
-                background: rgba(255,255,255,0.35);
-            }
+        .plan-cycle-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
 
-            .plan-cycle-btn:disabled {
-                opacity: 0.3;
-                cursor: not-allowed;
-            }
+        .plan-cycle-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
 
         .plan-cycle-info {
             text-align: center;
@@ -323,20 +323,36 @@
 
         /* Воркфлоу-индикатор (Спринт / Разбор / Планирование) */
         .workflow-breadcrumb {
-            display: flex; align-items: center; gap: 0.4rem;
-            background: rgba(255,255,255,0.12); border-radius: 2rem;
-            padding: 0.4rem 1rem; backdrop-filter: blur(4px);
-            flex-wrap: wrap; justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 2rem;
+            padding: 0.4rem 1rem;
+            backdrop-filter: blur(4px);
+            flex-wrap: wrap;
+            justify-content: center;
         }
+
         .wf-step {
-            font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.45);
-            padding: 0.2rem 0.6rem; border-radius: 1rem; transition: all 0.25s;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.45);
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            transition: all 0.25s;
             white-space: nowrap;
         }
+
         .wf-step.wf-active {
-            background: rgba(255,255,255,0.3); color: white;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
         }
-        .wf-arrow { color: rgba(255,255,255,0.25); font-size: 0.65rem; }
+
+        .wf-arrow {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 0.65rem;
+        }
 
         /* ── Кнопка редактирования проекта ── */
         .project-edit-btn {
@@ -676,6 +692,54 @@
             letter-spacing: 0.05em;
         }
 
+        /* ── Стили для выбора режима (Story 20.3) ── */
+        .classify-action-panel {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .classify-action-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 1rem 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #1e293b;
+        }
+
+        .classify-action-btn:hover {
+            border-color: #667eea;
+            background: #eef2ff;
+            transform: translateY(-2px);
+        }
+
+        .classify-action-btn .icon {
+            font-size: 1.6rem;
+        }
+
+        .classify-selected-type {
+            background: #f0f4ff;
+            border: 1.5px solid #c7d2fe;
+            border-radius: 0.65rem;
+            padding: 0.45rem 0.85rem;
+            font-size: 0.85rem;
+            color: #4338ca;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.75rem;
+        }
+
         /* ── Кнопка "Начать спринт!" (всегда видна, неактивна) ── */
         .workflow-btn {
             position: fixed;
@@ -787,9 +851,10 @@
                 <!-- Не авторизован -->
                 <div sec:authorize="isAnonymous()">
                     <a href="/oauth2/authorization/github"
-                       class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                            <path
+                                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                         </svg>
                         Войти через GitHub
                     </a>
@@ -798,13 +863,13 @@
                 <!-- Авторизован -->
                 <div sec:authorize="isAuthenticated()" class="flex items-center gap-3">
                     <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
-                         class="w-8 h-8 rounded-full border-2 border-white/50">
+                        class="w-8 h-8 rounded-full border-2 border-white/50">
                     <span class="text-sm opacity-90">
                         Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                     </span>
                     <form th:action="@{/logout}" method="post" id="logoutForm">
                         <button type="submit" onclick="clearAllData()"
-                                class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                             <i class="fas fa-sign-out-alt text-xs"></i> Выйти
                         </button>
                     </form>
@@ -843,7 +908,8 @@
                 <div class="plan-cycle-nav">
                     <button class="plan-cycle-btn" id="planPrevBtn"><i class="fas fa-chevron-left"></i> Назад</button>
                     <div class="plan-cycle-info">
-                        <div class="plan-cycle-title" id="planProjectTitle"><i class="fas fa-spinner fa-spin"></i> Загрузка проектов...</div>
+                        <div class="plan-cycle-title" id="planProjectTitle"><i class="fas fa-spinner fa-spin"></i>
+                            Загрузка проектов...</div>
                         <div class="plan-cycle-counter" id="planProjectCounter"></div>
                         <div class="plan-cycle-desc" id="planProjectDesc"></div>
                     </div>
@@ -894,7 +960,7 @@
 
     <!-- FAB: Навигация на обезьяну -->
     <a href="/" class="fab" id="fabNavFocus"
-       style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
+        style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
         🐒
     </a>
 
@@ -907,7 +973,7 @@
     <div id="inboxInputBar" class="inbox-inline-input hidden">
         <div class="inbox-input-box">
             <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
-                   style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
+                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
         </div>
     </div>
 
@@ -1054,6 +1120,7 @@
     </div>
 
     <!-- Новая модалка: Классификация записи инбокса (выбор типа сущности) -->
+    <!-- Найти блок классификации и заменить на этот код целиком -->
     <div id="inboxClassifyModal" class="modal-overlay hidden">
         <div class="modal-box">
             <h2 class="text-lg font-bold text-slate-800 mb-1">🗂️ Классифицировать запись</h2>
@@ -1064,30 +1131,48 @@
                 <span id="inboxClassifySourceText"></span>
             </div>
 
-            <div class="classify-options mb-2">
-                <div class="classify-option" data-classify="project">
-                    <span class="icon">📁</span>
-                    <span>Проект</span>
+            <!-- Шаг 1: Выбор типа сущности -->
+            <div id="classifyStep1">
+                <div class="classify-options mb-2">
+                    <div class="classify-option" data-classify="project"><span class="icon">📁</span><span>Проект</span>
+                    </div>
+                    <div class="classify-option" data-classify="task"><span class="icon">📝</span><span>Задача</span>
+                    </div>
+                    <div class="classify-option" data-classify="routine"><span class="icon">🔄</span><span>Рутина</span>
+                    </div>
                 </div>
-                <div class="classify-option" data-classify="task">
-                    <span class="icon">📝</span>
-                    <span>Задача</span>
-                </div>
-                <div class="classify-option" data-classify="routine">
-                    <span class="icon">🔄</span>
-                    <span>Рутина</span>
+                <div class="flex justify-between items-center mt-5">
+                    <button class="btn-danger" id="inboxClassifyDelete"><i
+                            class="fas fa-trash-alt mr-1.5"></i>Удалить</button>
+                    <div class="flex gap-2">
+                        <button class="btn-ghost" id="inboxClassifyEdit"><i
+                                class="fas fa-pencil-alt mr-1"></i>Редактировать</button>
+                        <button class="btn-ghost" id="inboxClassifyCancel">Отмена</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex justify-between items-center mt-5">
-                <button class="btn-danger" id="inboxClassifyDelete">
-                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
-                </button>
-                <div class="flex gap-2">
-                    <button class="btn-ghost" id="inboxClassifyEdit">
-                        <i class="fas fa-pencil-alt mr-1"></i>Редактировать
-                    </button>
-                    <button class="btn-ghost" id="inboxClassifyCancel">Отмена</button>
+            <!-- Шаг 2: Выбор режима -->
+            <div id="classifyStep2" class="hidden">
+                <div class="classify-selected-type">
+                    <i class="fas fa-tag"></i> <span id="classifySelectedTypeText"></span>
+                </div>
+                <p class="text-sm text-slate-500 mb-1">Выберите режим:</p>
+                <div class="classify-action-panel">
+                    <div class="classify-action-btn" id="classifyConvertBtn">
+                        <span class="icon">🔄</span>
+                        <span>Конвертация</span>
+                        <span style="font-size:0.75rem;color:#64748b;font-weight:500;">Создать и удалить запись</span>
+                    </div>
+                    <div class="classify-action-btn" id="classifyCreateBtn">
+                        <span class="icon">✨</span>
+                        <span>Создание</span>
+                        <span style="font-size:0.75rem;color:#64748b;font-weight:500;">Создать, запись остаётся</span>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <button class="btn-ghost" id="classifyStep2Back"><i
+                            class="fas fa-arrow-left mr-1"></i>Назад</button>
                 </div>
             </div>
         </div>
@@ -1105,7 +1190,7 @@
                 <div>
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Частота *</label>
                     <select id="routineCreateFrequency"
-                            style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
+                        style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
                         <option value="1">Ежедневно</option>
                         <option value="2">Еженедельно</option>
                         <option value="3">Ежемесячно</option>
@@ -1132,7 +1217,7 @@
                 <div>
                     <label class="text-sm font-medium text-slate-600 mb-1 block">Частота *</label>
                     <select id="routineEditFrequency"
-                            style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
+                        style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.6rem 0.85rem;font-size:0.95rem;outline:none;background:white;color:#1e293b;cursor:pointer;">
                         <option value="1">Ежедневно</option>
                         <option value="2">Еженедельно</option>
                         <option value="3">Ежемесячно</option>
@@ -1194,12 +1279,14 @@
         let allTasks = []; // Общее состояние
         let allProjects = [];
         let allRoutines = [];
+        const FREQUENCY_LABELS = { 1: 'Ежедневно', 2: 'Еженедельно', 3: 'Ежемесячно' };
         let deleteType = null;
         let planningProjectIndex = 0;
 
         // Состояние для классификации инбокса
         let classifyingInboxId = null;   // id записи, открытой в модалке классификации
         let convertingInboxId = null;    // id записи, для которой сейчас открыто create-окно (после сохранения запись будет удалена)
+        let currentClassifyMode = 'convert'; // 'convert' или 'create'
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
@@ -1428,96 +1515,51 @@
             if (!title) { titleInput.focus(); return; }
 
             const projectSelect = document.getElementById('createProject');
-            let projectId = projectSelect.value;
-            if (projectId === "") projectId = null;
-            else if (projectId) projectId = Number(projectId);
+            let projectId = projectSelect.value ? Number(projectSelect.value) : null;
 
             const btn = document.getElementById('createSave');
             btn.disabled = true;
 
+            // Данные для сущности
+            const taskData = {
+                title: title,
+                content: document.getElementById('createDesc').value.trim(),
+                projectId: projectId
+            };
+
             try {
-                // Если создаём из инбокса (есть convertingInboxId) — используем classify endpoint
                 if (convertingInboxId) {
-                    const classifyPayload = {
-                        targetType: "task",
-                        data: {
-                            title: title,
-                            content: document.getElementById('createDesc').value.trim(),
-                            projectId: projectId
-                        }
-                    };
-                    const response = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(classifyPayload)
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            showError('Запись инбокса не найдена или уже была обработана.');
-                            closeCreateModal();
-                            await inboxLoad();
-                            cancelInboxConversion();
-                            return;
-                        } else if (response.status === 409) {
-                            showError('Запись инбокса уже классифицирована.');
-                            closeCreateModal();
-                            await inboxLoad();
-                            cancelInboxConversion();
-                            return;
-                        } else {
-                            let errorMsg = 'Ошибка при создании задачи';
-                            try {
-                                const errData = await response.json();
-                                if (errData && errData.message) errorMsg = errData.message;
-                            } catch (e) { }
-                            showError(errorMsg);
-                            // Не закрываем форму
-                            return;
-                        }
-                    }
-
-                    // Успех
-                    closeCreateModal();
-                    await loadTasks();
-                    await loadProjects();
-                    await inboxLoad();  // обновляем инбокс — запись исчезнет
-                    cancelInboxConversion(); // сброс флага
-                    showSuccess('Задача успешно создана из записи инбокса!');
-                } else {
-                    // Обычное создание задачи (не из инбокса)
-                    const response = await fetch(API_URL, {
+                    // РЕЖИМ КЛАССИФИКАЦИИ (Story 20.3)
+                    const res = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            title,
-                            content: document.getElementById('createDesc').value.trim(),
-                            projectId: projectId
+                            entityType: 'task',
+                            mode: currentClassifyMode,
+                            entityData: taskData
                         })
                     });
+                    const result = await res.json();
 
-                    if (!response.ok) {
-                        let errorMsg = 'Ошибка при создании задачи';
-                        try {
-                            const errData = await response.json();
-                            if (errData && errData.message) errorMsg = errData.message;
-                        } catch (e) { }
-                        if (response.status === 400 || response.status === 404) {
-                            errorMsg += ' Возможно, выбранный проект был удалён. Пожалуйста, обновите список проектов и попробуйте снова.';
-                            if (confirm(errorMsg + '\nОбновить список проектов?')) {
-                                await loadProjects();
-                                openCreateModal();
-                            }
-                        } else {
-                            showError(errorMsg);
-                        }
-                        return;
+                    // Если сервер подтвердил удаление инбокса - убираем из списка
+                    if (result.inboxDeleted) {
+                        inboxItems = inboxItems.filter(i => String(i.id) !== String(convertingInboxId));
+                        renderInboxList();
                     }
-
-                    closeCreateModal();
-                    await loadTasks();
-                    await loadProjects();
+                    convertingInboxId = null;
+                } else {
+                    // ОБЫЧНОЕ СОЗДАНИЕ
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(taskData)
+                    });
                 }
+                closeCreateModal();
+                await loadTasks();
+                await loadProjects();
+            } catch (e) {
+                console.error(e);
             } finally {
                 btn.disabled = false;
             }
@@ -1546,83 +1588,46 @@
         document.getElementById('projectCreateSave').addEventListener('click', async () => {
             const nameInput = document.getElementById('projectCreateName');
             const name = nameInput.value.trim();
-            const errorLabel = document.getElementById('projectCreateError');
-
-            if (!name) {
-                errorLabel.classList.remove('hidden');
-                nameInput.focus();
-                return;
-            }
+            if (!name) { document.getElementById('projectCreateError').classList.remove('hidden'); return; }
 
             const btn = document.getElementById('projectCreateSave');
             btn.disabled = true;
 
+            const projectData = {
+                title: name,
+                description: document.getElementById('projectCreateDesc').value.trim()
+            };
+
             try {
                 if (convertingInboxId) {
-                    // Классификация в проект
-                    const classifyPayload = {
-                        targetType: "project",
-                        data: {
-                            title: name,
-                            description: document.getElementById('projectCreateDesc').value.trim()
-                        }
-                    };
-                    const response = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(classifyPayload)
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            showError('Запись инбокса не найдена или уже была обработана.');
-                            closeProjectCreateModal();
-                            await inboxLoad();
-                            cancelInboxConversion();
-                            return;
-                        } else if (response.status === 409) {
-                            showError('Запись инбокса уже классифицирована.');
-                            closeProjectCreateModal();
-                            await inboxLoad();
-                            cancelInboxConversion();
-                            return;
-                        } else {
-                            let errorMsg = 'Ошибка при создании проекта';
-                            try {
-                                const errData = await response.json();
-                                if (errData && errData.message) errorMsg = errData.message;
-                            } catch (e) { }
-                            showError(errorMsg);
-                            return;
-                        }
-                    }
-
-                    closeProjectCreateModal();
-                    await loadProjects();
-                    await inboxLoad();
-                    cancelInboxConversion();
-                    showSuccess('Проект успешно создан из записи инбокса!');
-                } else {
-                    // Обычное создание проекта
-                    const res = await fetch(PROJECTS_API_URL, {
+                    // КЛАССИФИКАЦИЯ В ПРОЕКТ
+                    const res = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            name,
-                            description: document.getElementById('projectCreateDesc').value.trim()
+                            entityType: 'project',
+                            mode: currentClassifyMode,
+                            entityData: projectData
                         })
                     });
-
-                    if (!res.ok) {
-                        alert("Ошибка при создании проекта.");
-                        return;
+                    const result = await res.json();
+                    if (result.inboxDeleted) {
+                        inboxItems = inboxItems.filter(i => String(i.id) !== String(convertingInboxId));
+                        renderInboxList();
                     }
-                    closeProjectCreateModal();
-                    await loadProjects();
+                    convertingInboxId = null;
+                } else {
+                    // ОБЫЧНОЕ СОЗДАНИЕ
+                    await fetch(PROJECTS_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: projectData.title, description: projectData.description })
+                    });
                 }
+                closeProjectCreateModal();
+                await loadProjects();
             } catch (e) {
                 console.error(e);
-                showError('Ошибка сети, попробуйте позже.');
             } finally {
                 btn.disabled = false;
             }
@@ -2023,7 +2028,23 @@
             if (!item) return;
             classifyingInboxId = itemId;
             document.getElementById('inboxClassifySourceText').textContent = item.title;
+
+            document.getElementById('classifyStep1').classList.remove('hidden');
+            document.getElementById('classifyStep2').classList.add('hidden');
             document.getElementById('inboxClassifyModal').classList.remove('hidden');
+        }
+
+        function openCreateForClassify(type, sourceTitle) {
+            if (type === 'task') {
+                openCreateModal();
+                document.getElementById('createTitle').value = sourceTitle;
+            } else if (type === 'project') {
+                openProjectCreateModal();
+                document.getElementById('projectCreateName').value = sourceTitle;
+            } else if (type === 'routine') {
+                openRoutineCreateModal();
+                document.getElementById('routineCreateName').value = sourceTitle;
+            }
         }
 
         function closeInboxClassifyModal() {
@@ -2053,40 +2074,47 @@
         // Обработчики выбора типа сущности
         document.querySelectorAll('#inboxClassifyModal .classify-option').forEach(opt => {
             opt.addEventListener('click', () => {
-                const type = opt.dataset.classify;
-                const item = inboxItems.find(i => String(i.id) === String(classifyingInboxId));
-                if (!item) {
-                    closeInboxClassifyModal();
-                    return;
-                }
-                // Запоминаем, какую запись инбокса конвертируем
-                convertingInboxId = classifyingInboxId;
-                const sourceTitle = item.title;
-                closeInboxClassifyModal();
-
-                if (type === 'task') {
-                    openCreateModal();
-                    document.getElementById('createTitle').value = sourceTitle;
-                    setTimeout(() => document.getElementById('createTitle').focus(), 50);
-                } else if (type === 'project') {
-                    openProjectCreateModal();
-                    document.getElementById('projectCreateName').value = sourceTitle;
-                    setTimeout(() => document.getElementById('projectCreateName').focus(), 50);
-                } else if (type === 'routine') {
-                    openRoutineCreateModal();
-                    document.getElementById('routineCreateName').value = sourceTitle;
-                    setTimeout(() => document.getElementById('routineCreateName').focus(), 50);
-                }
+                const typeLabels = { project: '📁 Проект', task: '📝 Задача', routine: '🔄 Рутина' };
+                classifySelectedType = opt.dataset.classify;
+                document.getElementById('classifySelectedTypeText').textContent = typeLabels[classifySelectedType];
+                document.getElementById('classifyStep1').classList.add('hidden');
+                document.getElementById('classifyStep2').classList.remove('hidden');
             });
         });
 
-        // Хелперы для конвертации (теперь не удаляют запись, а только сбрасывают флаг)
-        function finalizeInboxConversion() {
-            // Этот метод больше не используется, оставлен для совместимости
-            if (convertingInboxId) {
-                convertingInboxId = null;
-            }
+        // 3. Обработчики кнопок режима (Convert / Create)
+        // document.getElementById('classifyConvertBtn').addEventListener('click', () => startClassification('convert'));
+        // document.getElementById('classifyCreateBtn').addEventListener('click', () => startClassification('create'));
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const convBtn = document.getElementById('classifyConvertBtn');
+            const createBtn = document.getElementById('classifyCreateBtn');
+            const backBtn = document.getElementById('classifyStep2Back');
+
+            if (convBtn) convBtn.addEventListener('click', () => startClassification('convert'));
+            if (createBtn) createBtn.addEventListener('click', () => startClassification('create'));
+            if (backBtn) backBtn.addEventListener('click', () => {
+                document.getElementById('classifyStep2').classList.add('hidden');
+                document.getElementById('classifyStep1').classList.remove('hidden');
+            });
+        });
+
+
+        function startClassification(mode) {
+            const item = inboxItems.find(i => String(i.id) === String(classifyingInboxId));
+            if (!item) return;
+
+            currentClassifyMode = mode;
+            convertingInboxId = classifyingInboxId;
+            closeInboxClassifyModal();
+            openCreateForClassify(classifySelectedType, item.title);
         }
+
+        // 4. Кнопка "Назад"
+        document.getElementById('classifyStep2Back').addEventListener('click', () => {
+            document.getElementById('classifyStep2').classList.add('hidden');
+            document.getElementById('classifyStep1').classList.remove('hidden');
+        });
 
         function cancelInboxConversion() {
             convertingInboxId = null;
@@ -2189,7 +2217,6 @@
         }
 
         // ── Рутины (с поддержкой классификации) ────────────────
-        const FREQUENCY_LABELS = { 1: 'Ежедневно', 2: 'Еженедельно', 3: 'Ежемесячно' };
 
         async function loadRoutines() {
             try {
@@ -2259,72 +2286,47 @@
         });
 
         document.getElementById('routineCreateSave').addEventListener('click', async () => {
-            const name = document.getElementById('routineCreateName').value.trim();
-            if (!name) {
-                document.getElementById('routineCreateError').classList.remove('hidden');
-                document.getElementById('routineCreateName').focus();
-                return;
-            }
+            const nameInput = document.getElementById('routineCreateName');
+            const name = nameInput.value.trim();
+            if (!name) { document.getElementById('routineCreateError').classList.remove('hidden'); return; }
+
             const frequency = parseInt(document.getElementById('routineCreateFrequency').value, 10);
             const btn = document.getElementById('routineCreateSave');
             btn.disabled = true;
 
+            const routineData = { title: name, frequency: frequency };
+
             try {
                 if (convertingInboxId) {
-                    // Классификация в рутину
-                    const classifyPayload = {
-                        targetType: "routine",
-                        data: {
-                            title: name,
-                            frequency: frequency
-                        }
-                    };
-                    const response = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
+                    // КЛАССИФИКАЦИЯ В РУТИНУ
+                    const res = await fetch(`${INBOX_API_URL}/${convertingInboxId}/classify`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(classifyPayload)
+                        body: JSON.stringify({
+                            entityType: 'routine',
+                            mode: currentClassifyMode,
+                            entityData: routineData
+                        })
                     });
-
-                    if (!response.ok) {
-                        if (response.status === 404) {
-                            showError('Запись инбокса не найдена или уже была обработана.');
-                            closeRoutineCreateModal();
-                            await inboxLoad();
-                            cancelInboxConversion();
-                            return;
-                        } else if (response.status === 409) {
-                            showError('Запись инбокса уже классифицирована.');
-                            closeRoutineCreateModal();
-                            await inboxLoad();
-                            cancelInboxConversion();
-                            return;
-                        } else {
-                            let errorMsg = 'Ошибка при создании рутины';
-                            try {
-                                const errData = await response.json();
-                                if (errData && errData.message) errorMsg = errData.message;
-                            } catch (e) { }
-                            showError(errorMsg);
-                            return;
-                        }
+                    const result = await res.json();
+                    if (result.inboxDeleted) {
+                        inboxItems = inboxItems.filter(i => String(i.id) !== String(convertingInboxId));
+                        renderInboxList();
                     }
-
-                    closeRoutineCreateModal();
-                    await loadRoutines();
-                    await inboxLoad();
-                    cancelInboxConversion();
-                    showSuccess('Рутина успешно создана из записи инбокса!');
+                    convertingInboxId = null;
                 } else {
-                    // Обычное создание рутины
+                    // ОБЫЧНОЕ СОЗДАНИЕ
                     await fetch(ROUTINES_API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, frequency })
+                        body: JSON.stringify({ name: name, frequency: frequency })
                     });
-                    closeRoutineCreateModal();
-                    await loadRoutines();
                 }
-            } catch {
+                closeRoutineCreateModal();
+                await loadRoutines();
+            } catch (e) {
+                console.error(e);
+            } finally {
                 btn.disabled = false;
             }
         });
