@@ -139,6 +139,25 @@
             background: #e2e8f0;
         }
 
+        /* Описание проекта в createModal */
+        .create-project-info {
+            background: #f0f4ff; border: 1.5px solid #c7d2fe;
+            border-radius: 0.75rem; padding: 0.65rem 0.85rem;
+            margin-top: 0.35rem;
+        }
+        .create-project-info .info-desc {
+            font-size: 0.83rem; color: #475569; margin-bottom: 0.4rem;
+        }
+        .create-project-info .info-tasks-label {
+            font-size: 0.75rem; font-weight: 600; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.3rem;
+        }
+        .create-project-info .info-task {
+            font-size: 0.82rem; color: #334155;
+            display: flex; align-items: center; gap: 0.4rem; padding: 0.15rem 0;
+        }
+        .create-project-info .info-task i { color: #a5b4fc; font-size: 0.65rem; }
+
         .btn-success {
             background: #22c55e;
             color: white;
@@ -930,6 +949,7 @@
                     <select id="createProject">
                         <option value="" selected>— Без проекта —</option>
                     </select>
+                    <div id="createProjectInfo" class="create-project-info hidden"></div>
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-5">
@@ -1389,10 +1409,47 @@
             selectEl.innerHTML = options;
         }
 
+        // ── Информация о проекте в createModal ──────────────────
+        let _projInfoToken = 0;
+
+        async function renderCreateProjectInfo(projectId) {
+            const container = document.getElementById('createProjectInfo');
+            if (!projectId) { container.classList.add('hidden'); return; }
+
+            const myToken = ++_projInfoToken;
+            const project = allProjects.find(p => String(p.id) === String(projectId));
+            if (!project) { container.classList.add('hidden'); return; }
+
+            try {
+                const resp = await fetch(`${PROJECTS_API_URL}/${projectId}/tasks`);
+                if (myToken !== _projInfoToken) return;
+                if (!resp.ok) throw new Error(resp.status);
+                const allProjectTasks = await resp.json();
+                if (myToken !== _projInfoToken) return;
+
+                const projectTasks = allProjectTasks.filter(t => t.status !== 2 && t.status !== 3);
+
+                const descHtml = project.description
+                    ? `<div class="info-desc">${escHtml(project.description)}</div>` : '';
+                const tasksHtml = projectTasks.length === 0
+                    ? '<div style="font-size:0.8rem;color:#94a3b8;">Задач пока нет</div>'
+                    : `<div class="info-tasks-label">Задачи в проекте</div>` +
+                      projectTasks.map(t => `<div class="info-task"><i class="fas fa-circle"></i>${escHtml(t.title)}</div>`).join('');
+
+                container.innerHTML = descHtml + tasksHtml;
+                container.classList.remove('hidden');
+            } catch (e) {
+                if (myToken !== _projInfoToken) return;
+                console.error('Failed to load project tasks', e);
+                container.classList.add('hidden');
+            }
+        }
+
         // ── Create Task (расширено: поле Проект) ────────────────
         async function openCreateModal() {
             document.getElementById('createTitle').value = '';
             document.getElementById('createDesc').value = '';
+            document.getElementById('createProjectInfo').classList.add('hidden');
             const projectSelect = document.getElementById('createProject');
             projectSelect.innerHTML = '<option disabled selected>Загрузка проектов...</option>';
             document.getElementById('createModal').classList.remove('hidden');
@@ -1410,6 +1467,10 @@
         function closeCreateModal() {
             document.getElementById('createModal').classList.add('hidden');
         }
+
+        document.getElementById('createProject').addEventListener('change', function () {
+            renderCreateProjectInfo(this.value);
+        });
 
         document.getElementById('createCancel').addEventListener('click', () => {
             cancelInboxConversion();
