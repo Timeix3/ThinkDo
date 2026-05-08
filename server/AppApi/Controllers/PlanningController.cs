@@ -13,69 +13,29 @@ namespace AppApi.Controllers;
 public class PlanningController : ControllerBase
 {
     private readonly IProjectService _projectService;
+    private readonly ILogger<PlanningController> _logger;
 
-    public PlanningController(IProjectService projectService)
+    public PlanningController(IProjectService projectService, ILogger<PlanningController> logger)
     {
         _projectService = projectService;
+        _logger = logger;
     }
 
     private string GetCurrentUserId() => User.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? throw new UnauthorizedAccessException();
 
     /// <summary>
-    /// Проекты с их задачами для отображения в Планировании (заглушка)
+    /// Проекты с их задачами для отображения в Планировании
     /// </summary>
     [HttpGet("projects")]
     [ProducesResponseType(typeof(PlanningResponseDto), StatusCodes.Status200OK)]
-    public IActionResult GetProjects()
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetProjects()
     {
-        var response = new PlanningResponseDto
-        {
-            Projects = new[]
-            {
-                new PlanningProjectDto
-                {
-                    Id = 1,
-                    Name = "Текучка",
-                    Description = null,
-                    Tasks = new[]
-                    {
-                        new PlanningTaskDto
-                        {
-                            Id = 1,
-                            Title = "Задача 1",
-                            Status = TasksStatus.Available,
-                            Selected = false
-                        },
-                        new PlanningTaskDto
-                        {
-                            Id = 2,
-                            Title = "Задача 2",
-                            Status = TasksStatus.Available,
-                            Selected = true
-                        }
-                    }
-                },
-                new PlanningProjectDto
-                {
-                    Id = 2,
-                    Name = "Проект X",
-                    Description = "Описание",
-                    Tasks = new[]
-                    {
-                        new PlanningTaskDto
-                        {
-                            Id = 3,
-                            Title = "Тестовая задача",
-                            Status = TasksStatus.InProgress,
-                            Selected = true
-                        }
-                    }
-                }
-            },
-            TotalProjects = 2
-        };
+        var userId = GetCurrentUserId();
+        _logger.LogInformation("Getting planning projects for user {UserId}", userId);
 
-        return Ok(response);
+        var result = await _projectService.GetPlanningProjectsAsync(userId);
+        return Ok(result);
     }
 }

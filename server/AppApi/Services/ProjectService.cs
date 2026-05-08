@@ -2,6 +2,7 @@ using AppApi.Models.DTOs;
 using AppApi.Repositories.Interfaces;
 using AppApi.Services.Interfaces;
 using Common.Models;
+using Common.Enums;
 
 namespace AppApi.Services;
 
@@ -93,35 +94,57 @@ public class ProjectService : IProjectService
         });
     }
 
-    public async Task<IEnumerable<PlanningProjectResponseDto>> GetPlanningProjectsAsync(string userId)
+    public async Task<PlanningResponseDto> GetPlanningProjectsAsync(string userId)
     {
+        // 1. Убедиться, что дефолтный проект существует
         await EnsureDefaultProjectExistsAsync(userId);
 
+        // 2. Получить все активные проекты пользователя
         var projects = await _repository.GetAllAsync(userId);
-        var result = new List<PlanningProjectResponseDto>();
+
+        // 3. Получить ID задач в активном спринте (для поля selected)
+        var sprintTaskIds = await _taskRepository.GetActiveSprintTaskIdsAsync(userId);
+
+        // 4. Для каждого проекта загрузить available задачи
+        var projectDtos = new List<PlanningProjectDto>();
 
         foreach (var project in projects)
         {
-            var tasks = await _taskRepository.GetByProjectIdAsync(project.Id, userId);
+            // Получаем все задачи проекта
+            var allTasks = await _taskRepository.GetByProjectIdAsync(project.Id, userId);
 
-            result.Add(new PlanningProjectResponseDto
+            // Фильтруем только available задачи (не completed, не cancelled)
+            var availableTasks = allTasks
+                .Where(t => t.Status == TasksStatus.Available)
+                .Select(t => new PlanningTaskDto
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Status = t.Status,
+                    Selected = sprintTaskIds.Contains(t.Id) // в активном спринте?
+                })
+                .ToList();
+
+            projectDtos.Add(new PlanningProjectDto
             {
                 Id = project.Id,
                 Name = project.Name,
                 Description = project.Description,
-                IsDefault = project.IsDefault,
-                Tasks = tasks.Select(t => new PlanningTaskResponseDto
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    Content = t.Content,
-                    Status = t.Status,
-                    IsSelected = t.IsSelectedForSprint
-                })
+                Tasks = availableTasks
             });
         }
 
-        return result;
+        // 5. Сортировка: Текучка первая, остальные по имени
+        var sortedProjects = projectDtos
+            .OrderByDescending(p => p.Name == "Текучка") // true (1) выше false (0)
+            .ThenBy(p => p.Name)
+            .ToList();
+
+        return new PlanningResponseDto
+        {
+            Projects = sortedProjects,
+            TotalProjects = sortedProjects.Count
+        };
     }
 
     private static ProjectResponseDto MapToDto(ProjectItem p, bool includeTasks = false) => new()

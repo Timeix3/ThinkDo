@@ -27,6 +27,7 @@ public class PlanningControllerIntegrationTests : IAsyncLifetime
 
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
+    private const string TestUserId = "github-test-user";
 
     public async Task InitializeAsync()
     {
@@ -74,124 +75,279 @@ public class PlanningControllerIntegrationTests : IAsyncLifetime
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Sprints.RemoveRange(db.Sprints);
         db.Tasks.RemoveRange(db.Tasks);
         db.Projects.RemoveRange(db.Projects);
         await db.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Основной сценарий: запрос возвращает 200 OK с корректной структурой данных
-    /// </summary>
+    private async Task SeedDataAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Создаём проекты
+        var defaultProject = new ProjectItem
+        {
+            Name = "Текучка",
+            IsDefault = true,
+            UserId = TestUserId
+        };
+
+        var projectX = new ProjectItem
+        {
+            Name = "Проект X",
+            Description = "Описание",
+            UserId = TestUserId
+        };
+
+        db.Projects.AddRange(defaultProject, projectX);
+        await db.SaveChangesAsync();
+
+        // Создаём задачи
+        var task1 = new TaskItem
+        {
+            Title = "Задача 1",
+            Status = TasksStatus.Available,
+            ProjectId = defaultProject.Id,
+            UserId = TestUserId
+        };
+
+        var task2 = new TaskItem
+        {
+            Title = "Задача 2",
+            Status = TasksStatus.Available,
+            ProjectId = defaultProject.Id,
+            UserId = TestUserId
+        };
+
+        var task3 = new TaskItem
+        {
+            Title = "Задача 3 (в спринте)",
+            Status = TasksStatus.Available,
+            ProjectId = projectX.Id,
+            UserId = TestUserId
+        };
+
+        db.Tasks.AddRange(task1, task2, task3);
+        await db.SaveChangesAsync();
+
+        // Создаём активный спринт с задачей 3
+        var sprint = new SprintItem
+        {
+            UserId = TestUserId,
+            Status = SprintStatus.Active,
+            Tasks = new List<TaskItem> { task3 }
+        };
+
+        db.Sprints.Add(sprint);
+        await db.SaveChangesAsync();
+    }
+
     [Fact]
     public async Task GetProjects_ReturnsOkWithCorrectStructure()
     {
         // Arrange
-        var expectedStatusCodes = new[] { HttpStatusCode.OK, HttpStatusCode.Unauthorized };
+        await ClearDatabaseAsync();
+        await SeedDataAsync();
 
         // Act
         var response = await _client.GetAsync("/api/planning/projects");
 
         // Assert
-        response.StatusCode.Should().BeOneOf(expectedStatusCodes);
+        response.StatusCode.Should().BeOneOf(
+            HttpStatusCode.OK,
+            HttpStatusCode.Unauthorized);
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
             var content = await response.Content.ReadAsStringAsync();
             content.Should().NotBeNullOrEmpty();
 
-            var planningResponse = JsonSerializer.Deserialize<PlanningResponseDto>(
-                content,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                });
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var planningResponse = JsonSerializer.Deserialize<PlanningResponseDto>(content, options);
 
             planningResponse.Should().NotBeNull();
             planningResponse!.Projects.Should().NotBeNull();
             planningResponse.TotalProjects.Should().Be(planningResponse.Projects.Count());
-            planningResponse.TotalProjects.Should().BeGreaterThanOrEqualTo(1);
-        }
-    }
-
-    /// <summary>
-    /// Проверка наличия дефолтного проекта "Текучка" (краевой случай)
-    /// </summary>
-    [Fact]
-    public async Task GetProjects_ContainsDefaultProject()
-    {
-        // Act
-        var response = await _client.GetAsync("/api/planning/projects");
-
-        if (response.StatusCode == HttpStatusCode.OK)
-        {
-            var planningResponse = await response.Content
-                .ReadFromJsonAsync<PlanningResponseDto>(new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-            planningResponse.Should().NotBeNull();
 
             // Должен быть как минимум проект "Текучка"
-            var defaultProject = planningResponse!.Projects
-                .FirstOrDefault(p => p.Name == "Текучка" || p.Id == 1);
-
-            // Если это заглушка с хардкодом, то "Текучка" должна быть
-            defaultProject.Should().NotBeNull("должен присутствовать дефолтный проект 'Текучка'");
+            planningResponse.Projects.Should().Contain(p => p.Name == "Текучка");
         }
     }
 
-    /// <summary>
-    /// Проверка формата задач в проекте
-    /// </summary>
     [Fact]
-    public async Task GetProjects_TasksHaveCorrectFormat()
+    public async Task GetProjects_TekuchkaAlwaysFirst()
     {
+        // Arrange
+        await ClearDatabaseAsync();
+        await SeedDataAsync();
+
         // Act
         var response = await _client.GetAsync("/api/planning/projects");
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
-            var planningResponse = await response.Content
-                .ReadFromJsonAsync<PlanningResponseDto>(new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-            planningResponse.Should().NotBeNull();
-
-            // Проверяем все задачи во всех проектах
-            foreach (var project in planningResponse!.Projects)
+            var options = new JsonSerializerOptions
             {
-                project.Id.Should().BeGreaterThan(0);
-                project.Name.Should().NotBeNullOrEmpty();
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
 
-                if (project.Tasks.Any())
-                {
-                    foreach (var task in project.Tasks)
-                    {
-                        task.Id.Should().BeGreaterThan(0);
-                        task.Title.Should().NotBeNullOrEmpty();
-                        task.Status.Should().BeDefined();
-                        // Selected должен быть boolean
-                        (task.Selected == true || task.Selected == false).Should().BeTrue();
-                    }
-                }
-                else
-                {
-                    // Краевой случай: проект без задач должен иметь пустой массив
-                    project.Tasks.Should().BeEmpty();
-                }
+            var planningResponse = await response.Content
+                .ReadFromJsonAsync<PlanningResponseDto>(options);
+
+            // Assert
+            planningResponse.Should().NotBeNull();
+            if (planningResponse!.Projects.Any())
+            {
+                planningResponse.Projects.First().Name.Should().Be("Текучка");
             }
         }
     }
 
-    /// <summary>
-    /// Проверка Content-Type заголовка
-    /// </summary>
+    [Fact]
+    public async Task GetProjects_OnlyAvailableTasksReturned()
+    {
+        // Arrange
+        await ClearDatabaseAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var project = new ProjectItem
+            {
+                Name = "Текучка",
+                IsDefault = true,
+                UserId = TestUserId
+            };
+            db.Projects.Add(project);
+            await db.SaveChangesAsync();
+
+            db.Tasks.AddRange(
+                new TaskItem
+                {
+                    Title = "Available Task",
+                    Status = TasksStatus.Available,
+                    ProjectId = project.Id,
+                    UserId = TestUserId
+                },
+                new TaskItem
+                {
+                    Title = "Completed Task",
+                    Status = TasksStatus.Completed,
+                    ProjectId = project.Id,
+                    UserId = TestUserId
+                },
+                new TaskItem
+                {
+                    Title = "Cancelled Task",
+                    Status = TasksStatus.Cancelled,
+                    ProjectId = project.Id,
+                    UserId = TestUserId
+                }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        // Act
+        var response = await _client.GetAsync("/api/planning/projects");
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var planningResponse = await response.Content
+                .ReadFromJsonAsync<PlanningResponseDto>(options);
+
+            // Assert
+            planningResponse.Should().NotBeNull();
+            var tasks = planningResponse!.Projects.First().Tasks.ToList();
+
+            // Только Available задачи
+            tasks.Should().ContainSingle();
+            tasks.Should().OnlyContain(t => t.Status == TasksStatus.Available);
+            tasks.First().Title.Should().Be("Available Task");
+        }
+    }
+
+    [Fact]
+    public async Task GetProjects_TaskInActiveSprint_HasSelectedTrue()
+    {
+        // Arrange
+        await ClearDatabaseAsync();
+        await SeedDataAsync();
+
+        // Act
+        var response = await _client.GetAsync("/api/planning/projects");
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var planningResponse = await response.Content
+                .ReadFromJsonAsync<PlanningResponseDto>(options);
+
+            // Assert
+            planningResponse.Should().NotBeNull();
+
+            // Находим задачу "Задача 3 (в спринте)" во втором проекте
+            var projectX = planningResponse!.Projects
+                .FirstOrDefault(p => p.Name == "Проект X");
+
+            projectX.Should().NotBeNull();
+            var sprintTask = projectX!.Tasks
+                .FirstOrDefault(t => t.Title == "Задача 3 (в спринте)");
+
+            sprintTask.Should().NotBeNull();
+            sprintTask!.Selected.Should().BeTrue(
+                "задача должна быть отмечена как selected, так как она в активном спринте");
+        }
+    }
+
+    [Fact]
+    public async Task GetProjects_EmptyDatabase_CreatesDefaultProject()
+    {
+        // Arrange
+        await ClearDatabaseAsync();
+
+        // Act
+        var response = await _client.GetAsync("/api/planning/projects");
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var planningResponse = await response.Content
+                .ReadFromJsonAsync<PlanningResponseDto>(options);
+
+            // Assert (краевой случай: пользователь без проектов)
+            planningResponse.Should().NotBeNull();
+            planningResponse!.Projects.Should().HaveCount(1);
+            planningResponse.Projects.First().Name.Should().Be("Текучка");
+            planningResponse.Projects.First().Tasks.Should().BeEmpty();
+            planningResponse.TotalProjects.Should().Be(1);
+        }
+    }
+
     [Fact]
     public async Task GetProjects_ReturnsJsonContentType()
     {
@@ -206,59 +362,17 @@ public class PlanningControllerIntegrationTests : IAsyncLifetime
         }
     }
 
-    /// <summary>
-    /// Проверка статусов задач на валидность enum значений
-    /// </summary>
     [Fact]
-    public async Task GetProjects_TaskStatusesAreValidEnumValues()
+    public async Task GetProjects_WithoutAuth_ReturnsUnauthorized()
     {
+        // Arrange
+        var clientWithoutAuth = _factory.CreateClient();
+        // Не добавляем Authorization header
+
         // Act
-        var response = await _client.GetAsync("/api/planning/projects");
+        var response = await clientWithoutAuth.GetAsync("/api/planning/projects");
 
-        if (response.StatusCode == HttpStatusCode.OK)
-        {
-            var planningResponse = await response.Content
-                .ReadFromJsonAsync<PlanningResponseDto>(new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-            var validStatuses = Enum.GetValues<TasksStatus>();
-
-            foreach (var project in planningResponse!.Projects)
-            {
-                foreach (var task in project.Tasks)
-                {
-                    // Статус должен быть одним из допустимых значений TasksStatus
-                    validStatuses.Should().Contain(task.Status,
-                        $"статус задачи '{task.Title}' должен быть валидным значением TasksStatus");
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Проверка totalProjects соответствует фактическому количеству проектов
-    /// </summary>
-    [Fact]
-    public async Task GetProjects_TotalProjectsMatchesActualCount()
-    {
-        // Act
-        var response = await _client.GetAsync("/api/planning/projects");
-
-        if (response.StatusCode == HttpStatusCode.OK)
-        {
-            var planningResponse = await response.Content
-                .ReadFromJsonAsync<PlanningResponseDto>(new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-            var actualProjectCount = planningResponse!.Projects.Count();
-            planningResponse.TotalProjects.Should().Be(actualProjectCount,
-                "totalProjects должен соответствовать количеству проектов в массиве");
-        }
+        // Assert - должен вернуть 401
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }
