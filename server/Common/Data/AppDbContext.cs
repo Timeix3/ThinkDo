@@ -109,7 +109,6 @@ public class AppDbContext : DbContext
 
             entity.Property(e => e.Title)
                 .HasColumnName("title")
-                .HasMaxLength(255)
                 .IsRequired();
 
             entity.Property(e => e.CreatedAt)
