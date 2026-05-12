@@ -1,5 +1,6 @@
 package com.jedi.tasktracker.client;
 
+import com.jedi.tasktracker.client.dto.ClassifyResponse;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.RoutineDto;
@@ -42,7 +43,8 @@ public interface ApiClient {
 
   void restoreInboxItem(int id);
 
-  void classifyInboxItem(int id, String targetType, Map<String, Object> data);
+  ClassifyResponse classifyInboxItem(
+      int id, String entityType, String mode, Map<String, Object> entityData);
 
   List<ProjectDto> getProjects();
 
