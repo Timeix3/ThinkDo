@@ -23,7 +23,10 @@ public class PlanningApiController {
 
     List<PlanningProjectDto> planningProjects =
         projects.stream()
-            .map(p -> new PlanningProjectDto(p.id(), p.name(), p.description(), apiClient.getProjectTasks(p.id())))
+            .map(
+                p ->
+                    new PlanningProjectDto(
+                        p.id(), p.name(), p.description(), apiClient.getProjectTasks(p.id())))
             .toList();
 
     return new PlanningResponseDto(planningProjects, planningProjects.size());

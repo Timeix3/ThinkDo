@@ -3,8 +3,8 @@ package com.jedi.tasktracker.client;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.RoutineDto;
-import com.jedi.tasktracker.client.dto.TaskDto;
 import com.jedi.tasktracker.client.dto.SprintStatusDto;
+import com.jedi.tasktracker.client.dto.TaskDto;
 import java.util.List;
 import java.util.Map;
 
