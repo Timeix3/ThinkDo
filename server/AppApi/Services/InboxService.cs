@@ -29,15 +29,16 @@ public class InboxService : IInboxService
 
     public async Task<InboxItemResponseDto> CreateItemAsync(CreateInboxItemDto dto, string userId)
     {
-        // Валидация пустого title или только пробелов
-        if (string.IsNullOrWhiteSpace(dto.Title))
+        var trimmedTitle = dto.Title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedTitle))
         {
-            throw new ArgumentException("Title cannot be empty or whitespace");
+            throw new ArgumentException("Content cannot be empty or whitespace");
         }
 
         var item = new InboxItem
         {
-            Title = dto.Title.Trim(),
+            Title = trimmedTitle,
             UserId = userId
         };
 
@@ -47,10 +48,12 @@ public class InboxService : IInboxService
 
     public async Task<bool> UpdateItemAsync(int id, UpdateInboxItemDto dto, string userId)
     {
-        if (string.IsNullOrWhiteSpace(dto.Title))
+        var trimmedTitle = dto.Title?.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedTitle))
             throw new ArgumentException("Title cannot be empty or whitespace");
 
-        return await _repository.UpdateAsync(id, userId, dto.Title.Trim());
+        return await _repository.UpdateAsync(id, userId, trimmedTitle);
     }
 
     public async Task<bool> SoftDeleteItemAsync(int id, string userId)

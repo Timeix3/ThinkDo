@@ -132,9 +132,34 @@ public class InboxServiceTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("Title cannot be empty or whitespace");
+            .WithMessage("Content cannot be empty or whitespace");
 
         _repositoryMock.Verify(r => r.AddAsync(It.IsAny<InboxItem>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateItemAsync_LongTitle_ReturnsCreatedItem()
+    {
+        // Arrange
+        // Создаем строку длиной 1000 символов
+        var longTitle = new string('a', 1000);
+        var dto = new CreateInboxItemDto { Title = longTitle };
+
+        _repositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<InboxItem>()))
+            .ReturnsAsync((InboxItem item) =>
+            {
+                item.Id = 1;
+                return item;
+            });
+
+        // Act
+        var result = await _service.CreateItemAsync(dto, TestUserId);
+
+        // Assert
+        result.Title.Should().Be(longTitle);
+        result.Title.Length.Should().Be(1000);
+        _repositoryMock.Verify(r => r.AddAsync(It.Is<InboxItem>(i => i.Title == longTitle)), Times.Once);
     }
 
     [Fact]

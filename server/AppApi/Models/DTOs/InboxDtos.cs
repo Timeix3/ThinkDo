@@ -8,8 +8,7 @@ namespace AppApi.Models.DTOs;
 /// </summary>
 public class CreateInboxItemDto
 {
-    [Required(ErrorMessage = "Title is required")]
-    [MaxLength(255, ErrorMessage = "Title must not exceed 255 characters")]
+    [Required(ErrorMessage = "Content is required")]
     public string Title { get; set; } = string.Empty;
 }
 
@@ -29,8 +28,7 @@ public class InboxItemResponseDto
 /// </summary>
 public class UpdateInboxItemDto
 {
-    [Required(ErrorMessage = "Title is required")]
-    [MaxLength(255, ErrorMessage = "Title must not exceed 255 characters")]
+    [Required(ErrorMessage = "Content is required")]
     public string Title { get; set; } = string.Empty;
 }
 
