@@ -74,6 +74,10 @@
             max-width: 440px;
         }
 
+        .modal-overlay.nested {
+            z-index: 60;
+        }
+
         input[type="text"],
         textarea,
         input[type="date"],
@@ -988,12 +992,12 @@
                 </div>
             </div>
             <!-- Секция кнопок с динамическим выравниванием -->
-            <div class="flex justify-between mt-5" id="editModalFooter">
-                <button class="btn-danger" id="editDelete">Удалить</button>
-                <div class="flex gap-2">
-                    <button class="btn-ghost" id="editCancel">Отмена</button>
-                    <button class="btn-primary" id="editSave">Сохранить</button>
-                </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-danger" id="editDelete">
+                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
+                </button>
+                <button class="btn-ghost" id="editCancel">Отмена</button>
+                <button class="btn-primary" id="editSave">Сохранить</button>
             </div>
         </div>
     </div>
@@ -2147,14 +2151,24 @@
             document.getElementById('editTitle').value = task.title;
             document.getElementById('editDesc').value = task.content ?? '';
 
-            const completeBtn = document.getElementById('editDelete');
-            const footer = document.getElementById('editModalFooter');
+            const projectModal = document.getElementById('projectEditModal');
+            if (!projectModal.classList.contains('hidden')) {
+                projectModal.style.filter = 'brightness(0.85)';
+                projectModal.style.pointerEvents = 'none';
+                projectModal.style.transition = 'filter 0.2s';
+            }
 
+            document.getElementById('editModal').classList.add('nested');
             document.getElementById('editModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('editTitle').focus(), 50);
         }
 
         function closeEditModal() {
+            const projectModal = document.getElementById('projectEditModal');
+            projectModal.style.filter = '';
+            projectModal.style.pointerEvents = '';
+
+            document.getElementById('editModal').classList.remove('nested');
             document.getElementById('editModal').classList.add('hidden');
             editingTaskId = null;
         }
