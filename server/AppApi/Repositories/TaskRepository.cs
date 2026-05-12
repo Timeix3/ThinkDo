@@ -15,10 +15,11 @@ public class TaskRepository : ITaskRepository
         _context = context;
     }
 
-    public async Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetAllAsync(string userId, int offset = 0, int limit = 50)
+    public async Task<(IEnumerable<TaskItem> Items, int TotalCount)> GetAllWithProjectAsync(string userId, int offset = 0, int limit = 50)
     {
         var query = _context.Tasks
             .Where(t => t.UserId == userId && t.DeletedAt == null)
+            .Include(t => t.Project)
             .OrderByDescending(t => t.CreatedAt);
 
         var totalCount = await query.CountAsync();
@@ -26,14 +27,17 @@ public class TaskRepository : ITaskRepository
         var items = await query
             .Skip(offset)
             .Take(limit)
+            .AsNoTracking()
             .ToListAsync();
 
         return (items, totalCount);
     }
 
-    public async Task<TaskItem?> GetByIdAsync(int id, string userId)
+    public async Task<TaskItem?> GetByIdWithProjectAsync(int id, string userId)
     {
         return await _context.Tasks
+            .Include(t => t.Project)
+            .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId && t.DeletedAt == null);
     }
 
