@@ -77,6 +77,7 @@
         .modal-overlay.nested {
             z-index: 60;
         }
+
         .modal-box-project-edit {
             background: white;
             border-radius: 1.5rem;
@@ -1402,9 +1403,20 @@
 
     <script>
 
-        if (window.location.pathname.endsWith('/tasks') || window.location.pathname.endsWith('/tasks/')) {
-            window.location.replace('/projects');
-        }
+        const PATH_TO_PAGE = {
+            '/planning': 'dashboard',
+            '/tasks': 'dashboard',
+            '/inbox': 'inbox',
+            '/projects': 'projects',
+            '/routines': 'routines'
+        };
+
+        const PAGE_TO_PATH = {
+            'dashboard': '/planning',
+            'inbox': '/inbox',
+            'projects': '/projects',
+            'routines': '/routines'
+        };
 
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
@@ -2569,36 +2581,38 @@
         // ── Navigation ─────────────────────────────────────────
         let currentPage = 'dashboard';
 
-        function switchPage(page) {
+        function switchPage(page, pushState = true) {
             currentPage = page;
 
+            // 1. Визуальное переключение блоков
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
             document.getElementById('pageRoutines').classList.toggle('hidden', page !== 'routines');
 
+            // 2. Подсветка кнопок в меню
             document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
+            // 3. Управление видимостью кнопок
             document.querySelectorAll('[data-fab="inbox"]').forEach(fab => {
-                const allowedPages = (fab.dataset.page || 'tasks,inbox,projects,routines').split(',');
-                fab.classList.toggle('hidden', !allowedPages.includes(page) || page === 'dashboard');
+                fab.classList.toggle('hidden', page === 'dashboard');
             });
 
-            // Кнопка "К планированию!" — видна только в инбоксе
-            if (page !== 'inbox') {
-                document.getElementById('toPlanningBtn').classList.add('hidden');
+            // 4.Обновление URL в браузере
+            if (pushState) {
+                const newPath = PAGE_TO_PATH[page] || '/planning';
+                history.pushState({ page: page }, '', newPath);
             }
 
+            // 5. Загрузка данных
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
             if (page === 'dashboard') {
-                // Обновить список задач для текущего проекта
                 renderPlanningTasks();
-                // Пересчитать, должна ли появиться кнопка "Начать спринт!"
                 checkSprintButtonVisibility();
                 const toPlanningBtn = document.getElementById('toPlanningBtn');
                 if (toPlanningBtn) toPlanningBtn.classList.add('hidden');
@@ -2610,6 +2624,18 @@
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
         document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
+
+        // Обработка кнопки назад в браузере
+        window.onpopstate = function (event) {
+            if (event.state && event.state.page) {
+                // Переключаем страницу, но НЕ добавляем новую запись в историю (false)
+                switchPage(event.state.page, false);
+            } else {
+                // Если состояния нет, смотрим на текущий URL
+                const page = PATH_TO_PAGE[window.location.pathname] || 'dashboard';
+                switchPage(page, false);
+            }
+        };
 
         // ── Инбокс (с обновлением классификации) ───────────────
         let inboxItems = [];
@@ -2777,6 +2803,21 @@
                 document.getElementById('classifyStep2').classList.add('hidden');
                 document.getElementById('classifyStep1').classList.remove('hidden');
             });
+
+            // Логика роутинга
+            // Определяем, какой раздел открыть, исходя из URL в строке браузера
+            const currentPath = window.location.pathname;
+            const startPage = PATH_TO_PAGE[currentPath] || 'dashboard';
+
+            // Перезаписываем текущее состояние истории, чтобы браузер запомнил "точку входа"
+            history.replaceState({ page: startPage }, '', currentPath);
+
+            // Вызываем switchPage с флагом false (не добавлять новую запись в историю, так как мы только зашли)
+            switchPage(startPage, false);
+
+            // Загрузка данных)
+            loadTasks();
+            loadProjects();
         });
 
 
