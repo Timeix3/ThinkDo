@@ -74,10 +74,9 @@
             max-width: 440px;
         }
 
-<<<<<<< feature/JED-107
         .modal-overlay.nested {
             z-index: 60;
-=======
+        }
         .modal-box-project-edit {
             background: white;
             border-radius: 1.5rem;
@@ -98,7 +97,6 @@
                 border-radius: 0;
                 padding: 1rem;
             }
->>>>>>> main
         }
 
         input[type="text"],
@@ -1922,7 +1920,6 @@
                 if (!activeTasks.length) {
                     tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
                 } else {
-<<<<<<< feature/JED-107
                     tasksContainer.innerHTML = activeTasks.map(task => {
                         const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
                         const statusClass = task.status === 4 ? 'active' : 'active';
@@ -1933,14 +1930,12 @@
                                                     </div>
                                                 `;
                     }).join('');
-=======
                     tasksContainer.innerHTML = activeTasks.map(task => `
                         <div class="project-task-item-large" data-task-id="${task.id}">
                             <i class="fas fa-circle"></i>
                             <span>${escHtml(task.title)}</span>
                         </div>
                     `).join('');
->>>>>>> main
                 }
             } catch (error) {
                 console.error('Ошибка загрузки задач проекта:', error);
@@ -2123,7 +2118,6 @@
             }
         });
 
-<<<<<<< feature/JED-107
         function showUndoToast({ entityId, entityType, title, data, index, arrayRef, refreshFn }) {
             hideUndoToast();
 
@@ -2265,7 +2259,6 @@
             }
         }
 
-=======
         //ЗАГЛУШКА ДЛЯ КНОПКИ "+ЗАДАЧА" В МОДАЛКЕ ПРОЕКТА
         document.getElementById('projectAddTaskBtn').addEventListener('click', () => {
             // Открываем createModal с уже выбранным проектом
@@ -2279,7 +2272,6 @@
             }
         });
 
->>>>>>> main
         // ── Edit Task ──────────────────────────────────────────
         function openEditModal(taskId, tasks) {
             const task = tasks.find(t => String(t.id) === String(taskId));
