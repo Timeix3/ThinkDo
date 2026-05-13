@@ -74,6 +74,9 @@
             max-width: 440px;
         }
 
+        .modal-overlay.nested {
+            z-index: 60;
+        }
         .modal-box-project-edit {
             background: white;
             border-radius: 1.5rem;
@@ -270,6 +273,20 @@
             border-radius: 1.5rem;
             padding: 1.25rem;
             overflow: hidden;
+        }
+
+        /* Задача в planning (кликабельная) */
+        .planning-task-clickable {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.8rem;
+            margin-bottom: 0.55rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            cursor: pointer;
+            transition: box-shadow 0.15s;
         }
 
         .task-list-item {
@@ -1122,12 +1139,12 @@
                 </div>
             </div>
             <!-- Секция кнопок с динамическим выравниванием -->
-            <div class="flex justify-between mt-5" id="editModalFooter">
-                <button class="btn-success" id="editComplete">✓ Выполнено</button>
-                <div class="flex gap-2">
-                    <button class="btn-ghost" id="editCancel">Отмена</button>
-                    <button class="btn-primary" id="editSave">Сохранить</button>
-                </div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-danger" id="editDelete">
+                    <i class="fas fa-trash-alt mr-1.5"></i>Удалить
+                </button>
+                <button class="btn-ghost" id="editCancel">Отмена</button>
+                <button class="btn-primary" id="editSave">Сохранить</button>
             </div>
         </div>
     </div>
@@ -1345,10 +1362,10 @@
         </div>
     </div>
 
-    <!-- Undo-тост: удаление записи инбокса -->
-    <div id="inboxUndoToast" class="inbox-undo-toast hidden">
-        <span>Запись удалена</span>
-        <button id="inboxUndoBtn" class="inbox-undo-btn">Отменить</button>
+    <!-- Универсальный Undo-тост: удаление записи -->
+    <div id="undoToast" class="inbox-undo-toast hidden">
+        <span id="undoToastMessage">Элемент удалён</span>
+        <button id="undoBtn" class="inbox-undo-btn">Отменить</button>
     </div>
 
     <!-- ── Кнопка "Начать спринт!" (видна только в планировании, неактивна) ── -->
@@ -1391,12 +1408,36 @@
         let allRoutines = [];
         const FREQUENCY_LABELS = { 1: 'Ежедневно', 2: 'Еженедельно', 3: 'Ежемесячно' };
         let deleteType = null;
+        let deleteEntityId = null;
         let planningProjectIndex = 0;
 
         // Состояние для классификации инбокса
         let classifyingInboxId = null;   // id записи, открытой в модалке классификации
         let convertingInboxId = null;    // id записи, для которой сейчас открыто create-окно (после сохранения запись будет удалена)
         let currentClassifyMode = 'convert'; // 'convert' или 'create'
+
+        // ── Универсальное состояние для undo ───────────────────────
+        const undoState = {
+            timer: null,
+            entityId: null,
+            entityType: null,
+            entityData: null,
+            arrayIndex: -1,
+            arrayRef: null,
+            refreshFn: null
+        };
+
+        // ── Словарь названий сущностей ─────────────────────────────
+        const ENTITY_LABELS = {
+            task: 'Задача',
+            inbox: 'Запись инбокса',
+            project: 'Проект',
+            routine: 'Рутина'
+        };
+
+        function getEntityLabel(type) {
+            return ENTITY_LABELS[type] || 'Элемент';
+        }
 
         // ── Helpers ────────────────────────────────────────────
         function escHtml(str) {
@@ -1449,6 +1490,39 @@
             document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
             document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
             document.getElementById('planNextBtn').textContent = planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
+
+            // Задачи текущего проекта
+            const projectTasks = allTasks.filter(t => t.projectId === project.id);
+            const container = document.getElementById('planTasksList');
+            if (projectTasks.length === 0) {
+                container.innerHTML = '<div class="planning-empty" style="color:rgba(255,255,255,0.4);text-align:center;padding:1.5rem 0.5rem;font-size:0.85rem;">Нет задач в проекте</div>';
+            } else {
+                container.innerHTML = projectTasks.map(t => {
+                    const isDone = t.isSelectedForSprint;
+                    const checkStyle = isDone ? 'border-color:#22c55e;background:#22c55e;color:#fff;' : '';
+                    return `
+                <div class="planning-task-clickable" data-id="${t.id}">
+                    <div class="task-check shrink-0" data-complete-id="${t.id}" style="${checkStyle}">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="planning-task-title" style="flex:1;min-width:0;font-size:0.9rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                         data-edit-id="${t.id}">${escHtml(t.title)}</div>
+                </div>
+            `;
+                }).join('');
+
+                // Чекбокс — отметить задачу
+                container.querySelectorAll('.task-check').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        togglePlanning(btn.dataset.completeId, btn);
+                    });
+                });
+                // Клик по названию — открыть редактирование
+                container.querySelectorAll('[data-edit-id]').forEach(el => {
+                    el.addEventListener('click', () => openEditModal(el.dataset.editId, allTasks));
+                });
+            }
         }
 
         document.getElementById('planPrevBtn').addEventListener('click', () => {
@@ -1511,34 +1585,34 @@
 
                 const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
                 const taskCountHtml = `
-                                    <span class="project-task-count mt-2 block">
-                                        <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
-                                    </span>
-                                `;
+                                        <span class="project-task-count mt-2 block">
+                                            <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+                                        </span>
+                                    `;
 
                 const defaultClass = p.isDefault ? 'project-default' : '';
 
                 return `
-                                    <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                                        ${p.isDefault ? '' : `
-                                            <button class="project-edit-btn absolute top-2 right-2"
-                                                    data-project-id="${p.id}"
-                                                    title="Редактировать проект"
-                                                    onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
-                                                <i class="fas fa-pencil-alt"></i>
-                                            </button>
-                                        `}
+                                        <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                                            ${p.isDefault ? '' : `
+                                                <button class="project-edit-btn absolute top-2 right-2"
+                                                        data-project-id="${p.id}"
+                                                        title="Редактировать проект"
+                                                        onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </button>
+                                            `}
 
-                                        <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
-                                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                                ${badgeHtml}
+                                            <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                                    ${badgeHtml}
+                                                </div>
+                                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                                                ${taskCountHtml}
                                             </div>
-                                            ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                                            ${taskCountHtml}
                                         </div>
-                                    </div>
-                                `;
+                                    `;
             }).join('');
         }
 
@@ -1553,14 +1627,22 @@
         async function loadProjects() {
             try {
                 const res = await fetch(PROJECTS_API_URL);
-                if (!res.ok) throw new Error('Projects API error');
+                if (!res.ok) {
+                    // пытаемся прочитать тело ответа — там обычно стек или сообщение
+                    let text = null;
+                    try { text = await res.text(); } catch (e) { /* ignore */ }
+                    console.error(`Projects API error: HTTP ${res.status}`, text);
+                    showError(`Ошибка при загрузке проектов: HTTP ${res.status}` + (text ? ` — ${text}` : ''));
+                    return [];
+                }
                 const data = await res.json();
                 allProjects = data;
                 renderPlanning();
                 renderProjectsList();
                 return allProjects;
             } catch (e) {
-                console.error("Projects API error", e);
+                console.error("Projects API network/error", e);
+                showError('Ошибка сети при загрузке проектов. Проверьте логи сервера.');
                 return [];
             }
         }
@@ -1572,6 +1654,9 @@
                 allTasks = await res.json();
             } catch (e) {
                 console.log(e);
+            }
+            if (allProjects && allProjects.length > 0) {
+                renderPlanning();
             }
         }
 
@@ -1835,6 +1920,16 @@
                 if (!activeTasks.length) {
                     tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
                 } else {
+                    tasksContainer.innerHTML = activeTasks.map(task => {
+                        const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
+                        const statusClass = task.status === 4 ? 'active' : 'active';
+                        return `
+                                                    <div class="project-task-item">
+                                                        <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
+                                                        <span class="project-task-status ${statusClass}">${statusText}</span>
+                                                    </div>
+                                                `;
+                    }).join('');
                     tasksContainer.innerHTML = activeTasks.map(task => `
                         <div class="project-task-item-large" data-task-id="${task.id}">
                             <i class="fas fa-circle"></i>
@@ -1915,11 +2010,12 @@
         document.getElementById('projectEditDelete').addEventListener('click', () => {
             const project = allProjects.find(p => String(p.id) === String(editingProjectId));
             if (!project) return;
-            openDeleteConfirmModal(project.name, 'project');
+            openDeleteConfirmModal(project.name, 'project', project.id);
         });
 
-        function openDeleteConfirmModal(title, type) {
+        function openDeleteConfirmModal(title, type, entityId = null) {
             deleteType = type;
+            deleteEntityId = entityId;
             document.getElementById('deleteConfirmName').textContent = title;
             switch (type) {
                 case 'project':
@@ -1928,6 +2024,9 @@
                 case 'inbox':
                     document.getElementById('deleteConfirmType').textContent = 'запись инбокса';
                     break;
+                case 'task':
+                    document.getElementById('deleteConfirmType').textContent = 'задачу';
+                    break;
             }
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
             document.body.appendChild(document.getElementById('deleteConfirmModal'));
@@ -1935,6 +2034,7 @@
 
         function closeDeleteConfirmModal() {
             document.getElementById('deleteConfirmModal').classList.add('hidden');
+            deleteEntityId = null;
         }
 
         document.getElementById('deleteCancel').addEventListener('click', () => {
@@ -1948,8 +2048,49 @@
             await loadTasks();
         }
 
+        async function deleteTask() {
+            if (!editingTaskId) return;
+
+            const task = allTasks.find(t => String(t.id) === String(editingTaskId));
+            const taskIndex = allTasks.findIndex(t => String(t.id) === String(editingTaskId));
+
+            if (!task || taskIndex === -1) return;
+
+            const taskCopy = { ...task };
+
+            allTasks.splice(taskIndex, 1);
+
+            if (currentPage === 'dashboard') renderPlanning();
+            await loadProjects();
+
+            showUndoToast({
+                entityId: editingTaskId,
+                entityType: 'task',
+                title: task.title,
+                data: taskCopy,
+                index: taskIndex,
+                arrayRef: allTasks,
+                refreshFn: () => {
+                    if (currentPage === 'dashboard') renderPlanning();
+                    loadProjects();
+                }
+            });
+
+            fetch(`${API_URL}/${editingTaskId}`, { method: 'DELETE' })
+                .catch(err => console.error('Failed to delete task on server', err));
+
+            editingTaskId = null;
+        }
+
         document.getElementById('deleteConfirm').addEventListener('click', async () => {
             try {
+
+                if (deleteEntityId) {
+                    if (deleteType === 'project') editingProjectId = deleteEntityId;
+                    if (deleteType === 'task') editingTaskId = deleteEntityId;
+                    if (deleteType === 'inbox') classifyingInboxId = deleteEntityId;
+                }
+
                 switch (deleteType) {
                     case 'project':
                         await deleteProject();
@@ -1959,12 +2100,16 @@
                         await deleteInboxItem();
                         closeInboxClassifyModal();
                         break;
+                    case 'task':
+                        await deleteTask();
+                        break;
                 }
             } catch (e) {
                 console.error(e);
             }
             closeDeleteConfirmModal();
             deleteType = null;
+            deleteEntityId = null;
         });
 
         document.getElementById('deleteConfirmModal').addEventListener('click', (e) => {
@@ -1972,6 +2117,147 @@
                 document.getElementById('deleteConfirmModal').classList.add('hidden');
             }
         });
+
+        function showUndoToast({ entityId, entityType, title, data, index, arrayRef, refreshFn }) {
+            hideUndoToast();
+
+            undoState.entityId = entityId;
+            undoState.entityType = entityType;
+            undoState.entityData = data;
+            undoState.arrayIndex = index;
+            undoState.arrayRef = arrayRef;
+            undoState.refreshFn = refreshFn;
+
+            const label = getEntityLabel(entityType);
+            document.getElementById('undoToastMessage').textContent =
+                `${label} «${escHtml(title)}» удалена`;
+
+            const toast = document.getElementById('undoToast');
+            toast.classList.remove('hidden');
+
+            undoState.timer = setTimeout(hideUndoToast, 5000);
+        }
+
+        function hideUndoToast() {
+            if (undoState.timer) {
+                clearTimeout(undoState.timer);
+                undoState.timer = null;
+            }
+            document.getElementById('undoToast').classList.add('hidden');
+
+            undoState.entityId = null;
+            undoState.entityType = null;
+            undoState.entityData = null;
+            undoState.arrayIndex = -1;
+            undoState.arrayRef = null;
+            undoState.refreshFn = null;
+        }
+
+        document.getElementById('undoBtn').addEventListener('click', async () => {
+            const { entityId, entityType, entityData, arrayIndex, arrayRef, refreshFn } = undoState;
+
+            hideUndoToast();
+
+            if (!entityId || !entityData || arrayIndex === -1 || !arrayRef) {
+                console.warn('Undo: missing data for restoration');
+                return;
+            }
+
+            arrayRef.splice(arrayIndex, 0, entityData);
+
+            if (typeof refreshFn === 'function') {
+                try { refreshFn(); } catch (e) { console.warn('refreshFn failed', e); }
+            }
+
+            try {
+                const endpoints = {
+                    task: `${API_URL}/${entityId}/restore`,
+                    inbox: `${INBOX_API_URL}/${entityId}/restore`,
+                    project: `${PROJECTS_API_URL}/${entityId}/restore`,
+                    routine: `${ROUTINES_API_URL}/${entityId}/restore`
+                };
+
+                const url = endpoints[entityType];
+                if (url) {
+                    const res = await fetch(url, { method: 'PATCH' });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return;
+                }
+                throw new Error('No restore endpoint');
+            } catch (e) {
+                console.warn(`Restore endpoint for ${entityType} not available or failed:`, e);
+
+                // Для задач — попытаться воссоздать запись на сервере (POST)
+                if (entityType === 'task') {
+                    try {
+                        const body = {
+                            title: entityData.title,
+                            content: entityData.content ?? entityData.description ?? '',
+                            projectId: entityData.projectId ?? null
+                        };
+                        const res = await fetch(API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body)
+                        });
+                        if (res.ok) {
+                            const created = await res.json();
+                            const localIndex = arrayRef.findIndex(x => x === entityData);
+                            if (localIndex !== -1) arrayRef[localIndex] = created;
+                        } else {
+                            console.warn('Recreate task failed on server', res.status);
+                        }
+                    } catch (recreateErr) {
+                        console.warn('Failed to recreate task on server', recreateErr);
+                    }
+
+                    if (currentPage === 'dashboard') renderPlanning();
+                    await loadProjects();
+                    return;
+                }
+
+                if (entityType === 'inbox') {
+                    await inboxLoad();
+                } else if (entityType === 'project') {
+                    await loadProjects();
+                } else if (entityType === 'routine') {
+                    await loadRoutines();
+                }
+            }
+        });
+
+        // ── Load planning projects (tasks + selected flags) ───
+        async function loadPlanningProjects() {
+            try {
+                const res = await fetch(PLANNING_API_URL);
+                if (!res.ok) throw new Error('Planning API error');
+                const data = await res.json();
+                // API может вернуть { projects: [...] } или { Projects: [...] } либо сам массив
+                planningProjects = data.Projects ?? data.projects ?? data;
+
+                // Инициализируем selections по данным с сервера
+                planningSelections = planningSelections || {};
+                planningProjects.forEach(p => {
+                    const pid = p.Id ?? p.id ?? p.Id;
+                    planningSelections[pid] = planningSelections[pid] || {};
+                    const tasks = p.Tasks ?? p.tasks ?? [];
+                    tasks.forEach(t => {
+                        const tid = t.Id ?? t.id ?? t.Id;
+                        if (t.Selected === true || t.selected === true || t.IsSelectedForSprint === true || t.isSelectedForSprint === true) {
+                            planningSelections[pid][tid] = true;
+                        }
+                    });
+                });
+
+                // Отрисовываем — renderPlanning теперь использует planningProjects при наличии
+                renderPlanning();
+                return planningProjects;
+            } catch (e) {
+                console.warn('Planning API not available', e);
+                planningProjects = [];
+                return [];
+            }
+        }
 
         //ЗАГЛУШКА ДЛЯ КНОПКИ "+ЗАДАЧА" В МОДАЛКЕ ПРОЕКТА
         document.getElementById('projectAddTaskBtn').addEventListener('click', () => {
@@ -1994,24 +2280,24 @@
             document.getElementById('editTitle').value = task.title;
             document.getElementById('editDesc').value = task.content ?? '';
 
-            const completeBtn = document.getElementById('editComplete');
-            const footer = document.getElementById('editModalFooter');
-
-            if (currentPage === 'dashboard') {
-                completeBtn.classList.add('hidden');
-                footer.classList.remove('justify-between');
-                footer.classList.add('justify-end');
-            } else {
-                completeBtn.classList.remove('hidden');
-                footer.classList.remove('justify-end');
-                footer.classList.add('justify-between');
+            const projectModal = document.getElementById('projectEditModal');
+            if (!projectModal.classList.contains('hidden')) {
+                projectModal.style.filter = 'brightness(0.85)';
+                projectModal.style.pointerEvents = 'none';
+                projectModal.style.transition = 'filter 0.2s';
             }
 
+            document.getElementById('editModal').classList.add('nested');
             document.getElementById('editModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('editTitle').focus(), 50);
         }
 
         function closeEditModal() {
+            const projectModal = document.getElementById('projectEditModal');
+            projectModal.style.filter = '';
+            projectModal.style.pointerEvents = '';
+
+            document.getElementById('editModal').classList.remove('nested');
             document.getElementById('editModal').classList.add('hidden');
             editingTaskId = null;
         }
@@ -2029,7 +2315,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title,
-                    content: document.getElementById('editDesc').value.trim()
+                    content: document.getElementById('editDesc').value.trim(),
+                    projectId: allTasks.find(t => String(t.id) === String(editingTaskId)).projectId
                 })
             });
             closeEditModal();
@@ -2056,10 +2343,12 @@
             }
         }
 
-        document.getElementById('editComplete').addEventListener('click', () => {
-            const id = editingTaskId;
+        document.getElementById('editDelete').addEventListener('click', () => {
+            const task = allTasks.find(t => String(t.id) === String(editingTaskId));
+            if (!task) return;
+
             closeEditModal();
-            completeTask(id);
+            openDeleteConfirmModal(task.title, 'task', task.id);
         });
 
         // ── Flow Phase Indicator ───────────────────────────────
@@ -2191,15 +2480,15 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                                                <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                                                    <div class="flex items-start justify-between gap-3">
-                                                        <div class="flex-1 min-w-0">
-                                                            <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                    <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                                                        <div class="flex items-start justify-between gap-3">
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                            </div>
+                                                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                                                         </div>
-                                                        <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                                                     </div>
-                                                </div>
-                                            `).join('');
+                                                `).join('');
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -2258,7 +2547,7 @@
         document.getElementById('inboxClassifyDelete').addEventListener('click', () => {
             const inboxItem = inboxItems.find(i => String(i.id) === String(classifyingInboxId));
             if (!inboxItem) return;
-            openDeleteConfirmModal(inboxItem.title, 'inbox');
+            openDeleteConfirmModal(inboxItem.title, 'inbox', classifyingInboxId);
         });
 
         // Редактировать запись инбокса
@@ -2354,45 +2643,34 @@
 
         async function deleteInboxItem() {
             const idToDelete = classifyingInboxId;
-            try {
-                const res = await fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error();
-                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
-                renderInboxList();
-                updateInboxOverflowBadge();
-                showInboxUndoToast(idToDelete);
-            } catch (error) {
-                console.error('Ошибка удаления записи инбокса', error);
-                inboxItems = inboxItems.filter(i => String(i.id) !== String(idToDelete));
-                renderInboxList();
-                updateInboxOverflowBadge();
-                showInboxUndoToast(idToDelete);
-            }
-        }
+            const item = inboxItems.find(i => String(i.id) === String(idToDelete));
+            const itemIndex = inboxItems.findIndex(i => String(i.id) === String(idToDelete));
 
-        function showInboxUndoToast(deletedId) {
-            inboxUndoDeleteId = String(deletedId);
-            if (inboxUndoTimer) clearTimeout(inboxUndoTimer);
-            document.getElementById('inboxUndoToast').classList.remove('hidden');
-            inboxUndoTimer = setTimeout(hideInboxUndoToast, 5000);
-        }
+            if (!item || itemIndex === -1) return;
 
-        function hideInboxUndoToast() {
-            if (inboxUndoTimer) { clearTimeout(inboxUndoTimer); inboxUndoTimer = null; }
-            document.getElementById('inboxUndoToast').classList.add('hidden');
-            inboxUndoDeleteId = null;
-        }
+            const itemCopy = { ...item };
 
-        document.getElementById('inboxUndoBtn').addEventListener('click', async () => {
-            const idToRestore = inboxUndoDeleteId;
-            hideInboxUndoToast();
-            if (!idToRestore) return;
-            try {
-                const res = await fetch(`${INBOX_API_URL}/${idToRestore}/restore`, { method: 'PATCH' });
-                if (!res.ok) throw new Error();
-            } catch { }
-            await inboxLoad();
-        });
+            inboxItems.splice(itemIndex, 1);
+
+            renderInboxList();
+            updateInboxOverflowBadge();
+
+            showUndoToast({
+                entityId: idToDelete,
+                entityType: 'inbox',
+                title: item.title,
+                data: itemCopy,
+                index: itemIndex,
+                arrayRef: inboxItems,
+                refreshFn: () => {
+                    renderInboxList();
+                    updateInboxOverflowBadge();
+                }
+            });
+
+            fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' })
+                .catch(err => console.error('Failed to delete inbox item on server', err));
+        }
 
         function clearAllData() {
             try { localStorage.clear(); sessionStorage.clear(); } catch (e) { }
@@ -2435,18 +2713,18 @@
             container.innerHTML = allRoutines.map(r => {
                 const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
                 return `
-                                        <div class="task-list-item" data-routine-id="${r.id}">
-                                            <div class="flex items-center justify-between gap-3">
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
-                                                    <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
-                                                        <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
-                                                    </span>
+                                            <div class="task-list-item" data-routine-id="${r.id}">
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                                            <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                                        </span>
+                                                    </div>
+                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
                                                 </div>
-                                                <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
                                             </div>
-                                        </div>
-                                    `;
+                                        `;
             }).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {

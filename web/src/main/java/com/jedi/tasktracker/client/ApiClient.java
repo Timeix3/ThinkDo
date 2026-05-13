@@ -25,7 +25,7 @@ public interface ApiClient {
 
   void createTask(String title, String description, Integer projectId);
 
-  void updateTask(Long id, String title, String content);
+  void updateTask(Long id, String title, String content, Integer projectId);
 
   void selectTask(Long id);
 

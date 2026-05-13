@@ -35,8 +35,10 @@ public class TaskApiController {
 
   @PutMapping("/{id}")
   public ResponseEntity<Void> updateTask(
-      @PathVariable Long id, @RequestBody Map<String, String> body) {
-    apiClient.updateTask(id, body.get("title"), body.get("content"));
+      @PathVariable Long id, @RequestBody Map<String, Object> body) {
+    Object projectIdRaw = body.get("projectId");
+    Integer projectId = (projectIdRaw != null) ? (Integer) projectIdRaw : null;
+    apiClient.updateTask(id, (String) body.get("title"), (String) body.get("content"), projectId);
     return ResponseEntity.ok().build();
   }
 

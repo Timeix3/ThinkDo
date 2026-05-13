@@ -103,12 +103,16 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
-  public void updateTask(Long id, String title, String content) {
+  public void updateTask(Long id, String title, String content, Integer projectId) {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("title", title);
+    requestBody.put("content", content != null ? content : "");
+    requestBody.put("projectId", projectId);
     restClient
         .put()
         .uri("/api/tasks/{id}", id)
         .contentType(MediaType.APPLICATION_JSON)
-        .body(Map.of("title", title, "content", content != null ? content : ""))
+        .body(requestBody)
         .retrieve()
         .toBodilessEntity();
   }
