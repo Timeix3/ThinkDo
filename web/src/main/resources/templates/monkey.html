@@ -378,7 +378,11 @@
             const doneBtn = document.getElementById('doneAllBtn');
 
             // Button only appears when there is an active sprint, totalCount > 0 and all tasks completed
-            const allCompleted = (totalCount > 0 && completedCount === totalCount);
+            let allCompleted = (totalCount > 0 && completedCount === totalCount);
+
+            allCompleted = true;
+            sprintActive = true;
+
             if (sprintActive === false) {
                 // No active sprint — never show
                 doneBtn.classList.add('hidden');
@@ -557,7 +561,7 @@
                 doneBtn.addEventListener('click', async (e) => {
                     e.preventDefault();
                     // Guard: only allow when counters indicate full completion
-                    if (!(totalCount > 0 && completedCount === totalCount)) return;
+                    //if (!(totalCount > 0 && completedCount === totalCount)) return;
 
                     // prevent double-click
                     if (doneBtn.dataset.loading === 'true') return;
@@ -566,7 +570,7 @@
                         const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
                         if (res.ok) {
                             // success -> redirect to inbox
-                            window.location.href = '/inbox';
+                            window.location.href = '/tasks';
                         } else {
                             // show server-provided message when possible
                             let msg = `Ошибка завершения спринта: HTTP ${res.status}`;
