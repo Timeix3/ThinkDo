@@ -136,6 +136,13 @@
             background: #5a6fd6;
         }
 
+        .btn-primary:disabled,
+        .btn-success:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .btn-danger {
             background: #ef4444;
             color: white;
@@ -200,6 +207,19 @@
         .create-project-info .info-task i {
             color: #a5b4fc;
             font-size: 0.65rem;
+        }
+
+        .field-error {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .field-error i {
+            font-size: 0.7rem;
         }
 
         .btn-success {
@@ -1110,10 +1130,15 @@
                 </div>
                 <!-- НОВОЕ ПОЛЕ: Выбор проекта -->
                 <div>
-                    <label class="text-sm font-medium text-slate-600 mb-1 block">Проект</label>
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">
+                        Проект <span class="text-red-500">*</span>
+                    </label>
                     <select id="createProject">
-                        <option value="" selected>— Без проекта —</option>
+                        <option value="" disabled selected>— Выберите проект —</option>
                     </select>
+                    <div id="createProjectError" class="field-error hidden">
+                        <i class="fas fa-exclamation-circle"></i> <span>Выберите проект</span>
+                    </div>
                     <div id="createProjectInfo" class="create-project-info hidden"></div>
                 </div>
             </div>
@@ -1410,6 +1435,7 @@
         let classifyingInboxId = null;   // id записи, открытой в модалке классификации
         let convertingInboxId = null;    // id записи, для которой сейчас открыто create-окно (после сохранения запись будет удалена)
         let currentClassifyMode = 'convert'; // 'convert' или 'create'
+        let createModalSaveDisabled = true; // флаг для управления кнопкой создания задачи
 
         // ── Универсальное состояние для undo ───────────────────────
         const undoState = {
@@ -1774,12 +1800,35 @@
         // ── Вспомогательная функция заполнения select проектами ─
         function fillProjectSelect(selectEl, selectedValue = "") {
             if (!selectEl) return;
-            let options = '<option value="">— Без проекта —</option>';
+            if (allProjects.length === 0) {
+                selectEl.innerHTML = '<option value="" disabled selected>— Нет проектов, сначала создайте проект —</option>';
+                selectEl.disabled = true;
+                return;
+            }
+            selectEl.disabled = false;
+            let options = '<option value="" disabled selected>— Выберите проект —</option>';
             for (const p of allProjects) {
                 const displayName = p.isDefault ? `${p.name} ⭐` : p.name;
                 options += `<option value="${p.id}" ${String(p.id) === String(selectedValue) ? 'selected' : ''}>${escHtml(displayName)}</option>`;
             }
             selectEl.innerHTML = options;
+            // Если был передан selectedValue, но оно не подошло, принудительно выставим пустое значение
+            if (selectedValue && ![...selectEl.options].some(opt => opt.value == selectedValue)) {
+                selectEl.value = "";
+            }
+        }
+
+        function updateCreateModalSaveButton() {
+            const select = document.getElementById('createProject');
+            const saveBtn = document.getElementById('createSave');
+            const errorDiv = document.getElementById('createProjectError');
+            const isProjectSelected = select && select.value && select.value !== "";
+            if (!isProjectSelected) {
+                saveBtn.disabled = true;
+                if (errorDiv && !errorDiv.classList.contains('hidden')) errorDiv.classList.add('hidden');
+                return;
+            }
+            saveBtn.disabled = false;
         }
 
         // ── Информация о проекте в createModal ──────────────────
@@ -1823,12 +1872,38 @@
             document.getElementById('createTitle').value = '';
             document.getElementById('createDesc').value = '';
             document.getElementById('createProjectInfo').classList.add('hidden');
+            const errorDiv = document.getElementById('createProjectError');
+            if (errorDiv) errorDiv.classList.add('hidden');
+
             const projectSelect = document.getElementById('createProject');
             projectSelect.innerHTML = '<option disabled selected>Загрузка проектов...</option>';
+            const saveBtn = document.getElementById('createSave');
+            if (saveBtn) saveBtn.disabled = true;   // кнопка заблокирована, пока не выбран проект
+
             document.getElementById('createModal').classList.remove('hidden');
             document.getElementById('createModal').classList.add('nested');
+            document.getElementById('createSave').disabled = true;
             setTimeout(() => document.getElementById('createTitle').focus(), 50);
-            fillProjectSelect(projectSelect, "");
+
+            try {
+                await loadProjects();
+                fillProjectSelect(projectSelect, "");
+
+                updateCreateModalSaveButton();
+
+                if (!projectSelect._listenerAdded) {
+                    projectSelect.addEventListener('change', () => {
+                        const errDiv = document.getElementById('createProjectError');
+                        if (errDiv) errDiv.classList.add('hidden');
+                        updateCreateModalSaveButton();
+                    });
+                    projectSelect._listenerAdded = true;
+                }
+            } catch (e) {
+                console.error('Failed to load projects', e);
+                projectSelect.innerHTML = '<option disabled>Ошибка загрузки проектов</option>';
+                // Кнопка остаётся disabled – создать задачу нельзя
+            }
         }
 
         function closeCreateModal() {
@@ -1857,7 +1932,14 @@
             if (!title) { titleInput.focus(); return; }
 
             const projectSelect = document.getElementById('createProject');
-            let projectId = projectSelect.value ? Number(projectSelect.value) : null;
+            const errorDiv = document.getElementById('createProjectError');
+            if (!projectSelect.value || projectSelect.value === "") {
+                errorDiv.classList.remove('hidden');
+                projectSelect.focus();
+                return;
+            }
+            let projectId = Number(projectSelect.value);
+            errorDiv.classList.add('hidden');
 
             const btn = document.getElementById('createSave');
             btn.disabled = true;
@@ -2376,10 +2458,11 @@
             }
         }
 
-        document.getElementById('projectAddTaskBtn').addEventListener('click', () => {
-            openCreateModal();
+        document.getElementById('projectAddTaskBtn').addEventListener('click', async () => {
+            await openCreateModal();
             const projectSelect = document.getElementById('createProject');
             fillProjectSelect(projectSelect, editingProjectId);
+            updateCreateModalSaveButton();
         });
 
         // ── Edit Task ──────────────────────────────────────────
