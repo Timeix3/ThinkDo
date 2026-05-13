@@ -2214,15 +2214,6 @@
                 fab.classList.toggle('hidden', !allowedPages.includes(page) || page === 'dashboard');
             });
 
-            //const startSprintBtn = document.getElementById('startSprintBtn');
-
-            // Кнопка "Начать спринт!" — видна только в планировании
-            if (page === 'dashboard') {
-                startSprintBtn?.classList.remove('hidden');
-            } else {
-                startSprintBtn?.classList.add('hidden');
-            }
-
             // Кнопка "К планированию!" — видна только в инбоксе
             if (page !== 'inbox') {
                 document.getElementById('toPlanningBtn').classList.add('hidden');
