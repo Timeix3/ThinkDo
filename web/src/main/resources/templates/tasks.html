@@ -1368,11 +1368,6 @@
         <button id="undoBtn" class="inbox-undo-btn">Отменить</button>
     </div>
 
-    <!-- ── Кнопка "Начать спринт!" (видна только в планировании, неактивна) ── -->
-    <a href="#" id="startSprintBtn" class="workflow-btn disabled hidden">
-        <i class="fas fa-rocket"></i>
-        Начать спринт!
-    </a>
 
     <!-- Workflow-кнопка: К планированию! (на странице Проекты) -->
     <button id="toPlanningBtn" class="workflow-btn hidden">
@@ -1529,37 +1524,43 @@
             if (planningProjectIndex > 0) {
                 planningProjectIndex--;
                 renderPlanning();
+                renderPlanningTasks();
             }
         });
         document.getElementById('planNextBtn').addEventListener('click', () => {
             if (planningProjectIndex < allProjects.length - 1) {
                 planningProjectIndex++;
                 renderPlanning();
+                renderPlanningTasks();
             }
         });
 
 
-        async function togglePlanning(taskId, checkEl) {
+        async function togglePlanningAndRefresh(taskId, checkEl) {
             const task = allTasks.find(t => String(t.id) === String(taskId));
-            if (!task) return;
-            if (checkEl.dataset.loading === 'true') return;
+            if (!task || checkEl.dataset.loading === 'true') return;
             checkEl.dataset.loading = 'true';
-            if (task.isSelectedForSprint) {
-                const res = await fetch(`${API_URL}/${taskId}/deselect`, { method: 'PUT' });
-                if (!res.ok) console.error(`HTTP ${res.status}`);
-                task.isSelectedForSprint = false;
-                checkEl.style.borderColor = '';
-                checkEl.style.background = '';
-                checkEl.style.color = 'transparent';
-            } else {
-                const res = await fetch(`${API_URL}/${taskId}/select`, { method: 'PUT' });
-                if (!res.ok) console.error(`HTTP ${res.status}`);
-                task.isSelectedForSprint = true;
-                checkEl.style.borderColor = '#22c55e';
-                checkEl.style.background = '#22c55e';
-                checkEl.style.color = '#fff';
+
+            const currentlySelected = task.isSelectedForSprint;
+            const url = currentlySelected
+                ? `${API_URL}/${taskId}/deselect`
+                : `${API_URL}/${taskId}/select`;
+
+            try {
+                const res = await fetch(url, { method: 'PUT' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                // Обновить локальное состояние
+                task.isSelectedForSprint = !currentlySelected;
+                // Перерисовать текущий список (чтобы чекбокс обновился)
+                renderPlanningTasks();
+                // Пересчитать видимость кнопки
+                checkSprintButtonVisibility();
+            } catch (err) {
+                console.error('Ошибка переключения выбора задачи', err);
+            } finally {
+                checkEl.dataset.loading = 'false';
             }
-            checkEl.dataset.loading = 'false';
         }
 
         // ── Render ПРОЕКТОВ (Задача 9.3) ──
@@ -1616,6 +1617,107 @@
             }).join('');
         }
 
+        // Рендер списка задач выбранного проекта в планировании
+        function renderPlanningTasks() {
+            const container = document.getElementById('planTasksList');
+            if (!container) return;
+
+            const project = allProjects[planningProjectIndex];
+            if (!project) {
+                container.innerHTML = '<div class="text-white/50 text-center py-8">Нет проектов</div>';
+                return;
+            }
+
+            // Активные задачи проекта (не завершены и не удалены)
+            const projectTasks = allTasks.filter(t =>
+                String(t.projectId) === String(project.id) &&
+                t.status !== 2 && t.status !== 3
+            );
+
+            if (projectTasks.length === 0) {
+                container.innerHTML = '<div class="text-white/50 text-center py-8">В этом проекте нет активных задач</div>';
+                return;
+            }
+
+            container.innerHTML = `
+        <div class="space-y-2">
+            ${projectTasks.map(task => `
+                <div class="task-list-item flex items-center gap-3 p-3 bg-white rounded-xl">
+                    <div class="task-check ${task.isSelectedForSprint ? 'bg-green-500 border-green-500 text-white' : ''}"
+                         data-task-id="${task.id}"
+                         data-selected="${task.isSelectedForSprint}">
+                        ${task.isSelectedForSprint ? '✓' : ''}
+                    </div>
+                    <div class="flex-1 font-medium text-slate-800">${escHtml(task.title)}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+            // Навесить обработчики на чекбоксы
+            container.querySelectorAll('.task-check').forEach(check => {
+                check.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const taskId = check.dataset.taskId;
+                    togglePlanningAndRefresh(taskId, check);
+                });
+            });
+        }
+
+        function checkSprintButtonVisibility() {
+            // Фильтруем проекты: исключаем «Текучку» и, возможно, другие скрытые по JED-29.2
+            const relevantProjects = allProjects.filter(p =>
+                p.name !== 'Текучка' && !p.hidden      // hidden – если добавите такое поле
+            );
+
+            let allNonEmptyHaveSelection = true;
+
+            for (const project of relevantProjects) {
+                // Активные задачи проекта
+                const activeTasks = allTasks.filter(t =>
+                    String(t.projectId) === String(project.id) &&
+                    t.status !== 2 && t.status !== 3
+                );
+
+                if (activeTasks.length === 0) {
+                    // Проект пустой – не требует выбора
+                    continue;
+                }
+
+                // Есть ли хотя бы одна выбранная задача среди активных?
+                const hasSelected = activeTasks.some(t => t.isSelectedForSprint === true);
+                if (!hasSelected) {
+                    allNonEmptyHaveSelection = false;
+                    break;
+                }
+            }
+
+            const btn = document.getElementById('startSprintBtn');
+            const planningContainer = document.querySelector('.max-w-6xl'); // родитель, куда вставим
+
+            if (allNonEmptyHaveSelection && relevantProjects.length > 0) {
+                // Кнопка должна быть в DOM
+                if (!btn || !planningContainer.contains(btn)) {
+                    // Если её нет – создаём заново (или берём из переменной)
+                    const newBtn = document.createElement('a');
+                    newBtn.id = 'startSprintBtn';
+                    newBtn.href = '#';
+                    newBtn.className = 'workflow-btn';
+                    newBtn.innerHTML = '<i class="fas fa-rocket"></i> Начать спринт!';
+                    planningContainer.appendChild(newBtn);
+                    // По условию кнопка пока не должна быть disabled
+                    // Можно добавить обработчик клика позже (по заданию не требуется)
+                }
+                const toPlanningBtn = document.getElementById('toPlanningBtn');
+                if (toPlanningBtn) toPlanningBtn.classList.add('hidden');
+            } else {
+                // Кнопка НЕ должна быть в DOM – удаляем, если есть
+                if (btn && planningContainer.contains(btn)) {
+                    btn.remove();
+                }
+            }
+        }
+
         function getTaskCountWord(count) {
             if (count === 0) return 'задач';
             if (count === 1) return 'задача';
@@ -1638,6 +1740,7 @@
                 const data = await res.json();
                 allProjects = data;
                 renderPlanning();
+                renderPlanningTasks();
                 renderProjectsList();
                 return allProjects;
             } catch (e) {
@@ -1652,6 +1755,14 @@
             try {
                 const res = await fetch(API_URL);
                 allTasks = await res.json();
+                allTasks = allTasks.map(task => ({
+                    ...task,
+                    isSelectedForSprint: task.isSelectedForSprint === true ? true : false
+                }));
+                if (currentPage === 'dashboard') {
+                    renderPlanningTasks();
+                }
+                checkSprintButtonVisibility();
             } catch (e) {
                 console.log(e);
             }
@@ -1799,6 +1910,7 @@
                     updateProjectsTasks(editingProjectId);
                 await loadTasks();
                 await loadProjects();
+                checkSprintButtonVisibility();
             } catch (e) {
                 console.error(e);
             } finally {
@@ -2320,7 +2432,7 @@
             closeEditModal();
             if (editingProjectId !== null)
                 updateProjectsTasks(editingProjectId);
-            loadTasks();
+            await loadTasks();
         });
 
         // ── Complete  ─────────────────────────────────────────
@@ -2360,7 +2472,7 @@
 
         async function syncFlowPhase(page) {
             if (page === 'dashboard') { updateFlowPhaseIndicator('planning'); return; }
-            if (page === 'inbox')     { updateFlowPhaseIndicator('review');   return; }
+            if (page === 'inbox') { updateFlowPhaseIndicator('review'); return; }
             try {
                 const res = await fetch(`${SPRINT_API_URL}/status`);
                 if (!res.ok) throw new Error(res.status);
@@ -2391,15 +2503,6 @@
                 fab.classList.toggle('hidden', !allowedPages.includes(page) || page === 'dashboard');
             });
 
-            const startSprintBtn = document.getElementById('startSprintBtn');
-
-            // Кнопка "Начать спринт!" — видна только в планировании
-            if (page === 'dashboard') {
-                startSprintBtn?.classList.remove('hidden');
-            } else {
-                startSprintBtn?.classList.add('hidden');
-            }
-
             // Кнопка "К планированию!" — видна только в инбоксе
             if (page !== 'inbox') {
                 document.getElementById('toPlanningBtn').classList.add('hidden');
@@ -2409,6 +2512,14 @@
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
+            if (page === 'dashboard') {
+                // Обновить список задач для текущего проекта
+                renderPlanningTasks();
+                // Пересчитать, должна ли появиться кнопка "Начать спринт!"
+                checkSprintButtonVisibility();
+                const toPlanningBtn = document.getElementById('toPlanningBtn');
+                if (toPlanningBtn) toPlanningBtn.classList.add('hidden');
+            }
             syncFlowPhase(page);
         }
 

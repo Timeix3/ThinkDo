@@ -354,11 +354,14 @@
     <script>
         const API_URL = '/api/tasks';
         const SPRINT_API_URL = '/api/sprint/tasks';
+        const SPRINT_STATUS_URL = '/api/sprint/status';
+        const SPRINT_COMPLETE_URL = '/api/sprint/complete';
         const INBOX_API_URL = '/api/inbox';
 
         let remaining = [];
         let completedCount = 0;
         let totalCount = 0;
+        let sprintActive = null;
 
         if (!window.closeInboxInput) {
             window.closeInboxInput = function (selector = '#inboxInputBar') {
@@ -369,6 +372,27 @@
 
         function updateCounter() {
             document.getElementById('taskCounter').textContent = `${completedCount} / ${totalCount}`;
+        }
+
+        function evaluateCompleteButton() {
+            const doneBtn = document.getElementById('doneAllBtn');
+
+            // Button only appears when there is an active sprint, totalCount > 0 and all tasks completed
+            const allCompleted = (totalCount > 0 && completedCount === totalCount);
+            if (sprintActive === false) {
+                // No active sprint — never show
+                doneBtn.classList.add('hidden');
+                doneBtn.setAttribute('aria-hidden', 'true');
+                return;
+            }
+
+            if (allCompleted) {
+                doneBtn.classList.remove('hidden');
+                doneBtn.setAttribute('aria-hidden', 'false');
+            } else {
+                doneBtn.classList.add('hidden');
+                doneBtn.setAttribute('aria-hidden', 'true');
+            }
         }
 
         function renderCurrentTask() {
@@ -387,7 +411,8 @@
                                  Нет задач в спринте<br/>
                                  <span style="font-size:0.85rem;opacity:0.7;">Выберите задачи в Планировании.</span>
                                </div>`;
-                doneBtn.classList.remove('hidden');
+                // show/hide done button according to evaluation (uses sprintActive + counters)
+                evaluateCompleteButton();
                 return;
             }
             doneBtn.classList.add('hidden');
@@ -416,6 +441,41 @@
             document.getElementById('focusCheck').addEventListener('click', () => completeCurrentTask());
         }
 
+        async function refreshSprintStatus() {
+            try {
+                const res = await fetch(SPRINT_STATUS_URL);
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        sprintActive = false;
+                        return null;
+                    }
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                const status = await res.json();
+                if (typeof status.active !== 'undefined') sprintActive = !!status.active;
+                if (typeof status.total === 'number') totalCount = status.total;
+                if (typeof status.remaining === 'number')
+                    completedCount = Math.max(0, totalCount - status.remaining);
+                // If we already have remaining array, keep it in sync by trimming if mismatch
+                if (Array.isArray(remaining) && remaining.length !== status.remaining) {
+                    // Do not mutate server state here — just align UI remaining length if possible
+                    // If server reports remaining > 0 but our remaining array is empty, we will refresh tasks separately.
+                }
+                else {
+                    // If status has no remaining, try deducing from previously loaded remaining array
+                    if (Array.isArray(remaining)) {
+                        totalCount = Math.max(totalCount, remaining.length + completedCount);
+                    }
+                }
+                updateCounter();
+                return status;
+            } catch (e) {
+                console.warn('Не удалось получить статус спринта:', e);
+                // keep sprintActive as null (unknown) — fallback to local checks
+                return null;
+            }
+        }
+
         async function loadTasks() {
             const area = document.getElementById('focusArea');
             area.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Загрузка задач...</div>`;
@@ -425,6 +485,25 @@
                 remaining = await res.json();
                 totalCount = remaining.length;
                 completedCount = 0;
+
+                const status = await refreshSprintStatus();
+                if (status) {
+                    // If server reports total, reconcile completedCount/remaining array
+                    if (typeof status.total === 'number') {
+                        totalCount = status.total;
+                    }
+                    const serverRemaining = typeof status.remaining === 'number' ? status.remaining : remaining.length;
+                    completedCount = Math.max(0, totalCount - serverRemaining);
+                    // If server says remaining > 0 but our remaining array was shorter, trigger an extra fetch
+                    if (serverRemaining > 0 && (!Array.isArray(remaining) || remaining.length !== serverRemaining)) {
+                        // try to refresh remaining tasks from server to align
+                        try {
+                            const res2 = await fetch(SPRINT_API_URL);
+                            if (res2.ok) remaining = await res2.json();
+                        } catch (e) { /* ignore */ }
+                    }
+                }
+
                 updateCounter();
                 renderCurrentTask();
             } catch (e) {
@@ -435,6 +514,9 @@
                                 <span style="font-size:0.85rem;opacity:0.7;">${escHtml(e.message)}</span>
                               </div>
                             `;
+                // keep done button hidden on load failure
+                sprintActive = null;
+                evaluateCompleteButton();
             }
         }
 
@@ -467,6 +549,44 @@
                 }, { once: true });
             }, 250);
         }
+
+            // Attach sprint-complete handler
+            document.addEventListener('DOMContentLoaded', () => {
+                const doneBtn = document.getElementById('doneAllBtn');
+
+                doneBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    // Guard: only allow when counters indicate full completion
+                    if (!(totalCount > 0 && completedCount === totalCount)) return;
+
+                    // prevent double-click
+                    if (doneBtn.dataset.loading === 'true') return;
+                    doneBtn.dataset.loading = 'true';
+                    try {
+                        const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
+                        if (res.ok) {
+                            // success -> redirect to inbox
+                            window.location.href = '/inbox';
+                        } else {
+                            // show server-provided message when possible
+                            let msg = `Ошибка завершения спринта: HTTP ${res.status}`;
+                            try {
+                                const json = await res.json();
+                                if (json && json.message) msg = json.message;
+                            } catch (_) { }
+                            alert(msg);
+                            // keep button visible (do not redirect)
+                        }
+                    } catch (err) {
+                        alert('Сетевая ошибка при завершении спринта. Попробуйте ещё раз.');
+                    } finally {
+                        doneBtn.dataset.loading = 'false';
+                    }
+                });
+
+                // initial load
+                loadTasks();
+            });
 
         function spawnFabRipple(fabEl) {
             const ring = document.createElement('span');
@@ -650,9 +770,7 @@
             });
         })();
         // ── Init ──
-        document.addEventListener('DOMContentLoaded', () => {
-            loadTasks();
-        });
+        // moved loadTasks() into DOMContentLoaded handler abov
     </script>
     <script src="/js/inbox-fab.js"></script>
 </body>
