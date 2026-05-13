@@ -19,7 +19,7 @@ public class TaskRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAllAsync_WithUserTasks_ReturnsOnlyUserTasks()
+    public async Task GetAllWithProjectAsync_WithUserTasks_ReturnsOnlyUserTasks()
     {
         _context.Tasks.AddRange(
             new TaskItem { Title = "Task 1", Content = "Content 1", UserId = TestUserId },
@@ -28,7 +28,7 @@ public class TaskRepositoryTests : IDisposable
         );
         await _context.SaveChangesAsync();
 
-        var result = await _repository.GetAllAsync(TestUserId);
+        var result = await _repository.GetAllWithProjectAsync(TestUserId);
 
         result.Items.Should().HaveCount(2);
         result.Items.Should().OnlyContain(t => t.UserId == TestUserId);
@@ -36,7 +36,7 @@ public class TaskRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAllAsync_NoTasksForUser_ReturnsEmptyList()
+    public async Task GetAllWithProjectAsync_NoTasksForUser_ReturnsEmptyList()
     {
         _context.Tasks.Add(new TaskItem
         {
@@ -46,14 +46,14 @@ public class TaskRepositoryTests : IDisposable
         });
         await _context.SaveChangesAsync();
 
-        var result = await _repository.GetAllAsync(TestUserId);
+        var result = await _repository.GetAllWithProjectAsync(TestUserId);
 
         result.Items.Should().BeEmpty();
         result.TotalCount.Should().Be(0);
     }
 
     [Fact]
-    public async Task GetByIdAsync_ExistingTaskAndCorrectUser_ReturnsTask()
+    public async Task GetByIdWithProjectAsync_ExistingTaskAndCorrectUser_ReturnsTask()
     {
         var task = new TaskItem
         {
@@ -64,7 +64,7 @@ public class TaskRepositoryTests : IDisposable
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
 
-        var result = await _repository.GetByIdAsync(task.Id, TestUserId);
+        var result = await _repository.GetByIdWithProjectAsync(task.Id, TestUserId);
 
         result.Should().NotBeNull();
         result!.Title.Should().Be("Test Task");
@@ -72,7 +72,7 @@ public class TaskRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetByIdAsync_ExistingTaskButWrongUser_ReturnsNull()
+    public async Task GetByIdWithProjectAsync_ExistingTaskButWrongUser_ReturnsNull()
     {
         var task = new TaskItem
         {
@@ -83,7 +83,7 @@ public class TaskRepositoryTests : IDisposable
         _context.Tasks.Add(task);
         await _context.SaveChangesAsync();
 
-        var result = await _repository.GetByIdAsync(task.Id, TestUserId);
+        var result = await _repository.GetByIdWithProjectAsync(task.Id, TestUserId);
 
         result.Should().BeNull();
     }
@@ -205,7 +205,7 @@ public class TaskRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAllAsync_OrdersByCreatedAtDescending()
+    public async Task GetAllWithProjectAsync_OrdersByCreatedAtDescending()
     {
         var now = DateTime.UtcNow;
         _context.Tasks.AddRange(
@@ -230,7 +230,7 @@ public class TaskRepositoryTests : IDisposable
         );
         await _context.SaveChangesAsync();
 
-        var result = (await _repository.GetAllAsync(TestUserId)).Items.ToList();
+        var result = (await _repository.GetAllWithProjectAsync(TestUserId)).Items.ToList();
 
         result.Should().HaveCount(3);
         result[0].Title.Should().Be("Third");

@@ -54,9 +54,19 @@ public class TaskResponseDto
     public bool IsSelectedForSprint { get; set; }
     public int? BlockedByTaskId { get; set; }
     public int? ProjectId { get; set; }
-    public string? ProjectName { get; set; }
+    public ProjectInfoDto? Project { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+}
+
+/// <summary>
+/// Краткая информация о проекте для встраивания в ответ задачи
+/// </summary>
+public class ProjectInfoDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
 }
 
 /// <summary>

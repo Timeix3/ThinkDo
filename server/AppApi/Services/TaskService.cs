@@ -19,7 +19,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskListResponseDto> GetAllTasksAsync(string userId, int offset = 0, int limit = 50)
     {
-        var (items, totalCount) = await _repository.GetAllAsync(userId, offset, limit);
+        var (items, totalCount) = await _repository.GetAllWithProjectAsync(userId, offset, limit);
 
         return new TaskListResponseDto
         {
@@ -33,7 +33,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto?> GetTaskByIdAsync(int id, string userId)
     {
-        var task = await _repository.GetByIdAsync(id, userId);
+        var task = await _repository.GetByIdWithProjectAsync(id, userId);
         return task is null ? null : MapToDto(task);
     }
 
@@ -54,6 +54,7 @@ public class TaskService : ITaskService
     public async Task<TaskResponseDto> CreateTaskAsync(CreateTaskDto dto, string userId)
     {
         string? projectName = null;
+        string? projectDescription = null;
 
         if (dto.ProjectId.HasValue)
         {
@@ -65,6 +66,7 @@ public class TaskService : ITaskService
             }
 
             projectName = project.Name;
+            projectDescription = project.Description;
         }
 
         var task = new TaskItem
@@ -80,7 +82,14 @@ public class TaskService : ITaskService
         var created = await _repository.AddAsync(task);
 
         var response = MapToDto(created);
-        response.ProjectName = projectName;
+        response.Project = dto.ProjectId.HasValue
+            ? new ProjectInfoDto
+            {
+                Id = dto.ProjectId.Value,
+                Name = projectName ?? "Stub",
+                Description = projectDescription
+            }
+            : null;
 
         return response;
     }
@@ -106,7 +115,18 @@ public class TaskService : ITaskService
         };
 
         var updated = await _repository.UpdateAsync(task, userId);
-        return updated is null ? null : MapToDto(updated);
+
+        if (updated is null)
+            return null;
+
+        // Если есть проект, получаем его данные
+        if (updated.ProjectId.HasValue)
+        {
+            var withProject = await _repository.GetByIdWithProjectAsync(updated.Id, userId);
+            return withProject is null ? null : MapToDto(withProject);
+        }
+
+        return MapToDto(updated);
     }
 
     public async Task<bool> DeleteTaskAsync(int id, string userId)
@@ -116,7 +136,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto?> CompleteTaskAsync(int id, string userId)
     {
-        var task = await _repository.GetByIdAsync(id, userId);
+        var task = await _repository.GetByIdWithProjectAsync(id, userId);
 
         if (task is null)
             return null;
@@ -160,7 +180,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto?> CancelTaskAsync(int id, string userId)
     {
-        var task = await _repository.GetByIdAsync(id, userId);
+        var task = await _repository.GetByIdWithProjectAsync(id, userId);
 
         if (task is null)
             return null;
@@ -184,7 +204,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto?> SelectTaskForSprintAsync(int id, string userId)
     {
-        var task = await _repository.GetByIdAsync(id, userId);
+        var task = await _repository.GetByIdWithProjectAsync(id, userId);
 
         if (task is null)
             return null;
@@ -204,7 +224,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskResponseDto?> DeselectTaskForSprintAsync(int id, string userId)
     {
-        var task = await _repository.GetByIdAsync(id, userId);
+        var task = await _repository.GetByIdWithProjectAsync(id, userId);
 
         if (task is null)
             return null;
@@ -231,6 +251,14 @@ public class TaskService : ITaskService
         IsSelectedForSprint = task.IsSelectedForSprint,
         BlockedByTaskId = task.BlockedByTaskId,
         ProjectId = task.ProjectId,
+        Project = task.Project is not null && task.Project.DeletedAt == null
+            ? new ProjectInfoDto
+            {
+                Id = task.Project.Id,
+                Name = task.Project.Name,
+                Description = task.Project.Description
+            }
+            : null,
         CreatedAt = task.CreatedAt,
         UpdatedAt = task.UpdatedAt
     };

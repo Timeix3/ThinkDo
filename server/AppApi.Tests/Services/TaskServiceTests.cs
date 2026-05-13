@@ -49,7 +49,7 @@ public class TaskServiceTests
         };
 
         _repositoryMock
-            .Setup(r => r.GetAllAsync(TestUserId, pageNumber, pageSize))
+            .Setup(r => r.GetAllWithProjectAsync(TestUserId, pageNumber, pageSize))
             .ReturnsAsync((tasks, 5));
 
         var result = await _service.GetAllTasksAsync(TestUserId, pageNumber, pageSize);
@@ -60,7 +60,7 @@ public class TaskServiceTests
         result.PageNumber.Should().Be(1);
         result.PageSize.Should().Be(2);
 
-        _repositoryMock.Verify(r => r.GetAllAsync(TestUserId, pageNumber, pageSize), Times.Once);
+        _repositoryMock.Verify(r => r.GetAllWithProjectAsync(TestUserId, pageNumber, pageSize), Times.Once);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class TaskServiceTests
             UserId = TestUserId,
             CreatedAt = DateTime.UtcNow
         };
-        _repositoryMock.Setup(r => r.GetByIdAsync(1, TestUserId)).ReturnsAsync(task);
+        _repositoryMock.Setup(r => r.GetByIdWithProjectAsync(1, TestUserId)).ReturnsAsync(task);
 
         var result = await _service.GetTaskByIdAsync(1, TestUserId);
 
@@ -82,18 +82,18 @@ public class TaskServiceTests
         result!.Title.Should().Be("Test Task");
         result.Content.Should().Be("Test Content");
         result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        _repositoryMock.Verify(r => r.GetByIdAsync(1, TestUserId), Times.Once);
+        _repositoryMock.Verify(r => r.GetByIdWithProjectAsync(1, TestUserId), Times.Once);
     }
 
     [Fact]
     public async Task GetTaskByIdAsync_NonExistingId_ReturnsNull()
     {
-        _repositoryMock.Setup(r => r.GetByIdAsync(999, TestUserId)).ReturnsAsync((TaskItem?)null);
+        _repositoryMock.Setup(r => r.GetByIdWithProjectAsync(999, TestUserId)).ReturnsAsync((TaskItem?)null);
 
         var result = await _service.GetTaskByIdAsync(999, TestUserId);
 
         result.Should().BeNull();
-        _repositoryMock.Verify(r => r.GetByIdAsync(999, TestUserId), Times.Once);
+        _repositoryMock.Verify(r => r.GetByIdWithProjectAsync(999, TestUserId), Times.Once);
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public class TaskServiceTests
 
         // Assert
         result.ProjectId.Should().Be(5);
-        result.ProjectName.Should().Be("My Project");
+        result.Project.Name.Should().Be("My Project");
     }
 
     [Fact]
@@ -272,17 +272,34 @@ public class TaskServiceTests
     [Fact]
     public async Task UpdateTaskAsync_ChangingProjectToValidOne_ShouldSucceed()
     {
+        // Arrange
         var dto = new UpdateTaskDto { Title = "Updated", ProjectId = 10 };
         _projectRepositoryMock.Setup(r => r.GetByIdAsync(10, TestUserId, false))
-            .ReturnsAsync(new ProjectItem { Id = 10, UserId = TestUserId });
+            .ReturnsAsync(new ProjectItem { Id = 10, UserId = TestUserId, Name = "Test Project" });
 
         _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TaskItem>(), TestUserId))
             .ReturnsAsync((TaskItem t, string uid) => t);
 
+        // Добавляем мок для GetByIdWithProjectAsync
+        _repositoryMock.Setup(r => r.GetByIdWithProjectAsync(1, TestUserId))
+            .ReturnsAsync(new TaskItem
+            {
+                Id = 1,
+                Title = "Updated",
+                ProjectId = 10,
+                Project = new ProjectItem { Id = 10, Name = "Test Project" },
+                UserId = TestUserId
+            });
+
+        // Act
         var result = await _service.UpdateTaskAsync(1, dto, TestUserId);
 
+        // Assert
         result.Should().NotBeNull();
         result!.ProjectId.Should().Be(10);
+        result.Project.Should().NotBeNull();
+        result.Project!.Id.Should().Be(10);
+        result.Project.Name.Should().Be("Test Project");
     }
 
     [Fact]
@@ -296,7 +313,7 @@ public class TaskServiceTests
 
         var result = await _service.CreateTaskAsync(dto, TestUserId);
         result.ProjectId.Should().Be(5);
-        result.ProjectName.Should().Be("Pro");
+        result.Project.Name.Should().Be("Pro");
     }
 
     [Fact]
@@ -320,7 +337,7 @@ public class TaskServiceTests
     [Fact]
     public async Task SelectTaskForSprintAsync_CompletedTask_ShouldThrow()
     {
-        _repositoryMock.Setup(r => r.GetByIdAsync(1, TestUserId))
+        _repositoryMock.Setup(r => r.GetByIdWithProjectAsync(1, TestUserId))
             .ReturnsAsync(new TaskItem { Id = 1, UserId = TestUserId, Status = TasksStatus.Completed });
 
         await _service.Invoking(s => s.SelectTaskForSprintAsync(1, TestUserId))
@@ -330,7 +347,7 @@ public class TaskServiceTests
     [Fact]
     public async Task SelectTaskForSprintAsync_AlreadySelected_ShouldBeIdempotent()
     {
-        _repositoryMock.Setup(r => r.GetByIdAsync(1, TestUserId))
+        _repositoryMock.Setup(r => r.GetByIdWithProjectAsync(1, TestUserId))
             .ReturnsAsync(new TaskItem { Id = 1, UserId = TestUserId, IsSelectedForSprint = true });
 
         var result = await _service.SelectTaskForSprintAsync(1, TestUserId);
@@ -343,7 +360,7 @@ public class TaskServiceTests
     [Fact]
     public async Task DeselectTaskForSprintAsync_NotSelected_ShouldBeIdempotent()
     {
-        _repositoryMock.Setup(r => r.GetByIdAsync(1, TestUserId))
+        _repositoryMock.Setup(r => r.GetByIdWithProjectAsync(1, TestUserId))
             .ReturnsAsync(new TaskItem { Id = 1, UserId = TestUserId, IsSelectedForSprint = false });
 
         var result = await _service.DeselectTaskForSprintAsync(1, TestUserId);
