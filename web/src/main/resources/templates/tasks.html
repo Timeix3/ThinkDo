@@ -1868,7 +1868,7 @@
         }
 
         // ── Create Task (расширено: поле Проект) ────────────────
-        async function openCreateModal() {
+        function openCreateModal() {
             document.getElementById('createTitle').value = '';
             document.getElementById('createDesc').value = '';
             document.getElementById('createProjectInfo').classList.add('hidden');
@@ -1881,6 +1881,7 @@
             if (saveBtn) saveBtn.disabled = true;   // кнопка заблокирована, пока не выбран проект
 
             document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('createModal').classList.add('nested');
             document.getElementById('createSave').disabled = true;
             setTimeout(() => document.getElementById('createTitle').focus(), 50);
 
@@ -1907,6 +1908,7 @@
 
         function closeCreateModal() {
             document.getElementById('createModal').classList.add('hidden');
+            document.getElementById('createModal').classList.remove('nested');
         }
 
         document.getElementById('createProject').addEventListener('change', function () {
@@ -1986,6 +1988,8 @@
                     });
                 }
                 closeCreateModal();
+                if (editingProjectId !== null)
+                    updateProjectsTasks(editingProjectId);
                 await loadTasks();
                 await loadProjects();
                 checkSprintButtonVisibility();
@@ -2097,36 +2101,40 @@
             setTimeout(() => document.getElementById('projectEditName').focus(), 50);
 
             try {
+                await updateProjectsTasks(editingProjectId);
+            } catch {
+                tasksContainer.innerHTML = '<div class="project-tasks-error"><i class="fas fa-exclamation-triangle mr-1"></i> Не удалось загрузить задачи. Попробуйте позже.</div>';
+            }
+        }
+
+        async function updateProjectsTasks(projectId) {
+            try {
                 const res = await fetch(`${PROJECTS_API_URL}/${projectId}/tasks`);
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 const projectTasks = await res.json();
-
-                const activeTasks = projectTasks.filter(t => t.status !== 2 && t.status !== 3);
-                if (!activeTasks.length) {
-                    tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
-                } else {
-                    tasksContainer.innerHTML = activeTasks.map(task => {
-                        const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
-                        const statusClass = task.status === 4 ? 'active' : 'active';
-                        return `
-                                                    <div class="project-task-item">
-                                                        <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
-                                                        <span class="project-task-status ${statusClass}">${statusText}</span>
-                                                    </div>
-                                                `;
-                    }).join('');
-                    tasksContainer.innerHTML = activeTasks.map(task => `
-                        <div class="project-task-item-large" data-task-id="${task.id}">
-                            <i class="fas fa-circle"></i>
-                            <span>${escHtml(task.title)}</span>
-                        </div>
-                    `).join('');
-                }
+                renderEditProjectTasks(projectTasks);
             } catch (error) {
                 console.error('Ошибка загрузки задач проекта:', error);
-                tasksContainer.innerHTML = '<div class="project-tasks-error"><i class="fas fa-exclamation-triangle mr-1"></i> Не удалось загрузить задачи. Попробуйте позже.</div>';
+            }
+        }
+
+        function renderEditProjectTasks(projectTasks) {
+            const activeTasks = projectTasks.filter(t => t.status !== 2 && t.status !== 3);
+            const tasksContainer = document.getElementById('projectTaskListContainer');
+            if (!activeTasks.length) {
+                tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
+            } else {
+                tasksContainer.innerHTML = activeTasks.map(task => `
+                     <div class="project-task-item-large" data-task-id="${task.id}">
+                        <i class="fas fa-circle"></i>
+                         <span>${escHtml(task.title)}</span>
+                          </div>
+                `).join('');
+                tasksContainer.querySelectorAll('.project-task-item-large').forEach(el => {
+                    el.addEventListener('click', () => openEditModal(el.dataset.taskId, allTasks));
+                });
             }
         }
 
@@ -2263,9 +2271,11 @@
                 }
             });
 
-            fetch(`${API_URL}/${editingTaskId}`, { method: 'DELETE' })
+            await fetch(`${API_URL}/${editingTaskId}`, { method: 'DELETE' })
                 .catch(err => console.error('Failed to delete task on server', err));
 
+            if (editingProjectId !== null)
+                updateProjectsTasks(editingProjectId);
             editingTaskId = null;
         }
 
@@ -2295,6 +2305,7 @@
                 console.error(e);
             }
             closeDeleteConfirmModal();
+
             deleteType = null;
             deleteEntityId = null;
         });
@@ -2397,7 +2408,8 @@
                     } catch (recreateErr) {
                         console.warn('Failed to recreate task on server', recreateErr);
                     }
-
+                    if (editingProjectId !== null)
+                        updateProjectsTasks(editingProjectId);
                     if (currentPage === 'dashboard') renderPlanning();
                     await loadProjects();
                     return;
@@ -2446,17 +2458,11 @@
             }
         }
 
-        //ЗАГЛУШКА ДЛЯ КНОПКИ "+ЗАДАЧА" В МОДАЛКЕ ПРОЕКТА
-        document.getElementById('projectAddTaskBtn').addEventListener('click', () => {
-            // Открываем createModal с уже выбранным проектом
-            openCreateModal();
-            // TODO: автоматически выбрать текущий проект в селекте
+        document.getElementById('projectAddTaskBtn').addEventListener('click', async () => {
+            await openCreateModal();
             const projectSelect = document.getElementById('createProject');
-            if (editingProjectId && projectSelect) {
-                projectSelect.value = editingProjectId;
-                // триггернем обновление информации о проекте
-                projectSelect.dispatchEvent(new Event('change'));
-            }
+            fillProjectSelect(projectSelect, editingProjectId);
+            updateCreateModalSaveButton();
         });
 
         // ── Edit Task ──────────────────────────────────────────
@@ -2507,6 +2513,8 @@
                 })
             });
             closeEditModal();
+            if (editingProjectId !== null)
+                updateProjectsTasks(editingProjectId);
             await loadTasks();
         });
 
