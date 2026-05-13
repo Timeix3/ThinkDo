@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,16 +26,80 @@
             justify-content: center;
             color: white;
             font-size: 1.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
             z-index: 40;
             text-decoration: none;
         }
 
-            .fab:hover {
-                transform: scale(1.1);
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
+        /* ── Единый стиль workflow-кнопок ── */
+        .workflow-btn {
+            position: fixed;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 1rem 2.2rem;
+            border-radius: 2rem;
+            background: white;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
+                0 0 48px rgba(255, 255, 255, 0.25),
+                0 15px 40px rgba(0, 0, 0, 0.2);
+            z-index: 45;
+            cursor: pointer;
+            animation: workflowBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+                workflowBtnGlow 2.4s ease-in-out 0.5s infinite;
+            transition: transform 0.2s;
+        }
+
+        .workflow-btn:hover {
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .workflow-btn i {
+            font-size: 1.1rem;
+            color: #8b5cf6;
+        }
+
+        @keyframes workflowBtnAppear {
+            0% {
+                transform: translateX(-50%) translateY(40px) scale(0.8);
+                opacity: 0;
             }
+
+            100% {
+                transform: translateX(-50%) translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes workflowBtnGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
+                    0 0 48px rgba(255, 255, 255, 0.25),
+                    0 15px 40px rgba(0, 0, 0, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 36px rgba(255, 255, 255, 0.85),
+                    0 0 72px rgba(255, 255, 255, 0.45),
+                    0 20px 55px rgba(0, 0, 0, 0.3);
+            }
+        }
+
         /* ── Focus card ── */
         .focus-card {
             background: white;
@@ -43,9 +108,10 @@
             max-width: 520px;
             width: 100%;
             color: #1e293b;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18);
             position: relative;
         }
+
         /* ── Чекбокс ── */
         .focus-check {
             width: 32px;
@@ -62,17 +128,18 @@
             font-size: 0.85rem;
         }
 
-            .focus-check:hover {
-                border-color: #22c55e;
-                background: #dcfce7;
-                color: #22c55e;
-            }
+        .focus-check:hover {
+            border-color: #22c55e;
+            background: #dcfce7;
+            color: #22c55e;
+        }
 
-            .focus-check.checked {
-                border-color: #22c55e;
-                background: #22c55e;
-                color: #fff;
-            }
+        .focus-check.checked {
+            border-color: #22c55e;
+            background: #22c55e;
+            color: #fff;
+        }
+
         /* ── Анимация: задача уезжает влево ── */
         @keyframes taskSlideOutLeft {
             0% {
@@ -89,6 +156,7 @@
         .task-leaving {
             animation: taskSlideOutLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
+
         /* ── Анимация: следующая задача выезжает из глубины ── */
         @keyframes taskEmergeFromDepth {
             0% {
@@ -107,24 +175,26 @@
         .task-entering {
             animation: taskEmergeFromDepth 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
         /* ── Пустое состояние / Загрузка / Ошибка ── */
         .empty-state {
             text-align: center;
-            color: rgba(255,255,255,0.5);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 1.1rem;
             font-weight: 500;
             padding: 3rem 1rem;
         }
 
-            .empty-state i {
-                font-size: 3rem;
-                display: block;
-                margin-bottom: 1rem;
-                opacity: 0.4;
-            }
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
         /* ── Счётчик задач ── */
         .task-counter {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(4px);
             border-radius: 2rem;
             padding: 0.35rem 0.9rem;
@@ -132,11 +202,12 @@
             color: white;
             font-weight: 600;
         }
+
         /* ── Декоративные кольца на фоне ── */
         .bg-ring {
             position: fixed;
             border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             pointer-events: none;
         }
 
@@ -158,7 +229,7 @@
             width: 100%;
             max-width: 420px;
             color: #1e293b;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
         }
 
         .captcha-question {
@@ -174,57 +245,6 @@
             min-height: 1.1rem;
         }
 
-
-        /* ── Большая кнопка завершения ── */
-        .done-btn {
-            position: fixed;
-            bottom: 2.5rem;
-            left: 50%;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.7rem;
-            transform: translateX(-50%);
-            padding: 1rem 2.2rem;
-            border-radius: 2rem;
-            background: white;
-            color: #1e293b;
-            font-weight: 700;
-            font-size: 1.05rem;
-            text-decoration: none;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-            z-index: 45;
-            animation: doneBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, doneBtnPulse 2.4s ease-in-out 0.5s infinite;
-            transition: transform 0.2s;
-        }
-
-        .done-btn i {
-            font-size: 1.1rem;
-            color: #8b5cf6;
-        }
-
-        @keyframes doneBtnAppear {
-            0% {
-                transform: translateX(-50%) translateY(40px) scale(0.8);
-                opacity: 0;
-            }
-
-            100% {
-                transform: translateX(-50%) translateY(0) scale(1);
-                opacity: 1;
-            }
-        }
-        @keyframes doneBtnPulse {
-            0%, 100% {
-                transform: translateX(-50%) scale(1);
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-            }
-
-            50% {
-                transform: translateX(-50%) scale(1.02);
-                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
-            }
-        }
-
         /* ── Инлайн-ввод инбокса (фокус-страница) ── */
         .focus-inbox-input {
             position: fixed;
@@ -238,7 +258,7 @@
             background: white;
             border-radius: 1rem;
             padding: 0.75rem 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
             display: flex;
             gap: 0.5rem;
             align-items: center;
@@ -272,6 +292,7 @@
         }
     </style>
 </head>
+
 <body class="p-5">
     <!-- Декоративные кольца -->
     <div class="bg-ring" style="width:500px;height:500px;top:-100px;right:-120px;"></div>
@@ -286,15 +307,15 @@
             </div>
             <div class="flex items-center gap-3">
                 <span class="task-counter" id="taskCounter">0 / 0</span>
-                <img th:src="${#authentication.principal.attributes['avatar_url']}"
-                     alt="avatar" class="w-8 h-8 rounded-full border-2 border-white/50">
+                <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
+                    class="w-8 h-8 rounded-full border-2 border-white/50">
                 <span class="text-sm opacity-90">
                     Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                 </span>
                 <form th:action="@{/logout}" method="post" id="logoutForm">
                     <!-- Кнопка с вызовом функции очистки данных -->
                     <button type="submit" onclick="clearAllData()"
-                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                         <i class="fas fa-sign-out-alt text-xs"></i> Выйти
                     </button>
                 </form>
@@ -313,7 +334,7 @@
 
     <!-- FAB-инбокс: теперь по классу и data-target -->
     <div class="fab fab-add-inbox" data-target="#inboxInputBar"
-         style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
+        style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
         <i class="fas fa-plus fab-add-inbox-icon"></i>
     </div>
 
@@ -321,16 +342,17 @@
     <div id="inboxInputBar" class="focus-inbox-input hidden">
         <div class="inbox-input-box">
             <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
-                   style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;font-family:inherit;" />
+                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;font-family:inherit;" />
         </div>
     </div>
 
     <!-- FAB: Навигация на умника -->
-    <a href="/tasks" class="fab" id="fabNavMain" style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
+    <a href="/tasks" class="fab" id="fabNavMain"
+        style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
         🤓
     </a>
 
-    <a href="/tasks" id="doneAllBtn" class="done-btn hidden">
+    <a href="/tasks" id="doneAllBtn" class="workflow-btn hidden">
         <i class="fas fa-inbox"></i>
         К разбору!
     </a>
@@ -341,7 +363,8 @@
             <h2 id="captchaTitle" class="text-lg font-bold text-slate-800 mb-2">Подтвердите переход</h2>
             <div>
                 <div class="captcha-question" id="captchaQuestion">Сколько будет 1 + 2?</div>
-                <input type="text" id="captchaInput" placeholder="Введите ответ" style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.5rem;margin-top:0.5rem;font-size:1rem;" />
+                <input type="text" id="captchaInput" placeholder="Введите ответ"
+                    style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.5rem;margin-top:0.5rem;font-size:1rem;" />
                 <div class="captcha-error" id="captchaError" aria-live="polite"></div>
                 <div class="flex justify-end gap-2 mt-4">
                     <button id="captchaCancel" class="btn-ghost">Отмена</button>
@@ -550,43 +573,43 @@
             }, 250);
         }
 
-            // Attach sprint-complete handler
-            document.addEventListener('DOMContentLoaded', () => {
-                const doneBtn = document.getElementById('doneAllBtn');
+        // Attach sprint-complete handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const doneBtn = document.getElementById('doneAllBtn');
 
-                doneBtn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    // Guard: only allow when counters indicate full completion
-                    if (!(totalCount > 0 && completedCount === totalCount)) return;
+            doneBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                // Guard: only allow when counters indicate full completion
+                if (!(totalCount > 0 && completedCount === totalCount)) return;
 
-                    // prevent double-click
-                    if (doneBtn.dataset.loading === 'true') return;
-                    doneBtn.dataset.loading = 'true';
-                    try {
-                        const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
-                        if (res.ok) {
-                            // success -> redirect to inbox
-                            window.location.href = '/inbox';
-                        } else {
-                            // show server-provided message when possible
-                            let msg = `Ошибка завершения спринта: HTTP ${res.status}`;
-                            try {
-                                const json = await res.json();
-                                if (json && json.message) msg = json.message;
-                            } catch (_) { }
-                            alert(msg);
-                            // keep button visible (do not redirect)
-                        }
-                    } catch (err) {
-                        alert('Сетевая ошибка при завершении спринта. Попробуйте ещё раз.');
-                    } finally {
-                        doneBtn.dataset.loading = 'false';
+                // prevent double-click
+                if (doneBtn.dataset.loading === 'true') return;
+                doneBtn.dataset.loading = 'true';
+                try {
+                    const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
+                    if (res.ok) {
+                        // success -> redirect to inbox
+                        window.location.href = '/inbox';
+                    } else {
+                        // show server-provided message when possible
+                        let msg = `Ошибка завершения спринта: HTTP ${res.status}`;
+                        try {
+                            const json = await res.json();
+                            if (json && json.message) msg = json.message;
+                        } catch (_) { }
+                        alert(msg);
+                        // keep button visible (do not redirect)
                     }
-                });
-
-                // initial load
-                loadTasks();
+                } catch (err) {
+                    alert('Сетевая ошибка при завершении спринта. Попробуйте ещё раз.');
+                } finally {
+                    doneBtn.dataset.loading = 'false';
+                }
             });
+
+            // initial load
+            loadTasks();
+        });
 
         function spawnFabRipple(fabEl) {
             const ring = document.createElement('span');
@@ -774,4 +797,5 @@
     </script>
     <script src="/js/inbox-fab.js"></script>
 </body>
+
 </html>
