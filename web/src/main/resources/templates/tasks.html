@@ -578,6 +578,15 @@
             align-items: center;
         }
 
+        .inbox-content-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         /* ── Undo-тост инбокса ──────────────────────────────── */
         .inbox-undo-toast {
             position: fixed;
@@ -1090,8 +1099,8 @@
     <!-- Inline-поле ввода для инбокса -->
     <div id="inboxInputBar" class="inbox-inline-input hidden">
         <div class="inbox-input-box">
-            <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
-                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
+            <textarea id="inboxInputField" placeholder="Запишите мысль" rows="1"
+                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;resize:none;max-height:50vh;overflow-y:auto;"></textarea>
         </div>
     </div>
 
@@ -1233,8 +1242,8 @@
             <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать запись</h2>
             <div class="flex flex-col gap-3">
                 <div>
-                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
-                    <input type="text" id="inboxEditTitle" placeholder="Название записи" />
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Контент *</label>
+                    <textarea id="inboxEditTitle" rows="1" placeholder="Запишите мысль" style="resize:none;max-height:50vh;overflow-y:auto;"></textarea>
                 </div>
             </div>
             <div class="flex justify-between mt-5">
@@ -1242,6 +1251,17 @@
                     <button class="btn-ghost" id="inboxEditCancel">Отмена</button>
                     <button class="btn-primary" id="inboxEditSave">Сохранить</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="inboxContentViewModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-2">📝 Контент записи</h2>
+            <div id="inboxContentViewText" class="text-slate-700 whitespace-pre-wrap max-h-[50vh] overflow-y-auto border border-slate-200 rounded-lg p-3"></div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-ghost" id="inboxContentViewClose">Закрыть</button>
+                <button class="btn-primary" id="inboxContentViewClassify">Действия</button>
             </div>
         </div>
     </div>
@@ -2483,7 +2503,7 @@
                                                     <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
                                                         <div class="flex items-start justify-between gap-3">
                                                             <div class="flex-1 min-w-0">
-                                                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                                <div class="font-semibold text-slate-800 mb-1 inbox-content-preview">${escHtml(item.title)}</div>
                                                             </div>
                                                             <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                                                         </div>
@@ -2492,7 +2512,7 @@
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
-                el.addEventListener('click', () => openInboxClassifyModal(el.dataset.inboxId));
+                el.addEventListener('click', () => openInboxContentViewModal(el.dataset.inboxId));
             });
         }
 
@@ -2508,13 +2528,34 @@
         window.inboxCreate = inboxCreate;
         window.inboxLoad = inboxLoad;
 
+        function openInboxContentViewModal(itemId) {
+            const item = inboxItems.find(i => String(i.id) === String(itemId));
+            if (!item) return;
+            classifyingInboxId = itemId;
+            document.getElementById('inboxContentViewText').textContent = item.title;
+            document.getElementById('inboxContentViewModal').classList.remove('hidden');
+        }
+
+        function closeInboxContentViewModal() {
+            document.getElementById('inboxContentViewModal').classList.add('hidden');
+        }
+
+        document.getElementById('inboxContentViewModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeInboxContentViewModal();
+        });
+        document.getElementById('inboxContentViewClose').addEventListener('click', closeInboxContentViewModal);
+        document.getElementById('inboxContentViewClassify').addEventListener('click', () => {
+            closeInboxContentViewModal();
+            if (classifyingInboxId) openInboxClassifyModal(classifyingInboxId);
+        });
+
         // ── Inbox Classify Modal ───────────────────────────────
         function openInboxClassifyModal(itemId) {
             const item = inboxItems.find(i => String(i.id) === String(itemId));
             if (!item) return;
             classifyingInboxId = itemId;
             document.getElementById('inboxClassifySourceText').textContent = item.title;
-
+            document.getElementById('inboxContentViewText').textContent = item.title;
             document.getElementById('classifyStep1').classList.remove('hidden');
             document.getElementById('classifyStep2').classList.add('hidden');
             document.getElementById('inboxClassifyModal').classList.remove('hidden');
@@ -2606,18 +2647,40 @@
             convertingInboxId = null;
         }
 
+        function autoGrowInboxTextarea(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, window.innerHeight * 0.5) + 'px';
+        }
+
         // ── Inbox Edit Modal (оставлена для редактирования) ───
         function openInboxEditModal(itemId) {
             const item = inboxItems.find(i => String(i.id) === String(itemId));
             if (!item) return;
             editingInboxId = itemId;
-            document.getElementById('inboxEditTitle').value = item.title;
+            const editField = document.getElementById('inboxEditTitle');
+            editField.value = item.title;
             document.getElementById('inboxEditModal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('inboxEditTitle').focus(), 50);
+            requestAnimationFrame(() => {
+                autoGrowInboxTextarea(editField);
+                document.getElementById('inboxEditSave').disabled = !editField.value.trim();
+                editField.focus();
+            });
         }
 
         function closeInboxEditModal() { document.getElementById('inboxEditModal').classList.add('hidden'); }
         document.getElementById('inboxEditCancel').addEventListener('click', closeInboxEditModal);
+        document.getElementById('inboxEditTitle').addEventListener('input', (e) => {
+            autoGrowInboxTextarea(e.target);
+            document.getElementById('inboxEditSave').disabled = !e.target.value.trim();
+        });
+        document.getElementById('inboxEditTitle').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!e.target.value.trim()) return;
+                document.getElementById('inboxEditSave').click();
+            }
+        });
         document.getElementById('inboxEditModal').addEventListener('click', e => {
             if (e.target === e.currentTarget) closeInboxEditModal();
         });
