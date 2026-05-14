@@ -142,6 +142,7 @@ public class TaskRepository : ITaskRepository
     public async Task<IEnumerable<TaskItem>> GetSprintTasksAsync(string userId)
     {
         return await _context.Tasks
+            .Include(t => t.Project)
             .Where(t => t.UserId == userId
                      && t.DeletedAt == null
                      && t.IsSelectedForSprint
