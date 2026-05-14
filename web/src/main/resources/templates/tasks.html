@@ -607,6 +607,14 @@
             animation: toastIn 0.2s ease-out;
         }
 
+        .inbox-undo-text {
+            max-width: min(90vw, 700px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
         @keyframes toastIn {
             from {
                 opacity: 0;
@@ -819,6 +827,15 @@
             margin-bottom: 0.15rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+        }
+
+        .delete-confirm-content {
+            display: inline-block;
+            vertical-align: top;
+            max-height: min(25vh, 180px);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         /* ── Стили для выбора режима (Story 20.3) ── */
@@ -1227,7 +1244,7 @@
             <h2 class="text-lg font-bold text-slate-800 mb-2">⚠️ Подтвердите действие</h2>
             <p class="text-slate-600 mb-6">
                 Удалить <span id="deleteConfirmType"></span>
-                "<span class="font-semibold text-slate-800" id="deleteConfirmName"></span>"?
+                "<span class="font-semibold text-slate-800 delete-confirm-content" id="deleteConfirmName"></span>"?
             </p>
             <div class="flex justify-end gap-2">
                 <button class="btn-ghost" id="deleteCancel">Отмена</button>
@@ -1386,7 +1403,7 @@
 
     <!-- Универсальный Undo-тост: удаление записи -->
     <div id="undoToast" class="inbox-undo-toast hidden">
-        <span id="undoToastMessage">Элемент удалён</span>
+        <span id="undoToastMessage" class="inbox-undo-text">Элемент удалён</span>
         <button id="undoBtn" class="inbox-undo-btn">Отменить</button>
     </div>
 
@@ -2152,7 +2169,7 @@
 
             const label = getEntityLabel(entityType);
             document.getElementById('undoToastMessage').textContent =
-                `${label} «${escHtml(title)}» удалена`;
+                `${label} «${title}» удалена`;
 
             const toast = document.getElementById('undoToast');
             toast.classList.remove('hidden');
@@ -2723,7 +2740,7 @@
             showUndoToast({
                 entityId: idToDelete,
                 entityType: 'inbox',
-                title: item.title,
+                title: truncateToastText(item.title, 60),
                 data: itemCopy,
                 index: itemIndex,
                 arrayRef: inboxItems,
@@ -2735,6 +2752,13 @@
 
             fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' })
                 .catch(err => console.error('Failed to delete inbox item on server', err));
+        }
+
+        function truncateToastText(text, maxChars = 80) {
+            const chars = Array.from((text || '').trim());
+            if (!chars.length) return '';
+            if (chars.length <= maxChars) return chars.join('');
+            return chars.slice(0, maxChars).join('') + '...';
         }
 
         function clearAllData() {
