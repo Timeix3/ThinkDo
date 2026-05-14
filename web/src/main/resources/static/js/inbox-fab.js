@@ -1,5 +1,5 @@
-// Унифицированный обработчик FAB-инбокса для всех страниц SPA
-// Предотвращает дубли при быстром клике
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ FAB-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ SPA
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
 (function () {
   const DEFAULT_API = '/api/inbox';
@@ -40,6 +40,12 @@
     }
   }
 
+  function autoGrowTextarea(el) {
+    if (!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, window.innerHeight * 0.5) + 'px';
+  }
+
   function openInput(targetSelector, btn) {
     const st = stateMap.get(targetSelector);
     const bar = findInputBar(targetSelector);
@@ -47,7 +53,7 @@
     bar.classList.remove('hidden');
     queryAllFabsForTarget(targetSelector).forEach(b => setIcon(b, b === btn ? 'fa-check' : 'fa-plus'));
     const input = bar.querySelector('input, textarea');
-    if (input) input.focus();
+    if (input) { input.focus(); autoGrowTextarea(input); }
     st.open = true;
     st.activeBtn = btn;
   }
@@ -58,7 +64,7 @@
     if (!bar) return;
     bar.classList.add('hidden');
     const input = bar.querySelector('input, textarea');
-    if (input) input.value = '';
+    if (input) { input.value = ''; input.style.height = ''; }
     queryAllFabsForTarget(targetSelector).forEach(b => setIcon(b, 'fa-plus'));
     if (st) { st.open = false; st.activeBtn = null; }
   }
@@ -103,7 +109,8 @@
     bar.__inbox_fab_initialized = true;
 
     bar.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         const inputEl = bar.querySelector('input, textarea');
         const val = (inputEl && inputEl.value.trim()) || '';
         if (!val) return;
@@ -113,6 +120,10 @@
       if (e.key === 'Escape') {
         closeInput(targetSelector);
       }
+    });
+
+    bar.addEventListener('input', (e) => {
+      if (e.target && e.target.matches('textarea')) autoGrowTextarea(e.target);
     });
 
     document.addEventListener('click', (e) => {
@@ -157,7 +168,7 @@
               const input = bar.querySelector('input, textarea');
               const val = (input && input.value.trim()) || '';
               if (!val) {
-                if (input) input.focus();
+                if (input) { input.focus(); autoGrowTextarea(input); }
                 return;
               }
               if (st.creating) return;
@@ -170,7 +181,7 @@
               queryAllFabsForTarget(targetSelector).forEach(b => setIcon(b, b === btn ? 'fa-check' : 'fa-plus'));
               st.activeBtn = btn;
               const input = bar.querySelector('input, textarea');
-              if (input) input.focus();
+              if (input) { input.focus(); autoGrowTextarea(input); }
             }
           }
         });
