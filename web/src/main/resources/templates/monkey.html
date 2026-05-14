@@ -326,11 +326,11 @@
     </div>
 
     <!-- FAB: Навигация на умника -->
-    <a href="/tasks" class="fab" id="fabNavMain" style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
+    <a href="/projects?section=inbox" class="fab" id="fabNavMain" style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
         🤓
     </a>
 
-    <a href="/tasks" id="doneAllBtn" class="done-btn hidden">
+    <a href="/projects?section=inbox" id="doneAllBtn" class="done-btn hidden">
         <i class="fas fa-inbox"></i>
         К разбору!
     </a>
@@ -725,7 +725,7 @@
                 }
                 if (val === currentCaptcha.answer) {
                     closeModal();
-                    window.location.href = fab.getAttribute('href') || '/tasks';
+                    window.location.href = fab.getAttribute('href') || '/projects?section=inbox';
                 } else {
 
                     if (countError > 1) {
@@ -752,7 +752,7 @@
                     openModal();
                 } else {
 
-                    window.location.href = fab.getAttribute('href') || '/tasks';
+                    window.location.href = fab.getAttribute('href') || '/projects?section=inbox';
                 }
             });
 

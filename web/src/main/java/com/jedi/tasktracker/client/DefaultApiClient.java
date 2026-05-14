@@ -245,4 +245,9 @@ public class DefaultApiClient implements ApiClient {
   public void deleteRoutine(int id) {
     restClient.delete().uri("/api/routines/{id}", id).retrieve().toBodilessEntity();
   }
+
+  @Override
+  public String getCurrentPhase() {
+    return restClient.get().uri("/api/flow/phase").retrieve().body(String.class);
+  }
 }
