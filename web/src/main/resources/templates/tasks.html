@@ -1548,7 +1548,7 @@
                 container.querySelectorAll('.task-check').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        togglePlanning(btn.dataset.completeId, btn);
+                        togglePlanningAndRefresh(btn.dataset.completeId, btn);
                     });
                 });
                 // Клик по названию — открыть редактирование
@@ -1761,6 +1761,25 @@
             if (count === 1) return 'задача';
             if (count >= 2 && count <= 4) return 'задачи';
             return 'задач';
+        }
+
+        async function sendFlowPhaseUpdate(phase) {
+            const btn = document.getElementById('toPlanningBtn');
+            if (btn.dataset.updating === 'true') return; // Защита от двойного клика
+
+            btn.dataset.updating = 'true';
+
+            // Отправляем запрос (fire-and-forget для UI, но логируем ошибки)
+            fetch('/api/flow/phase', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phase: phase })
+            })
+                .then(() => console.log(`Flow phase updated to ${phase}`))
+                .catch(err => console.error('Failed to update flow phase', err))
+                .finally(() => {
+                    btn.dataset.updating = 'false';
+                });
         }
 
         // ── Load projects ─────────────────────────────────────
@@ -2673,7 +2692,10 @@
             }
         }
 
-        document.getElementById('toPlanningBtn').addEventListener('click', () => switchPage('dashboard'));
+        document.getElementById('toPlanningBtn').addEventListener('click', () => {
+            sendFlowPhaseUpdate('planning');
+            switchPage('dashboard')
+        });
 
         async function updateToPlanningBtn() {
             let status = null;

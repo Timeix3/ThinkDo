@@ -61,4 +61,8 @@ public interface ApiClient {
   RoutineDto updateRoutine(int id, String name, int frequency);
 
   void deleteRoutine(int id);
+
+  void updateFlowPhase(String phase);
+
+  void completeSprint();
 }
