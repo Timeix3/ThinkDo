@@ -5,6 +5,6 @@ public record TaskDto(
     String title,
     String content,
     Integer projectId,
-    String projectName,
+    ProjectInfoDto project,
     Boolean isSelectedForSprint,
     Integer status) {}
