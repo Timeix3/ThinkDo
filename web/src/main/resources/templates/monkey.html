@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,16 +26,17 @@
             justify-content: center;
             color: white;
             font-size: 1.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
             z-index: 40;
             text-decoration: none;
         }
 
-            .fab:hover {
-                transform: scale(1.1);
-            }
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
         /* ── Focus card ── */
         .focus-card {
             background: white;
@@ -43,9 +45,10 @@
             max-width: 520px;
             width: 100%;
             color: #1e293b;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.18);
             position: relative;
         }
+
         /* ── Чекбокс ── */
         .focus-check {
             width: 32px;
@@ -62,17 +65,18 @@
             font-size: 0.85rem;
         }
 
-            .focus-check:hover {
-                border-color: #22c55e;
-                background: #dcfce7;
-                color: #22c55e;
-            }
+        .focus-check:hover {
+            border-color: #22c55e;
+            background: #dcfce7;
+            color: #22c55e;
+        }
 
-            .focus-check.checked {
-                border-color: #22c55e;
-                background: #22c55e;
-                color: #fff;
-            }
+        .focus-check.checked {
+            border-color: #22c55e;
+            background: #22c55e;
+            color: #fff;
+        }
+
         /* ── Анимация: задача уезжает влево ── */
         @keyframes taskSlideOutLeft {
             0% {
@@ -89,6 +93,7 @@
         .task-leaving {
             animation: taskSlideOutLeft 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
+
         /* ── Анимация: следующая задача выезжает из глубины ── */
         @keyframes taskEmergeFromDepth {
             0% {
@@ -107,24 +112,26 @@
         .task-entering {
             animation: taskEmergeFromDepth 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
         /* ── Пустое состояние / Загрузка / Ошибка ── */
         .empty-state {
             text-align: center;
-            color: rgba(255,255,255,0.5);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 1.1rem;
             font-weight: 500;
             padding: 3rem 1rem;
         }
 
-            .empty-state i {
-                font-size: 3rem;
-                display: block;
-                margin-bottom: 1rem;
-                opacity: 0.4;
-            }
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
         /* ── Счётчик задач ── */
         .task-counter {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(4px);
             border-radius: 2rem;
             padding: 0.35rem 0.9rem;
@@ -132,11 +139,12 @@
             color: white;
             font-weight: 600;
         }
+
         /* ── Декоративные кольца на фоне ── */
         .bg-ring {
             position: fixed;
             border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             pointer-events: none;
         }
 
@@ -158,7 +166,7 @@
             width: 100%;
             max-width: 420px;
             color: #1e293b;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
         }
 
         .captcha-question {
@@ -213,8 +221,11 @@
                 opacity: 1;
             }
         }
+
         @keyframes doneBtnPulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translateX(-50%) scale(1);
                 box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
             }
@@ -238,7 +249,7 @@
             background: white;
             border-radius: 1rem;
             padding: 0.75rem 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
             display: flex;
             gap: 0.5rem;
             align-items: center;
@@ -270,8 +281,55 @@
             pointer-events: none;
             animation: fabRippleOut 0.65s ease-out forwards;
         }
+
+        /* Стили проекта для Обезьяны */
+        .project-breadcrumb {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .project-desc-wrapper {
+            margin-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 0.75rem;
+        }
+
+        .project-desc-trigger {
+            font-size: 0.8rem;
+            color: #6366f1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            user-select: none;
+        }
+
+        .project-desc-content {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-top: 0.5rem;
+            max-height: 30vh;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            line-height: 1.5;
+        }
+
+        /* Скроллбар для описания */
+        .project-desc-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .project-desc-content::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
     </style>
 </head>
+
 <body class="p-5">
     <!-- Декоративные кольца -->
     <div class="bg-ring" style="width:500px;height:500px;top:-100px;right:-120px;"></div>
@@ -286,15 +344,15 @@
             </div>
             <div class="flex items-center gap-3">
                 <span class="task-counter" id="taskCounter">0 / 0</span>
-                <img th:src="${#authentication.principal.attributes['avatar_url']}"
-                     alt="avatar" class="w-8 h-8 rounded-full border-2 border-white/50">
+                <img th:src="${#authentication.principal.attributes['avatar_url']}" alt="avatar"
+                    class="w-8 h-8 rounded-full border-2 border-white/50">
                 <span class="text-sm opacity-90">
                     Привет, <strong th:text="${#authentication.principal.attributes['login']}"></strong>!
                 </span>
                 <form th:action="@{/logout}" method="post" id="logoutForm">
                     <!-- Кнопка с вызовом функции очистки данных -->
                     <button type="submit" onclick="clearAllData()"
-                            class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+                        class="bg-white/20 hover:bg-white/30 transition text-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                         <i class="fas fa-sign-out-alt text-xs"></i> Выйти
                     </button>
                 </form>
@@ -313,7 +371,7 @@
 
     <!-- FAB-инбокс: теперь по классу и data-target -->
     <div class="fab fab-add-inbox" data-target="#inboxInputBar"
-         style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
+        style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
         <i class="fas fa-plus fab-add-inbox-icon"></i>
     </div>
 
@@ -321,7 +379,7 @@
     <div id="inboxInputBar" class="focus-inbox-input hidden">
         <div class="inbox-input-box">
             <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
-                   style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;font-family:inherit;" />
+                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;font-family:inherit;" />
         </div>
     </div>
 
@@ -341,7 +399,8 @@
             <h2 id="captchaTitle" class="text-lg font-bold text-slate-800 mb-2">Подтвердите переход</h2>
             <div>
                 <div class="captcha-question" id="captchaQuestion">Сколько будет 1 + 2?</div>
-                <input type="text" id="captchaInput" placeholder="Введите ответ" style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.5rem;margin-top:0.5rem;font-size:1rem;" />
+                <input type="text" id="captchaInput" placeholder="Введите ответ"
+                    style="width:100%;border:1.5px solid #e2e8f0;border-radius:0.5rem;padding:0.5rem;margin-top:0.5rem;font-size:1rem;" />
                 <div class="captcha-error" id="captchaError" aria-live="polite"></div>
                 <div class="flex justify-end gap-2 mt-4">
                     <button id="captchaCancel" class="btn-ghost">Отмена</button>
@@ -420,25 +479,55 @@
             const task = remaining[0];
             const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
+            const hasProject = task.project != null;
+            const projectHeader = hasProject
+                ? `<div class="project-breadcrumb"><i class="fas fa-folder-open mr-1"></i>${escHtml(task.project.name)}</div>`
+                : '';
+
+            const hasDescription = hasProject && task.project.description && task.project.description.trim() !== '';
+            const projectDescBlock = hasDescription ? `
+                <div class="project-desc-wrapper">
+                    <div class="project-desc-trigger" onclick="toggleProjectDesc()">
+                        <i class="fas fa-info-circle"></i>
+                        <span>О проекте</span>
+                        <i class="fas fa-chevron-down ml-auto transition-transform" id="descChevron"></i>
+                    </div>
+                    <div class="project-desc-content hidden" id="projectDesc">
+                        ${escHtml(task.project.description).replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            ` : '';
+
             area.innerHTML = `
-                                        <div class="focus-card task-entering" id="focusCard">
-                                          <div class="flex items-start gap-4">
-                                            <div class="focus-check" id="focusCheck" title="Выполнить">
-                                              <i class="fas fa-check"></i>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                              <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
-                                              <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
-                                            </div>
-                                          </div>
-                                          <!-- Прогресс-бар внизу карточки -->
-                                          <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
-                                            <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
-                                          </div>
-                                        </div>
-                                      `;
+                <div class="focus-card task-entering" id="focusCard">
+                    ${projectHeader}
+                    <div class="flex items-start gap-4">
+                        <div class="focus-check" id="focusCheck" title="Выполнить">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
+                            <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
+                            ${projectDescBlock}
+                        </div>
+                    </div>
+                    <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                    </div>
+                </div>
+            `;
 
             document.getElementById('focusCheck').addEventListener('click', () => completeCurrentTask());
+        }
+
+        function toggleProjectDesc() {
+            const content = document.getElementById('projectDesc');
+            const chevron = document.getElementById('descChevron');
+            if (content && chevron) {
+                const isHidden = content.classList.contains('hidden');
+                content.classList.toggle('hidden');
+                chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
         }
 
         async function refreshSprintStatus() {
@@ -550,43 +639,43 @@
             }, 250);
         }
 
-            // Attach sprint-complete handler
-            document.addEventListener('DOMContentLoaded', () => {
-                const doneBtn = document.getElementById('doneAllBtn');
+        // Attach sprint-complete handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const doneBtn = document.getElementById('doneAllBtn');
 
-                doneBtn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    // Guard: only allow when counters indicate full completion
-                    if (!(totalCount > 0 && completedCount === totalCount)) return;
+            doneBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                // Guard: only allow when counters indicate full completion
+                if (!(totalCount > 0 && completedCount === totalCount)) return;
 
-                    // prevent double-click
-                    if (doneBtn.dataset.loading === 'true') return;
-                    doneBtn.dataset.loading = 'true';
-                    try {
-                        const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
-                        if (res.ok) {
-                            // success -> redirect to inbox
-                            window.location.href = '/inbox';
-                        } else {
-                            // show server-provided message when possible
-                            let msg = `Ошибка завершения спринта: HTTP ${res.status}`;
-                            try {
-                                const json = await res.json();
-                                if (json && json.message) msg = json.message;
-                            } catch (_) { }
-                            alert(msg);
-                            // keep button visible (do not redirect)
-                        }
-                    } catch (err) {
-                        alert('Сетевая ошибка при завершении спринта. Попробуйте ещё раз.');
-                    } finally {
-                        doneBtn.dataset.loading = 'false';
+                // prevent double-click
+                if (doneBtn.dataset.loading === 'true') return;
+                doneBtn.dataset.loading = 'true';
+                try {
+                    const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
+                    if (res.ok) {
+                        // success -> redirect to inbox
+                        window.location.href = '/inbox';
+                    } else {
+                        // show server-provided message when possible
+                        let msg = `Ошибка завершения спринта: HTTP ${res.status}`;
+                        try {
+                            const json = await res.json();
+                            if (json && json.message) msg = json.message;
+                        } catch (_) { }
+                        alert(msg);
+                        // keep button visible (do not redirect)
                     }
-                });
-
-                // initial load
-                loadTasks();
+                } catch (err) {
+                    alert('Сетевая ошибка при завершении спринта. Попробуйте ещё раз.');
+                } finally {
+                    doneBtn.dataset.loading = 'false';
+                }
             });
+
+            // initial load
+            loadTasks();
+        });
 
         function spawnFabRipple(fabEl) {
             const ring = document.createElement('span');
@@ -774,4 +863,5 @@
     </script>
     <script src="/js/inbox-fab.js"></script>
 </body>
+
 </html>
