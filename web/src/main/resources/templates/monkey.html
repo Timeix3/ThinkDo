@@ -281,6 +281,52 @@
             pointer-events: none;
             animation: fabRippleOut 0.65s ease-out forwards;
         }
+
+        /* Стили проекта для Обезьяны */
+        .project-breadcrumb {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .project-desc-wrapper {
+            margin-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 0.75rem;
+        }
+
+        .project-desc-trigger {
+            font-size: 0.8rem;
+            color: #6366f1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            user-select: none;
+        }
+
+        .project-desc-content {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-top: 0.5rem;
+            max-height: 30vh;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            line-height: 1.5;
+        }
+
+        /* Скроллбар для описания */
+        .project-desc-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .project-desc-content::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
     </style>
 </head>
 
@@ -434,25 +480,55 @@
             const task = remaining[0];
             const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
+            const hasProject = task.project != null;
+            const projectHeader = hasProject
+                ? `<div class="project-breadcrumb"><i class="fas fa-folder-open mr-1"></i>${escHtml(task.project.name)}</div>`
+                : '';
+
+            const hasDescription = hasProject && task.project.description && task.project.description.trim() !== '';
+            const projectDescBlock = hasDescription ? `
+                <div class="project-desc-wrapper">
+                    <div class="project-desc-trigger" onclick="toggleProjectDesc()">
+                        <i class="fas fa-info-circle"></i>
+                        <span>О проекте</span>
+                        <i class="fas fa-chevron-down ml-auto transition-transform" id="descChevron"></i>
+                    </div>
+                    <div class="project-desc-content hidden" id="projectDesc">
+                        ${escHtml(task.project.description).replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            ` : '';
+
             area.innerHTML = `
-                                        <div class="focus-card task-entering" id="focusCard">
-                                          <div class="flex items-start gap-4">
-                                            <div class="focus-check" id="focusCheck" title="Выполнить">
-                                              <i class="fas fa-check"></i>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                              <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
-                                              <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
-                                            </div>
-                                          </div>
-                                          <!-- Прогресс-бар внизу карточки -->
-                                          <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
-                                            <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
-                                          </div>
-                                        </div>
-                                      `;
+                <div class="focus-card task-entering" id="focusCard">
+                    ${projectHeader}
+                    <div class="flex items-start gap-4">
+                        <div class="focus-check" id="focusCheck" title="Выполнить">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-lg font-bold text-slate-800 mb-2">${escHtml(task.title)}</h2>
+                            <p class="text-sm text-slate-500 leading-relaxed">${escHtml(task.content)}</p>
+                            ${projectDescBlock}
+                        </div>
+                    </div>
+                    <div class="mt-5 h-1 rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-500" style="width: ${progressPercent}%; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                    </div>
+                </div>
+            `;
 
             document.getElementById('focusCheck').addEventListener('click', () => completeCurrentTask());
+        }
+
+        function toggleProjectDesc() {
+            const content = document.getElementById('projectDesc');
+            const chevron = document.getElementById('descChevron');
+            if (content && chevron) {
+                const isHidden = content.classList.contains('hidden');
+                content.classList.toggle('hidden');
+                chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
         }
 
         async function refreshSprintStatus() {
