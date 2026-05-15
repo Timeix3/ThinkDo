@@ -1,0 +1,159 @@
+﻿.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #f97316;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    z-index: 40;
+}
+
+    .fab:hover {
+        transform: scale(1.1);
+        background: #ea6c00;
+    }
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    font-weight: 600;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+    .btn-primary:hover {
+        background: #5a6fd6;
+    }
+
+    .btn-primary:disabled,
+    .btn-success:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    font-weight: 600;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+.btn-ghost {
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    font-weight: 600;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+    .btn-ghost:hover {
+        background: #e2e8f0;
+    }
+
+.btn-success {
+    background: #22c55e;
+    color: white;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    font-weight: 600;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+    .btn-success:hover {
+        background: #16a34a;
+    }
+
+/* ── Единый стиль workflow-кнопок ── */
+.workflow-btn {
+    position: fixed;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 1rem 2.2rem;
+    border-radius: 2rem;
+    background: white;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-decoration: none;
+    box-shadow: 0 0 24px rgba(255, 255, 255, 0.55), 0 0 48px rgba(255, 255, 255, 0.25), 0 15px 40px rgba(0, 0, 0, 0.2);
+    z-index: 45;
+    cursor: pointer;
+    animation: workflowBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, workflowBtnGlow 2.4s ease-in-out 0.5s infinite;
+    transition: transform 0.2s;
+}
+
+    .workflow-btn:hover {
+        transform: translateX(-50%) scale(1.05);
+    }
+
+    .workflow-btn i {
+        font-size: 1.1rem;
+        color: #8b5cf6;
+    }
+
+@keyframes workflowBtnAppear {
+    0% {
+        transform: translateX(-50%) translateY(40px) scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(-50%) translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes workflowBtnGlow {
+
+    0%, 100% {
+        box-shadow: 0 0 24px rgba(255, 255, 255, 0.55), 0 0 48px rgba(255, 255, 255, 0.25), 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 36px rgba(255, 255, 255, 0.85), 0 0 72px rgba(255, 255, 255, 0.45), 0 20px 55px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* ── Дополнительный стиль для инлайн-кнопки ── */
+.section-add-btn {
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    color: white;
+    border-radius: 0.65rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    line-height: 1;
+}
+
+    .section-add-btn:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }

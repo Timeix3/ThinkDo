@@ -2,6 +2,7 @@ package com.jedi.tasktracker.client;
 
 import com.jedi.tasktracker.client.dto.ClassifyResponse;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
+import com.jedi.tasktracker.client.dto.PhaseResponse;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.RoutineDto;
 import com.jedi.tasktracker.client.dto.SprintStatusDto;
@@ -244,6 +245,11 @@ public class DefaultApiClient implements ApiClient {
   @Override
   public void deleteRoutine(int id) {
     restClient.delete().uri("/api/routines/{id}", id).retrieve().toBodilessEntity();
+  }
+
+  @Override
+  public String getCurrentPhase() {
+    return restClient.get().uri("/api/flow/phase").retrieve().body(PhaseResponse.class).phase();
   }
 
   @Override
