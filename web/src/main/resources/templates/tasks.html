@@ -1353,77 +1353,17 @@
             alert(message);
         }
 
-        // ── Render: Планирование (перебор проектов по одному) ──
-
-        function renderPlanning() {
-            // Сбросить индекс если вышел за границы
-            if (planningProjectIndex >= allProjects.length) planningProjectIndex = allProjects.length - 1;
-            if (planningProjectIndex < 0) planningProjectIndex = 0;
-
-            const project = allProjects[planningProjectIndex];
-
-            // Заголовок и счётчик
-            const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
-            document.getElementById('planProjectTitle').textContent = icon + ' ' + project.name;
-            document.getElementById('planProjectCounter').textContent = (planningProjectIndex + 1) + ' из ' + allProjects.length;
-            const descEl = document.getElementById('planProjectDesc');
-            if (project.description) {
-                descEl.textContent = project.description;
-                descEl.style.display = 'block';
-            } else {
-                descEl.style.display = 'none';
-            }
-
-            // Кнопки навигации
-            document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
-            document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
-            document.getElementById('planNextBtn').textContent = planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
-
-            // Задачи текущего проекта
-            const projectTasks = allTasks.filter(t => t.projectId === project.id);
-            const container = document.getElementById('planTasksList');
-            if (projectTasks.length === 0) {
-                container.innerHTML = '<div class="planning-empty" style="color:rgba(255,255,255,0.4);text-align:center;padding:1.5rem 0.5rem;font-size:0.85rem;">Нет задач в проекте</div>';
-            } else {
-                container.innerHTML = projectTasks.map(t => {
-                    const isDone = t.isSelectedForSprint;
-                    const checkStyle = isDone ? 'border-color:#22c55e;background:#22c55e;color:#fff;' : '';
-                    return `
-                        <div class="planning-task-clickable" data-id="${t.id}">
-                            <div class="task-check shrink-0" data-complete-id="${t.id}" style="${checkStyle}">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <div class="planning-task-title" style="flex:1;min-width:0;font-size:0.9rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                                 data-edit-id="${t.id}">${escHtml(t.title)}</div>
-                        </div>
-                    `;
-                }).join('');
-
-                // Чекбокс — отметить задачу
-                container.querySelectorAll('.task-check').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        togglePlanningAndRefresh(btn.dataset.completeId, btn);
-                    });
-                });
-                // Клик по названию — открыть редактирование
-                container.querySelectorAll('[data-edit-id]').forEach(el => {
-                    el.addEventListener('click', () => openEditModal(el.dataset.editId, allTasks));
-                });
-            }
-        }
-
         document.getElementById('planPrevBtn').addEventListener('click', () => {
             if (planningProjectIndex > 0) {
                 planningProjectIndex--;
-                renderPlanning();
+                updatePlanningHeader();
                 renderPlanningTasks();
             }
         });
         document.getElementById('planNextBtn').addEventListener('click', () => {
             if (planningProjectIndex < allProjects.length - 1) {
                 planningProjectIndex++;
-                renderPlanning();
+                updatePlanningHeader();
                 renderPlanningTasks();
             }
         });
@@ -1479,34 +1419,34 @@
 
                 const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
                 const taskCountHtml = `
-                                                <span class="project-task-count mt-2 block">
-                                                    <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
-                                                </span>
-                                            `;
+                                                        <span class="project-task-count mt-2 block">
+                                                            <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+                                                        </span>
+                                                    `;
 
                 const defaultClass = p.isDefault ? 'project-default' : '';
 
                 return `
-                                                <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                                                    ${p.isDefault ? '' : `
-                                                        <button class="project-edit-btn absolute top-2 right-2"
-                                                                data-project-id="${p.id}"
-                                                                title="Редактировать проект"
-                                                                onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
-                                                            <i class="fas fa-pencil-alt"></i>
-                                                        </button>
-                                                    `}
+                                                        <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                                                            ${p.isDefault ? '' : `
+                                                                <button class="project-edit-btn absolute top-2 right-2"
+                                                                        data-project-id="${p.id}"
+                                                                        title="Редактировать проект"
+                                                                        onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                                                                    <i class="fas fa-pencil-alt"></i>
+                                                                </button>
+                                                            `}
 
-                                                    <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
-                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                            <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                                            ${badgeHtml}
+                                                            <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                                                    ${badgeHtml}
+                                                                </div>
+                                                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                                                                ${taskCountHtml}
+                                                            </div>
                                                         </div>
-                                                        ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                                                        ${taskCountHtml}
-                                                    </div>
-                                                </div>
-                                            `;
+                                                    `;
             }).join('');
         }
 
@@ -1535,7 +1475,7 @@
             container.innerHTML = `
                 <div class="space-y-2">
                     ${projectTasks.map(task => `
-                        <div class="task-list-item flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="task-list-item flex items-center gap-3 p-3 bg-white rounded-xl" data-edit-id="${task.id}">
                             <div class="task-check ${task.isSelectedForSprint ? 'bg-green-500 border-green-500 text-white' : ''}"
                                  data-task-id="${task.id}"
                                  data-selected="${task.isSelectedForSprint}">
@@ -1543,9 +1483,9 @@
                             </div>
                             <div class="flex-1 font-medium text-slate-800">${escHtml(task.title)}</div>
                         </div>
-                    `).join('')}
-                </div>
-            `;
+                        `).join('')}
+                        </div>
+                    `;
 
             // Навесить обработчики на чекбоксы
             container.querySelectorAll('.task-check').forEach(check => {
@@ -1555,6 +1495,40 @@
                     togglePlanningAndRefresh(taskId, check);
                 });
             });
+
+            // Клик по названию — открыть редактирование
+            container.querySelectorAll('.task-list-item').forEach(el => {
+                el.addEventListener('click', () => openEditModal(el.dataset.editId, allTasks));
+            });
+        }
+
+        // ── Обновление заголовка проекта в планировании ──
+        function updatePlanningHeader() {
+            const project = allProjects[planningProjectIndex];
+            if (!project) {
+                document.getElementById('planProjectTitle').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+                document.getElementById('planProjectCounter').textContent = '';
+                document.getElementById('planProjectDesc').style.display = 'none';
+                return;
+            }
+
+            const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
+            document.getElementById('planProjectTitle').textContent = icon + ' ' + project.name;
+            document.getElementById('planProjectCounter').textContent = (planningProjectIndex + 1) + ' из ' + allProjects.length;
+
+            const descEl = document.getElementById('planProjectDesc');
+            if (project.description) {
+                descEl.textContent = project.description;
+                descEl.style.display = 'block';
+            } else {
+                descEl.style.display = 'none';
+            }
+
+            // Кнопки навигации
+            document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
+            document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
+            document.getElementById('planNextBtn').textContent =
+                planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
         }
 
         function checkSprintButtonVisibility() {
@@ -1651,7 +1625,8 @@
                 }
                 const data = await res.json();
                 allProjects = data;
-                renderPlanning();
+
+                updatePlanningHeader();
                 renderPlanningTasks();
                 renderProjectsList();
                 return allProjects;
@@ -1677,9 +1652,6 @@
                 checkSprintButtonVisibility();
             } catch (e) {
                 console.log(e);
-            }
-            if (allProjects && allProjects.length > 0) {
-                renderPlanning();
             }
         }
 
@@ -2017,11 +1989,11 @@
                 tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
             } else {
                 tasksContainer.innerHTML = activeTasks.map(task => `
-                             <div class="project-task-item-large" data-task-id="${task.id}">
-                                <i class="fas fa-circle"></i>
-                                 <span>${escHtml(task.title)}</span>
-                                  </div>
-                        `).join('');
+                                     <div class="project-task-item-large" data-task-id="${task.id}">
+                                        <i class="fas fa-circle"></i>
+                                         <span>${escHtml(task.title)}</span>
+                                          </div>
+                                `).join('');
                 tasksContainer.querySelectorAll('.project-task-item-large').forEach(el => {
                     el.addEventListener('click', () => openEditModal(el.dataset.taskId, allTasks));
                 });
@@ -2145,10 +2117,9 @@
 
             allTasks.splice(taskIndex, 1);
 
-            if (currentPage === 'dashboard') renderPlanning();
             await loadProjects();
 
-            showUndoToast({
+            /*showUndoToast({
                 entityId: editingTaskId,
                 entityType: 'task',
                 title: task.title,
@@ -2156,10 +2127,9 @@
                 index: taskIndex,
                 arrayRef: allTasks,
                 refreshFn: () => {
-                    if (currentPage === 'dashboard') renderPlanning();
                     loadProjects();
                 }
-            });
+            });*/
 
             await fetch(`${API_URL}/${editingTaskId}`, { method: 'DELETE' })
                 .catch(err => console.error('Failed to delete task on server', err));
@@ -2273,7 +2243,7 @@
                 }
                 throw new Error('No restore endpoint');
             } catch (e) {
-                console.warn(`Restore endpoint for ${entityType} not available or failed:`, e);
+                //console.warn(`Restore endpoint for ${entityType} not available or failed:`, e);
 
                 // Для задач — попытаться воссоздать запись на сервере (POST)
                 if (entityType === 'task') {
@@ -2300,7 +2270,6 @@
                     }
                     if (editingProjectId !== null)
                         updateProjectsTasks(editingProjectId);
-                    if (currentPage === 'dashboard') renderPlanning();
                     await loadProjects();
                     return;
                 }
@@ -2338,8 +2307,6 @@
                     });
                 });
 
-                // Отрисовываем — renderPlanning теперь использует planningProjects при наличии
-                renderPlanning();
                 return planningProjects;
             } catch (e) {
                 console.warn('Planning API not available', e);
@@ -2581,15 +2548,15 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                                                    <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                                                        <div class="flex items-start justify-between gap-3">
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="font-semibold text-slate-800 mb-1 inbox-content-preview">${escHtml(item.title)}</div>
+                                                            <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                                                                <div class="flex items-start justify-between gap-3">
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <div class="font-semibold text-slate-800 mb-1 inbox-content-preview">${escHtml(item.title)}</div>
+                                                                    </div>
+                                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
+                                                                </div>
                                                             </div>
-                                                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
-                                                        </div>
-                                                    </div>
-                                                `).join('');
+                                                        `).join('');
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -2878,18 +2845,18 @@
             container.innerHTML = allRoutines.map(r => {
                 const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
                 return `
-                                                    <div class="task-list-item" data-routine-id="${r.id}">
-                                                        <div class="flex items-center justify-between gap-3">
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
-                                                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
-                                                                    <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
-                                                                </span>
+                                                            <div class="task-list-item" data-routine-id="${r.id}">
+                                                                <div class="flex items-center justify-between gap-3">
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                                                            <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
+                                                                </div>
                                                             </div>
-                                                            <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
-                                                        </div>
-                                                    </div>
-                                                `;
+                                                        `;
             }).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {
