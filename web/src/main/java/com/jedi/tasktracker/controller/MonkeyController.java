@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class MonkeyController {
 
-  @GetMapping("/")
-  public String index(Model model) {
+  @GetMapping("/monkey")
+  public String monkey(Model model) {
     model.addAttribute("pageTitle", "Обезьяна и Умник");
     return "monkey";
   }
