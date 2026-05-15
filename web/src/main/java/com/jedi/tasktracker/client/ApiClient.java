@@ -63,7 +63,7 @@ public interface ApiClient {
   void deleteRoutine(int id);
 
   String getCurrentPhase();
-  
+
   void updateFlowPhase(String phase);
 
   void completeSprint();

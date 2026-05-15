@@ -2586,7 +2586,10 @@
                                                             <div class="flex-1 min-w-0">
                                                                 <div class="font-semibold text-slate-800 mb-1 inbox-content-preview">${escHtml(item.title)}</div>
                                                             </div>
-                                                        `).join('');
+                                                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
+                                                        </div>
+                                                    </div>
+                                                `).join('');
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -3038,14 +3041,6 @@
     </script>
 
     <script src="/js/inbox-fab.js"></script>
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', () => {
-            const section = /*[[${initialSection}]]*/ 'inbox';
-            if (section && typeof switchPage === 'function') {
-                switchPage(section);
-            }
-        });
-    </script>
 </body>
 
 </html>

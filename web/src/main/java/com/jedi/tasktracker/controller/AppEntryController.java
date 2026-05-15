@@ -24,10 +24,10 @@ public class AppEntryController {
         return "redirect:/monkey";
       }
       case "review" -> {
-        return "redirect:/projects?section=inbox";
+        return "redirect:/inbox";
       }
       case "planning" -> {
-        return "redirect:/projects?section=dashboard";
+        return "redirect:/planning";
       }
       default -> {
         return "redirect:/monkey";

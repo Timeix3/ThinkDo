@@ -2,6 +2,7 @@ package com.jedi.tasktracker.client;
 
 import com.jedi.tasktracker.client.dto.ClassifyResponse;
 import com.jedi.tasktracker.client.dto.InboxListResponseDto;
+import com.jedi.tasktracker.client.dto.PhaseResponse;
 import com.jedi.tasktracker.client.dto.ProjectDto;
 import com.jedi.tasktracker.client.dto.RoutineDto;
 import com.jedi.tasktracker.client.dto.SprintStatusDto;
@@ -248,9 +249,9 @@ public class DefaultApiClient implements ApiClient {
 
   @Override
   public String getCurrentPhase() {
-    return restClient.get().uri("/api/flow/phase").retrieve().body(String.class);
+    return restClient.get().uri("/api/flow/phase").retrieve().body(PhaseResponse.class).phase();
   }
-  
+
   @Override
   public void updateFlowPhase(String phase) {
     restClient
