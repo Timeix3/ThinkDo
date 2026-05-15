@@ -37,6 +37,69 @@
             transform: scale(1.1);
         }
 
+        /* ── Единый стиль workflow-кнопок ── */
+        .workflow-btn {
+            position: fixed;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 1rem 2.2rem;
+            border-radius: 2rem;
+            background: white;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
+                0 0 48px rgba(255, 255, 255, 0.25),
+                0 15px 40px rgba(0, 0, 0, 0.2);
+            z-index: 45;
+            cursor: pointer;
+            animation: workflowBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+                workflowBtnGlow 2.4s ease-in-out 0.5s infinite;
+            transition: transform 0.2s;
+        }
+
+        .workflow-btn:hover {
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .workflow-btn i {
+            font-size: 1.1rem;
+            color: #8b5cf6;
+        }
+
+        @keyframes workflowBtnAppear {
+            0% {
+                transform: translateX(-50%) translateY(40px) scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateX(-50%) translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes workflowBtnGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
+                    0 0 48px rgba(255, 255, 255, 0.25),
+                    0 15px 40px rgba(0, 0, 0, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 0 36px rgba(255, 255, 255, 0.85),
+                    0 0 72px rgba(255, 255, 255, 0.45),
+                    0 20px 55px rgba(0, 0, 0, 0.3);
+            }
+        }
+
         /* ── Focus card ── */
         .focus-card {
             background: white;
@@ -180,60 +243,6 @@
             font-size: 0.9rem;
             margin-top: 0.5rem;
             min-height: 1.1rem;
-        }
-
-
-        /* ── Большая кнопка завершения ── */
-        .done-btn {
-            position: fixed;
-            bottom: 2.5rem;
-            left: 50%;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.7rem;
-            transform: translateX(-50%);
-            padding: 1rem 2.2rem;
-            border-radius: 2rem;
-            background: white;
-            color: #1e293b;
-            font-weight: 700;
-            font-size: 1.05rem;
-            text-decoration: none;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-            z-index: 45;
-            animation: doneBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, doneBtnPulse 2.4s ease-in-out 0.5s infinite;
-            transition: transform 0.2s;
-        }
-
-        .done-btn i {
-            font-size: 1.1rem;
-            color: #8b5cf6;
-        }
-
-        @keyframes doneBtnAppear {
-            0% {
-                transform: translateX(-50%) translateY(40px) scale(0.8);
-                opacity: 0;
-            }
-
-            100% {
-                transform: translateX(-50%) translateY(0) scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes doneBtnPulse {
-
-            0%,
-            100% {
-                transform: translateX(-50%) scale(1);
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-            }
-
-            50% {
-                transform: translateX(-50%) scale(1.02);
-                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4);
-            }
         }
 
         /* ── Инлайн-ввод инбокса (фокус-страница) ── */
@@ -389,7 +398,7 @@
         🤓
     </a>
 
-    <a href="/tasks" id="doneAllBtn" class="done-btn hidden">
+    <a href="/tasks" id="doneAllBtn" class="workflow-btn hidden">
         <i class="fas fa-inbox"></i>
         К разбору!
     </a>
