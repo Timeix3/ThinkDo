@@ -362,7 +362,7 @@
             const doneBtn = document.getElementById('doneAllBtn');
 
             // Button only appears when there is an active sprint, totalCount > 0 and all tasks completed
-            const allCompleted = (totalCount > 0 && completedCount === totalCount);
+            const allCompleted = (sprintActive === true && remaining.length === 0 && (completedCount > 0 || totalCount === 0));
             if (sprintActive === false) {
                 // No active sprint — never show
                 doneBtn.classList.add('hidden');
@@ -466,10 +466,21 @@
                     throw new Error(`HTTP ${res.status}`);
                 }
                 const status = await res.json();
-                if (typeof status.active !== 'undefined') sprintActive = !!status.active;
-                if (typeof status.total === 'number') totalCount = status.total;
-                if (typeof status.remaining === 'number')
-                    completedCount = Math.max(0, totalCount - status.remaining);
+                const hasActive = (typeof status.active !== 'undefined') ? status.active : status.hasActiveSprint;
+                if (typeof hasActive !== 'undefined') sprintActive = !!hasActive;
+
+                const totalFromStatus = (typeof status.total === 'number')
+                    ? status.total
+                    : (typeof status.pendingTasksCount === 'number' ? status.pendingTasksCount : undefined);
+
+                if (typeof totalFromStatus === 'number') totalCount = totalFromStatus;
+
+                const remainingFromStatus = (typeof status.remaining === 'number')
+                    ? status.remaining
+                    : (typeof status.pendingTasksCount === 'number' ? status.pendingTasksCount : undefined);
+
+                if (typeof remainingFromStatus === 'number')
+                    completedCount = Math.max(0, totalCount - remainingFromStatus);
                 // If we already have remaining array, keep it in sync by trimming if mismatch
                 if (Array.isArray(remaining) && remaining.length !== status.remaining) {
                     // Do not mutate server state here — just align UI remaining length if possible
@@ -515,6 +526,24 @@
                             const res2 = await fetch(SPRINT_API_URL);
                             if (res2.ok) remaining = await res2.json();
                         } catch (e) { /* ignore */ }
+                    }
+                }
+
+                if (remaining.length === 0 && sprintActive === true) {
+                    try {
+                        const allTasksRes = await fetch('/api/tasks');
+                        if (allTasksRes.ok) {
+                            const allTasks = await allTasksRes.json();
+                            const selected = (Array.isArray(allTasks) ? allTasks : [])
+                                .filter(t => t.isSelectedForSprint === true && t.status !== 2 && t.status !== 3);
+                            if (selected.length > 0) {
+                                remaining = selected;
+                                totalCount = Math.max(totalCount, selected.length);
+                                completedCount = Math.max(0, totalCount - remaining.length);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Fallback selected tasks load failed', e);
                     }
                 }
 
@@ -571,19 +600,35 @@
             doneBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 // Guard: only allow when counters indicate full completion
-                if (!(totalCount > 0 && completedCount === totalCount)) return;
+                if (!(sprintActive === true && remaining.length === 0 && (completedCount > 0 || totalCount === 0))) return;
 
                 // prevent double-click
                 if (doneBtn.dataset.loading === 'true') return;
 
                 doneBtn.dataset.loading = 'true';
 
-                updateFlowPhaseApi('review');
+                try {
+                    const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
+                    if (!res.ok) {
+                        let msg = `HTTP ${res.status}`;
+                        try {
+                            const body = await res.json();
+                            if (body?.message) msg = body.message;
+                        } catch { }
+                        throw new Error(msg);
+                    }
 
-                // Переходим на страницу инбокса (разбор)
-                window.location.href = '/inbox';
+                    // fallback для UI, если обновление фазы на бэкенде задержалось
+                    updateFlowPhaseApi('review');
 
-                doneBtn.dataset.loading = 'false';
+                     // Переходим на страницу инбокса (разбор)
+                    window.location.href = '/inbox';
+                } catch (err) {
+                    console.error('Не удалось завершить спринт', err);
+                    alert('Не удалось завершить спринт: ' + (err?.message || 'неизвестная ошибка'));
+                } finally {
+                    doneBtn.dataset.loading = 'false';
+                }
             });
 
             // initial load

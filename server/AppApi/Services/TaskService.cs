@@ -10,11 +10,13 @@ public class TaskService : ITaskService
 {
     private readonly ITaskRepository _repository;
     private readonly IProjectRepository _projectRepository;
+    private readonly ISprintRepository _sprintRepository;
 
-    public TaskService(ITaskRepository repository, IProjectRepository projectRepository)
+    public TaskService(ITaskRepository repository, IProjectRepository projectRepository, ISprintRepository sprintRepository)
     {
         _repository = repository;
         _projectRepository = projectRepository;
+        _sprintRepository = sprintRepository;
     }
 
     public async Task<TaskListResponseDto> GetAllTasksAsync(string userId, int offset = 0, int limit = 50)
@@ -238,7 +240,14 @@ public class TaskService : ITaskService
 
     public async Task<IEnumerable<TaskResponseDto>> GetSprintTasksAsync(string userId)
     {
-        var tasks = await _repository.GetSprintTasksAsync(userId);
+        var activeSprint = await _sprintRepository.GetActiveSprintAsync(userId);
+        if (activeSprint is null)
+        {
+            return Enumerable.Empty<TaskResponseDto>();
+        }
+
+        var tasks = activeSprint.Tasks
+            .Where(t => t.Status != TasksStatus.Completed && t.Status != TasksStatus.Cancelled);
         return tasks.Select(MapToDto);
     }
 
