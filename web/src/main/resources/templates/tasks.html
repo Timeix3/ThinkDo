@@ -1537,77 +1537,17 @@
             alert(message);
         }
 
-        // ── Render: Планирование (перебор проектов по одному) ──
-
-        function renderPlanning() {
-            // Сбросить индекс если вышел за границы
-            if (planningProjectIndex >= allProjects.length) planningProjectIndex = allProjects.length - 1;
-            if (planningProjectIndex < 0) planningProjectIndex = 0;
-
-            const project = allProjects[planningProjectIndex];
-
-            // Заголовок и счётчик
-            const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
-            document.getElementById('planProjectTitle').textContent = icon + ' ' + project.name;
-            document.getElementById('planProjectCounter').textContent = (planningProjectIndex + 1) + ' из ' + allProjects.length;
-            const descEl = document.getElementById('planProjectDesc');
-            if (project.description) {
-                descEl.textContent = project.description;
-                descEl.style.display = 'block';
-            } else {
-                descEl.style.display = 'none';
-            }
-
-            // Кнопки навигации
-            document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
-            document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
-            document.getElementById('planNextBtn').textContent = planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
-
-            // Задачи текущего проекта
-            const projectTasks = allTasks.filter(t => t.projectId === project.id);
-            const container = document.getElementById('planTasksList');
-            if (projectTasks.length === 0) {
-                container.innerHTML = '<div class="planning-empty" style="color:rgba(255,255,255,0.4);text-align:center;padding:1.5rem 0.5rem;font-size:0.85rem;">Нет задач в проекте</div>';
-            } else {
-                container.innerHTML = projectTasks.map(t => {
-                    const isDone = t.isSelectedForSprint;
-                    const checkStyle = isDone ? 'border-color:#22c55e;background:#22c55e;color:#fff;' : '';
-                    return `
-                <div class="planning-task-clickable" data-id="${t.id}">
-                    <div class="task-check shrink-0" data-complete-id="${t.id}" style="${checkStyle}">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="planning-task-title" style="flex:1;min-width:0;font-size:0.9rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                         data-edit-id="${t.id}">${escHtml(t.title)}</div>
-                </div>
-            `;
-                }).join('');
-
-                // Чекбокс — отметить задачу
-                container.querySelectorAll('.task-check').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        togglePlanningAndRefresh(btn.dataset.completeId, btn);
-                    });
-                });
-                // Клик по названию — открыть редактирование
-                container.querySelectorAll('[data-edit-id]').forEach(el => {
-                    el.addEventListener('click', () => openEditModal(el.dataset.editId, allTasks));
-                });
-            }
-        }
-
         document.getElementById('planPrevBtn').addEventListener('click', () => {
             if (planningProjectIndex > 0) {
                 planningProjectIndex--;
-                renderPlanning();
+                updatePlanningHeader();
                 renderPlanningTasks();
             }
         });
         document.getElementById('planNextBtn').addEventListener('click', () => {
             if (planningProjectIndex < allProjects.length - 1) {
                 planningProjectIndex++;
-                renderPlanning();
+                updatePlanningHeader();
                 renderPlanningTasks();
             }
         });
@@ -1719,7 +1659,7 @@
             container.innerHTML = `
         <div class="space-y-2">
             ${projectTasks.map(task => `
-                <div class="task-list-item flex items-center gap-3 p-3 bg-white rounded-xl">
+                <div class="task-list-item flex items-center gap-3 p-3 bg-white rounded-xl" data-edit-id="${task.id}">
                     <div class="task-check ${task.isSelectedForSprint ? 'bg-green-500 border-green-500 text-white' : ''}"
                          data-task-id="${task.id}"
                          data-selected="${task.isSelectedForSprint}">
@@ -1739,6 +1679,40 @@
                     togglePlanningAndRefresh(taskId, check);
                 });
             });
+
+            // Клик по названию — открыть редактирование
+            container.querySelectorAll('.task-list-item').forEach(el => {
+                el.addEventListener('click', () => openEditModal(el.dataset.editId, allTasks));
+            });
+        }
+
+        // ── Обновление заголовка проекта в планировании ──
+        function updatePlanningHeader() {
+            const project = allProjects[planningProjectIndex];
+            if (!project) {
+                document.getElementById('planProjectTitle').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+                document.getElementById('planProjectCounter').textContent = '';
+                document.getElementById('planProjectDesc').style.display = 'none';
+                return;
+            }
+
+            const icon = project.isDefault ? '⭐' : (project.blocked ? '🔒' : '📁');
+            document.getElementById('planProjectTitle').textContent = icon + ' ' + project.name;
+            document.getElementById('planProjectCounter').textContent = (planningProjectIndex + 1) + ' из ' + allProjects.length;
+
+            const descEl = document.getElementById('planProjectDesc');
+            if (project.description) {
+                descEl.textContent = project.description;
+                descEl.style.display = 'block';
+            } else {
+                descEl.style.display = 'none';
+            }
+
+            // Кнопки навигации
+            document.getElementById('planPrevBtn').disabled = planningProjectIndex === 0;
+            document.getElementById('planNextBtn').disabled = planningProjectIndex === allProjects.length - 1;
+            document.getElementById('planNextBtn').textContent =
+                planningProjectIndex === allProjects.length - 1 ? '✅ Готово' : 'Далее ›';
         }
 
         function checkSprintButtonVisibility() {
@@ -1835,7 +1809,8 @@
                 }
                 const data = await res.json();
                 allProjects = data;
-                renderPlanning();
+
+                updatePlanningHeader(); 
                 renderPlanningTasks();
                 renderProjectsList();
                 return allProjects;
@@ -1861,9 +1836,6 @@
                 checkSprintButtonVisibility();
             } catch (e) {
                 console.log(e);
-            }
-            if (allProjects && allProjects.length > 0) {
-                renderPlanning();
             }
         }
 
@@ -2325,10 +2297,9 @@
 
             allTasks.splice(taskIndex, 1);
 
-            if (currentPage === 'dashboard') renderPlanning();
             await loadProjects();
 
-            showUndoToast({
+            /*showUndoToast({
                 entityId: editingTaskId,
                 entityType: 'task',
                 title: task.title,
@@ -2336,10 +2307,9 @@
                 index: taskIndex,
                 arrayRef: allTasks,
                 refreshFn: () => {
-                    if (currentPage === 'dashboard') renderPlanning();
                     loadProjects();
                 }
-            });
+            });*/
 
             await fetch(`${API_URL}/${editingTaskId}`, { method: 'DELETE' })
                 .catch(err => console.error('Failed to delete task on server', err));
@@ -2453,7 +2423,7 @@
                 }
                 throw new Error('No restore endpoint');
             } catch (e) {
-                console.warn(`Restore endpoint for ${entityType} not available or failed:`, e);
+                //console.warn(`Restore endpoint for ${entityType} not available or failed:`, e);
 
                 // Для задач — попытаться воссоздать запись на сервере (POST)
                 if (entityType === 'task') {
@@ -2480,7 +2450,6 @@
                     }
                     if (editingProjectId !== null)
                         updateProjectsTasks(editingProjectId);
-                    if (currentPage === 'dashboard') renderPlanning();
                     await loadProjects();
                     return;
                 }
@@ -2518,8 +2487,6 @@
                     });
                 });
 
-                // Отрисовываем — renderPlanning теперь использует planningProjects при наличии
-                renderPlanning();
                 return planningProjects;
             } catch (e) {
                 console.warn('Planning API not available', e);
