@@ -575,27 +575,15 @@
 
                 // prevent double-click
                 if (doneBtn.dataset.loading === 'true') return;
+
                 doneBtn.dataset.loading = 'true';
-                try {
-                    const res = await fetch(SPRINT_COMPLETE_URL, { method: 'POST' });
-                    if (res.ok) {
-                        // success -> redirect to inbox
-                        window.location.href = '/inbox';
-                    } else {
-                        // show server-provided message when possible
-                        let msg = `Ошибка завершения спринта: HTTP ${res.status}`;
-                        try {
-                            const json = await res.json();
-                            if (json && json.message) msg = json.message;
-                        } catch (_) { }
-                        alert(msg);
-                        // keep button visible (do not redirect)
-                    }
-                } catch (err) {
-                    alert('Сетевая ошибка при завершении спринта. Попробуйте ещё раз.');
-                } finally {
-                    doneBtn.dataset.loading = 'false';
-                }
+
+                updateFlowPhaseApi('review');
+
+                // Переходим на страницу инбокса (разбор)
+                window.location.href = '/inbox';
+
+                doneBtn.dataset.loading = 'false';
             });
 
             // initial load
@@ -629,6 +617,19 @@
             return String(str ?? '')
                 .replace(/&/g, '&amp;').replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        async function updateFlowPhaseApi(phase) {
+            try {
+                // Fire-and-forget: отправляем запрос, но не ждем его завершения для перехода
+                fetch('/api/flow/phase', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phase: phase })
+                }).catch(err => console.error('Flow update failed', err));
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function clearAllData() {
