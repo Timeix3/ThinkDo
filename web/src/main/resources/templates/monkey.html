@@ -8,96 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/css/buttons.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-        }
-
-        .fab {
-            position: fixed;
-            bottom: 2rem;
-            width: 56px;
-            height: 56px;
-            border-radius: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            z-index: 40;
-            text-decoration: none;
-        }
-
-        .fab:hover {
-            transform: scale(1.1);
-        }
-
-        /* ── Единый стиль workflow-кнопок ── */
-        .workflow-btn {
-            position: fixed;
-            bottom: 2.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.7rem;
-            padding: 1rem 2.2rem;
-            border-radius: 2rem;
-            background: white;
-            color: #1e293b;
-            font-weight: 700;
-            font-size: 1.05rem;
-            text-decoration: none;
-            box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
-                0 0 48px rgba(255, 255, 255, 0.25),
-                0 15px 40px rgba(0, 0, 0, 0.2);
-            z-index: 45;
-            cursor: pointer;
-            animation: workflowBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-                workflowBtnGlow 2.4s ease-in-out 0.5s infinite;
-            transition: transform 0.2s;
-        }
-
-        .workflow-btn:hover {
-            transform: translateX(-50%) scale(1.05);
-        }
-
-        .workflow-btn i {
-            font-size: 1.1rem;
-            color: #8b5cf6;
-        }
-
-        @keyframes workflowBtnAppear {
-            0% {
-                transform: translateX(-50%) translateY(40px) scale(0.8);
-                opacity: 0;
-            }
-
-            100% {
-                transform: translateX(-50%) translateY(0) scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes workflowBtnGlow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
-                    0 0 48px rgba(255, 255, 255, 0.25),
-                    0 15px 40px rgba(0, 0, 0, 0.2);
-            }
-
-            50% {
-                box-shadow: 0 0 36px rgba(255, 255, 255, 0.85),
-                    0 0 72px rgba(255, 255, 255, 0.45),
-                    0 20px 55px rgba(0, 0, 0, 0.3);
-            }
         }
 
         /* ── Focus card ── */
@@ -250,7 +166,7 @@
             position: fixed;
             bottom: 6rem;
             right: 2rem;
-            z-index: 42;
+            z-index: 100;
             width: 280px;
         }
 
@@ -380,7 +296,7 @@
 
     <!-- FAB-инбокс: теперь по классу и data-target -->
     <div class="fab fab-add-inbox" data-target="#inboxInputBar"
-        style="background: #f97316; position: fixed; bottom: 2rem; right: 2rem;">
+         style="z-index: 100;">
         <i class="fas fa-plus fab-add-inbox-icon"></i>
     </div>
 
@@ -393,8 +309,7 @@
     </div>
 
     <!-- FAB: Навигация на умника -->
-    <a href="/tasks" class="fab" id="fabNavMain"
-        style="bottom: 2rem; left: 2rem; background: #8b5cf6; font-size: 1.6rem;">
+    <a href="/tasks" class="fab" id="fabNavMain" style="bottom: 2rem; left: 2rem; background: #f97316; font-size: 1.6rem;">
         🤓
     </a>
 
