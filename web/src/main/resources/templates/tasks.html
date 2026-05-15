@@ -1419,34 +1419,34 @@
 
                 const taskCount = allTasks.filter(t => t.projectId === p.id && t.status !== 2 && t.status !== 3).length;
                 const taskCountHtml = `
-                                                <span class="project-task-count mt-2 block">
-                                                    <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
-                                                </span>
-                                            `;
+                                                        <span class="project-task-count mt-2 block">
+                                                            <i class="fas fa-list"></i>  ${taskCount} ${getTaskCountWord(taskCount)}
+                                                        </span>
+                                                    `;
 
                 const defaultClass = p.isDefault ? 'project-default' : '';
 
                 return `
-                                                <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
-                                                    ${p.isDefault ? '' : `
-                                                        <button class="project-edit-btn absolute top-2 right-2"
-                                                                data-project-id="${p.id}"
-                                                                title="Редактировать проект"
-                                                                onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
-                                                            <i class="fas fa-pencil-alt"></i>
-                                                        </button>
-                                                    `}
+                                                        <div class="project-list-item ${defaultClass}" data-project-id="${p.id}">
+                                                            ${p.isDefault ? '' : `
+                                                                <button class="project-edit-btn absolute top-2 right-2"
+                                                                        data-project-id="${p.id}"
+                                                                        title="Редактировать проект"
+                                                                        onclick="event.stopPropagation(); openProjectEditModal('${p.id}')">
+                                                                    <i class="fas fa-pencil-alt"></i>
+                                                                </button>
+                                                            `}
 
-                                                    <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
-                                                        <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                                            <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
-                                                            ${badgeHtml}
+                                                            <div class="${p.isDefault ? '' : 'cursor-pointer'}" ${p.isDefault ? '' : `onclick="openProjectEditModal('${p.id}')"`}>
+                                                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                                                    <div class="font-semibold text-slate-800 truncate">${icon} ${escHtml(p.name)}</div>
+                                                                    ${badgeHtml}
+                                                                </div>
+                                                                ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
+                                                                ${taskCountHtml}
+                                                            </div>
                                                         </div>
-                                                        ${p.description ? `<p class="text-sm text-slate-500 line-clamp-2">${escHtml(p.description)}</p>` : ''}
-                                                        ${taskCountHtml}
-                                                    </div>
-                                                </div>
-                                            `;
+                                                    `;
             }).join('');
         }
 
@@ -1473,17 +1473,19 @@
             }
 
             container.innerHTML = `
-        <div class="space-y-2">
-            ${projectTasks.map(task => `
-                <div class="task-list-item flex items-center gap-3 p-3 bg-white rounded-xl" data-edit-id="${task.id}">
-                    <div class="task-check ${task.isSelectedForSprint ? 'bg-green-500 border-green-500 text-white' : ''}"
-                         data-task-id="${task.id}"
-                         data-selected="${task.isSelectedForSprint}">
-                        ${task.isSelectedForSprint ? '✓' : ''}
-                    </div>
-                    <div class="flex-1 font-medium text-slate-800">${escHtml(task.title)}</div>
-                </div>
-            `;
+                <div class="space-y-2">
+                    ${projectTasks.map(task => `
+                        <div class="task-list-item flex items-center gap-3 p-3 bg-white rounded-xl" data-edit-id="${task.id}">
+                            <div class="task-check ${task.isSelectedForSprint ? 'bg-green-500 border-green-500 text-white' : ''}"
+                                 data-task-id="${task.id}"
+                                 data-selected="${task.isSelectedForSprint}">
+                                ${task.isSelectedForSprint ? '✓' : ''}
+                            </div>
+                            <div class="flex-1 font-medium text-slate-800">${escHtml(task.title)}</div>
+                        </div>
+                        `).join('')}
+                        </div>
+                    `;
 
             // Навесить обработчики на чекбоксы
             container.querySelectorAll('.task-check').forEach(check => {
@@ -1624,7 +1626,7 @@
                 const data = await res.json();
                 allProjects = data;
 
-                updatePlanningHeader(); 
+                updatePlanningHeader();
                 renderPlanningTasks();
                 renderProjectsList();
                 return allProjects;
@@ -1987,11 +1989,11 @@
                 tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
             } else {
                 tasksContainer.innerHTML = activeTasks.map(task => `
-                             <div class="project-task-item-large" data-task-id="${task.id}">
-                                <i class="fas fa-circle"></i>
-                                 <span>${escHtml(task.title)}</span>
-                                  </div>
-                        `).join('');
+                                     <div class="project-task-item-large" data-task-id="${task.id}">
+                                        <i class="fas fa-circle"></i>
+                                         <span>${escHtml(task.title)}</span>
+                                          </div>
+                                `).join('');
                 tasksContainer.querySelectorAll('.project-task-item-large').forEach(el => {
                     el.addEventListener('click', () => openEditModal(el.dataset.taskId, allTasks));
                 });
@@ -2546,15 +2548,15 @@
                 return;
             }
             container.innerHTML = sorted.map(item => `
-                                                    <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
-                                                        <div class="flex items-start justify-between gap-3">
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="font-semibold text-slate-800 mb-1 inbox-content-preview">${escHtml(item.title)}</div>
+                                                            <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
+                                                                <div class="flex items-start justify-between gap-3">
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <div class="font-semibold text-slate-800 mb-1 inbox-content-preview">${escHtml(item.title)}</div>
+                                                                    </div>
+                                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
+                                                                </div>
                                                             </div>
-                                                            <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
-                                                        </div>
-                                                    </div>
-                                                `).join('');
+                                                        `).join('');
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
@@ -2843,18 +2845,18 @@
             container.innerHTML = allRoutines.map(r => {
                 const label = FREQUENCY_LABELS[r.frequency] ?? r.frequency;
                 return `
-                                                    <div class="task-list-item" data-routine-id="${r.id}">
-                                                        <div class="flex items-center justify-between gap-3">
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
-                                                                <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
-                                                                    <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
-                                                                </span>
+                                                            <div class="task-list-item" data-routine-id="${r.id}">
+                                                                <div class="flex items-center justify-between gap-3">
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <div class="font-semibold text-slate-800 truncate mb-1">🔄 ${escHtml(r.name)}</div>
+                                                                        <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md" style="background:#d1fae5;color:#047857;">
+                                                                            <i class="fas fa-sync-alt" style="font-size:0.6rem;"></i>${escHtml(label)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
+                                                                </div>
                                                             </div>
-                                                            <i class="fas fa-pencil-alt text-slate-300 text-sm shrink-0"></i>
-                                                        </div>
-                                                    </div>
-                                                `;
+                                                        `;
             }).join('');
 
             container.querySelectorAll('.task-list-item').forEach(el => {
