@@ -264,6 +264,17 @@ public class DefaultApiClient implements ApiClient {
   }
 
   @Override
+  public void startSprint(List<Long> taskIds) {
+    restClient
+        .post()
+        .uri("/api/sprint/start")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(Map.of("taskIds", taskIds))
+        .retrieve()
+        .toBodilessEntity();
+  }
+
+  @Override
   public void completeSprint() {
     restClient.post().uri("/api/sprint/complete").retrieve().toBodilessEntity();
   }

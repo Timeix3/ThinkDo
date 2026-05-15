@@ -12,6 +12,7 @@ public class TaskServiceTests
 {
     private readonly Mock<ITaskRepository> _repositoryMock;
     private readonly Mock<IProjectRepository> _projectRepositoryMock;
+    private readonly Mock<ISprintRepository> _sprintRepositoryMock;
     private readonly TaskService _service;
     private const string TestUserId = "test-user-123";
 
@@ -19,7 +20,8 @@ public class TaskServiceTests
     {
         _repositoryMock = new Mock<ITaskRepository>();
         _projectRepositoryMock = new Mock<IProjectRepository>();
-        _service = new TaskService(_repositoryMock.Object, _projectRepositoryMock.Object);
+        _sprintRepositoryMock = new Mock<ISprintRepository>();
+        _service = new TaskService(_repositoryMock.Object, _projectRepositoryMock.Object, _sprintRepositoryMock.Object);
     }
 
     [Fact]

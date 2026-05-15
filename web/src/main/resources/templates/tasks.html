@@ -1502,6 +1502,61 @@
             });
         }
 
+        async function startSprintFromSelection(event) {
+            event.preventDefault();
+
+            const selectedTaskIds = allTasks
+                .filter(t => t.isSelectedForSprint === true && t.status !== 2 && t.status !== 3)
+                .map(t => t.id);
+
+            if (selectedTaskIds.length === 0) {
+                showError('Выберите хотя бы одну задачу для спринта.');
+                return;
+            }
+
+            const startBtn = document.getElementById('startSprintBtn');
+            if (!startBtn || startBtn.dataset.loading === 'true') return;
+
+            startBtn.dataset.loading = 'true';
+            try {
+                const res = await fetch(`${SPRINT_API_URL}/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ taskIds: selectedTaskIds })
+                });
+
+                if (!res.ok) {
+                    let errorMessage = '';
+                    try {
+                        const errorJson = await res.json();
+                        errorMessage = errorJson?.message ?? '';
+                    } catch {
+                        try { errorMessage = await res.text(); } catch { errorMessage = ''; }
+                    }
+
+                    // Если спринт уже активен — просто переходим в режим спринта
+                    if (res.status === 409) {
+                        updateFlowPhaseIndicator('sprint');
+                        window.location.href = '/monkey';
+                        return;
+                    }
+
+                    throw new Error(`HTTP ${res.status}: ${errorMessage}`);
+                }
+
+                updateFlowPhaseIndicator('sprint');
+                const startBtnNow = document.getElementById('startSprintBtn');
+                if (startBtnNow) startBtnNow.remove();
+                window.location.href = '/monkey';
+            } catch (err) {
+                console.error('Не удалось запустить спринт', err);
+                const msg = (err && err.message) ? err.message : 'Не удалось запустить спринт. Попробуйте снова.';
+                showError(msg);
+            } finally {
+                startBtn.dataset.loading = 'false';
+            }
+        }
+
         // ── Обновление заголовка проекта в планировании ──
         function updatePlanningHeader() {
             const project = allProjects[planningProjectIndex];
@@ -1562,7 +1617,9 @@
             const btn = document.getElementById('startSprintBtn');
             const planningContainer = document.querySelector('.max-w-6xl'); // родитель, куда вставим
 
-            if (allNonEmptyHaveSelection && relevantProjects.length > 0) {
+            const sprintPhaseActive = currentFlowPhase === 'sprint';
+
+            if (!sprintPhaseActive && allNonEmptyHaveSelection && relevantProjects.length > 0) {
                 // Кнопка должна быть в DOM
                 if (!btn || !planningContainer.contains(btn)) {
                     // Если её нет – создаём заново (или берём из переменной)
@@ -1572,8 +1629,7 @@
                     newBtn.className = 'workflow-btn';
                     newBtn.innerHTML = '<i class="fas fa-rocket"></i> Начать спринт!';
                     planningContainer.appendChild(newBtn);
-                    // По условию кнопка пока не должна быть disabled
-                    // Можно добавить обработчик клика позже (по заданию не требуется)
+                    newBtn.addEventListener('click', startSprintFromSelection);
                 }
                 const toPlanningBtn = document.getElementById('toPlanningBtn');
                 if (toPlanningBtn) toPlanningBtn.classList.add('hidden');
@@ -2405,13 +2461,25 @@
 
         // ── Flow Phase Indicator ───────────────────────────────
         function updateFlowPhaseIndicator(phase) {
+            currentFlowPhase = (phase || '').toLowerCase();
             document.querySelectorAll('#flowPhaseIndicator .wf-step').forEach(el => {
-                el.classList.toggle('wf-active', el.dataset.phase === phase);
+                el.classList.toggle('wf-active', el.dataset.phase === currentFlowPhase);
             });
         }
 
         async function syncFlowPhase(page) {
-            if (page === 'dashboard') { updateFlowPhaseIndicator('planning'); return; }
+            if (page === 'dashboard') {
+                try {
+                    const res = await fetch(`${SPRINT_API_URL}/status`);
+                    if (!res.ok) throw new Error(res.status);
+                    const data = await res.json();
+                    updateFlowPhaseIndicator((data.phase ?? '').toLowerCase() || 'planning');
+                } catch (e) {
+                    updateFlowPhaseIndicator('planning');
+                }
+                checkSprintButtonVisibility();
+                return;
+            }
             if (page === 'inbox') { updateFlowPhaseIndicator('review'); return; }
             try {
                 const res = await fetch(`${SPRINT_API_URL}/status`);
@@ -2425,6 +2493,7 @@
 
         // ── Navigation ─────────────────────────────────────────
         let currentPage = 'dashboard';
+        let currentFlowPhase = 'planning';
 
         function switchPage(page, pushState = true) {
             currentPage = page;
@@ -2464,6 +2533,9 @@
             }
             syncFlowPhase(page);
         }
+
+        const existingStartSprintBtn = document.getElementById('startSprintBtn');
+        if (existingStartSprintBtn) existingStartSprintBtn.addEventListener('click', startSprintFromSelection);
 
         document.getElementById('navDashboard').addEventListener('click', () => switchPage('dashboard'));
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));

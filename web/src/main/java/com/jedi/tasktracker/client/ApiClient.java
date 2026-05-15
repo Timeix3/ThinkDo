@@ -67,4 +67,6 @@ public interface ApiClient {
   void updateFlowPhase(String phase);
 
   void completeSprint();
+
+  void startSprint(List<Long> taskIds);
 }

@@ -15,6 +15,7 @@ public class SprintRepository : ISprintRepository
     {
         return await _context.Sprints
             .Include(s => s.Tasks)
+            .ThenInclude(t => t.Project)
             .FirstOrDefaultAsync(s => s.UserId == userId && s.Status == SprintStatus.Active);
     }
 
