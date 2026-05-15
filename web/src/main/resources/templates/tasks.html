@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/css/buttons.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -20,40 +21,6 @@
             border-radius: 2rem;
             padding: 0.5rem 1rem;
             backdrop-filter: blur(4px);
-        }
-
-        .kanban-col {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 1.5rem;
-            padding: 1rem;
-            min-height: 300px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .fab {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: #f97316;
-            width: 56px;
-            height: 56px;
-            border-radius: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            z-index: 40;
-        }
-
-        .fab:hover {
-            transform: scale(1.1);
-            background: #ea6c00;
         }
 
         .modal-overlay {
@@ -77,6 +44,7 @@
         .modal-overlay.nested {
             z-index: 60;
         }
+
         .modal-box-project-edit {
             background: white;
             border-radius: 1.5rem;
@@ -120,55 +88,6 @@
         input[type="date"]:focus,
         select:focus {
             border-color: #667eea;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            border-radius: 0.75rem;
-            padding: 0.6rem 1.25rem;
-            font-weight: 600;
-            transition: background 0.2s;
-            cursor: pointer;
-        }
-
-        .btn-primary:hover {
-            background: #5a6fd6;
-        }
-
-        .btn-primary:disabled,
-        .btn-success:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-            border-radius: 0.75rem;
-            padding: 0.6rem 1.25rem;
-            font-weight: 600;
-            transition: background 0.2s;
-            cursor: pointer;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        .btn-ghost {
-            background: #f1f5f9;
-            color: #64748b;
-            border-radius: 0.75rem;
-            padding: 0.6rem 1.25rem;
-            font-weight: 600;
-            transition: background 0.2s;
-            cursor: pointer;
-        }
-
-        .btn-ghost:hover {
-            background: #e2e8f0;
         }
 
         /* Описание проекта в createModal */
@@ -220,20 +139,6 @@
 
         .field-error i {
             font-size: 0.7rem;
-        }
-
-        .btn-success {
-            background: #22c55e;
-            color: white;
-            border-radius: 0.75rem;
-            padding: 0.6rem 1.25rem;
-            font-weight: 600;
-            transition: background 0.2s;
-            cursor: pointer;
-        }
-
-        .btn-success:hover {
-            background: #16a34a;
         }
 
         .nav-disabled {
@@ -584,7 +489,7 @@
             position: fixed;
             bottom: 6rem;
             right: 2rem;
-            z-index: 42;
+            z-index: 100;
             width: 300px;
         }
 
@@ -905,101 +810,6 @@
             gap: 0.4rem;
             margin-bottom: 0.75rem;
         }
-
-        /* ── Кнопка "Начать спринт!" (всегда видна, неактивна) ── */
-        .workflow-btn {
-            position: fixed;
-            bottom: 2.5rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.7rem;
-            padding: 1rem 2.2rem;
-            border-radius: 2rem;
-            background: white;
-            color: #1e293b;
-            font-weight: 700;
-            font-size: 1.05rem;
-            text-decoration: none;
-            border: none;
-            box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
-                0 0 48px rgba(255, 255, 255, 0.25),
-                0 15px 40px rgba(0, 0, 0, 0.2);
-            z-index: 45;
-            cursor: pointer;
-            animation: workflowBtnAppear 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-                workflowBtnGlow 2.4s ease-in-out 0.5s infinite;
-            transition: transform 0.2s;
-        }
-
-        .workflow-btn:hover {
-            transform: translateX(-50%) scale(1.05);
-        }
-
-        .workflow-btn i {
-            font-size: 1.1rem;
-            color: #8b5cf6;
-        }
-
-        /* Неактивное состояние (заглушка) */
-        .workflow-btn.disabled {
-            opacity: 0.55;
-            pointer-events: none;
-            cursor: not-allowed;
-            animation: none;
-            box-shadow: 0 0 24px rgba(255, 255, 255, 0.3);
-        }
-
-        .workflow-btn.disabled:hover {
-            transform: translateX(-50%);
-        }
-
-        @keyframes workflowBtnAppear {
-            0% {
-                transform: translateX(-50%) translateY(40px) scale(0.8);
-                opacity: 0;
-            }
-
-            100% {
-                transform: translateX(-50%) translateY(0) scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes workflowBtnGlow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 24px rgba(255, 255, 255, 0.55),
-                    0 0 48px rgba(255, 255, 255, 0.25),
-                    0 15px 40px rgba(0, 0, 0, 0.2);
-            }
-
-            50% {
-                box-shadow: 0 0 36px rgba(255, 255, 255, 0.85),
-                    0 0 72px rgba(255, 255, 255, 0.45),
-                    0 20px 55px rgba(0, 0, 0, 0.3);
-            }
-        }
-
-        /* ── Дополнительный стиль для инлайн-кнопки ── */
-        .section-add-btn {
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.45);
-            color: white;
-            border-radius: 0.65rem;
-            padding: 0.25rem 0.75rem;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.15s;
-            line-height: 1;
-        }
-
-        .section-add-btn:hover {
-            background: rgba(255, 255, 255, 0.4);
-        }
     </style>
 </head>
 
@@ -1106,7 +916,7 @@
                 <!-- Заголовок с inline-кнопкой создания проекта -->
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-white font-bold text-lg">📁 Мои проекты</h2>
-                    <button class="section-add-btn" id="btnAddProjectInline">+</button>
+                    <button class="section-add-btn" id="btnAddProjectInline"><i class="fas fa-plus"></i></button>
                 </div>
                 <div id="projectsListContent"></div>
             </div>
@@ -1127,12 +937,12 @@
 
     <!-- FAB: Навигация на обезьяну -->
     <a href="/monkey" class="fab" id="fabNavFocus"
-       style="bottom: 2rem; left: 2rem; right: auto; background: #8b5cf6; font-size: 1.6rem; text-decoration: none;">
+       style="bottom: 2rem; left: 2rem; right: auto; background: #f97316; font-size: 1.6rem; text-decoration: none;">
         🐒
     </a>
 
     <!-- FAB-инбокс: класс + data-target -->
-    <div class="fab hidden fab-add-inbox" data-fab="inbox" data-target="#inboxInputBar" style="position:fixed;">
+    <div class="fab hidden fab-add-inbox" data-fab="inbox" data-target="#inboxInputBar" style="position: fixed; z-index: 100;">
         <i class="fas fa-plus fab-add-inbox-icon"></i>
     </div>
 
@@ -1204,7 +1014,7 @@
     </div>
 
     <!-- Модалка: Создание проекта (Задача 9.4) -->
-    <div id="projectCreateModal" class="modal-overlay hidden">
+    <div id="projectCreateModal" class="modal-overlay nested hidden">
         <div class="modal-box">
             <h2 class="text-lg font-bold text-slate-800 mb-4">📁 Новый проект</h2>
             <div class="flex flex-col gap-3">
@@ -1448,6 +1258,21 @@
 
     <script>
 
+        const PATH_TO_PAGE = {
+            '/planning': 'dashboard',
+            '/tasks': 'dashboard',
+            '/inbox': 'inbox',
+            '/projects': 'projects',
+            '/routines': 'routines'
+        };
+
+        const PAGE_TO_PATH = {
+            'dashboard': '/planning',
+            'inbox': '/inbox',
+            'projects': '/projects',
+            'routines': '/routines'
+        };
+
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
         const PROJECTS_API_URL = '/api/projects';
@@ -1578,7 +1403,7 @@
                 container.querySelectorAll('.task-check').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        togglePlanning(btn.dataset.completeId, btn);
+                        togglePlanningAndRefresh(btn.dataset.completeId, btn);
                     });
                 });
                 // Клик по названию — открыть редактирование
@@ -1791,6 +1616,25 @@
             if (count === 1) return 'задача';
             if (count >= 2 && count <= 4) return 'задачи';
             return 'задач';
+        }
+
+        async function sendFlowPhaseUpdate(phase) {
+            const btn = document.getElementById('toPlanningBtn');
+            if (btn.dataset.updating === 'true') return; // Защита от двойного клика
+
+            btn.dataset.updating = 'true';
+
+            // Отправляем запрос (fire-and-forget для UI, но логируем ошибки)
+            fetch('/api/flow/phase', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phase: phase })
+            })
+                .then(() => console.log(`Flow phase updated to ${phase}`))
+                .catch(err => console.error('Failed to update flow phase', err))
+                .finally(() => {
+                    btn.dataset.updating = 'false';
+                });
         }
 
         // ── Load projects ─────────────────────────────────────
@@ -2020,6 +1864,8 @@
                         inboxItems = inboxItems.filter(i => String(i.id) !== String(convertingInboxId));
                         renderInboxList();
                     }
+                    if (currentClassifyMode === 'convert')
+                        closeInboxClassifyModal();
                     convertingInboxId = null;
                 } else {
                     // ОБЫЧНОЕ СОЗДАНИЕ
@@ -2101,6 +1947,8 @@
                         renderInboxList();
                     }
                     convertingInboxId = null;
+                    if (currentClassifyMode === 'convert')
+                        closeInboxClassifyModal();
                 } else {
                     // ОБЫЧНОЕ СОЗДАНИЕ
                     await fetch(PROJECTS_API_URL, {
@@ -2611,36 +2459,38 @@
         // ── Navigation ─────────────────────────────────────────
         let currentPage = 'dashboard';
 
-        function switchPage(page) {
+        function switchPage(page, pushState = true) {
             currentPage = page;
 
+            // 1. Визуальное переключение блоков
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
             document.getElementById('pageRoutines').classList.toggle('hidden', page !== 'routines');
 
+            // 2. Подсветка кнопок в меню
             document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
+            // 3. Управление видимостью кнопок
             document.querySelectorAll('[data-fab="inbox"]').forEach(fab => {
-                const allowedPages = (fab.dataset.page || 'tasks,inbox,projects,routines').split(',');
-                fab.classList.toggle('hidden', !allowedPages.includes(page) || page === 'dashboard');
+                fab.classList.toggle('hidden', page === 'dashboard');
             });
 
-            // Кнопка "К планированию!" — видна только в инбоксе
-            if (page !== 'inbox') {
-                document.getElementById('toPlanningBtn').classList.add('hidden');
+            // 4.Обновление URL в браузере
+            if (pushState) {
+                const newPath = PAGE_TO_PATH[page] || '/planning';
+                history.pushState({ page: page }, '', newPath);
             }
 
+            // 5. Загрузка данных
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
             if (page === 'dashboard') {
-                // Обновить список задач для текущего проекта
                 renderPlanningTasks();
-                // Пересчитать, должна ли появиться кнопка "Начать спринт!"
                 checkSprintButtonVisibility();
                 const toPlanningBtn = document.getElementById('toPlanningBtn');
                 if (toPlanningBtn) toPlanningBtn.classList.add('hidden');
@@ -2652,6 +2502,18 @@
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
         document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
+
+        // Обработка кнопки назад в браузере
+        window.onpopstate = function (event) {
+            if (event.state && event.state.page) {
+                // Переключаем страницу, но НЕ добавляем новую запись в историю (false)
+                switchPage(event.state.page, false);
+            } else {
+                // Если состояния нет, смотрим на текущий URL
+                const page = PATH_TO_PAGE[window.location.pathname] || 'dashboard';
+                switchPage(page, false);
+            }
+        };
 
         // ── Инбокс (с обновлением классификации) ───────────────
         let inboxItems = [];
@@ -2689,7 +2551,10 @@
             }
         }
 
-        document.getElementById('toPlanningBtn').addEventListener('click', () => switchPage('dashboard'));
+        document.getElementById('toPlanningBtn').addEventListener('click', () => {
+            sendFlowPhaseUpdate('planning');
+            switchPage('dashboard')
+        });
 
         async function updateToPlanningBtn() {
             let status = null;
@@ -2837,6 +2702,21 @@
                 document.getElementById('classifyStep2').classList.add('hidden');
                 document.getElementById('classifyStep1').classList.remove('hidden');
             });
+
+            // Логика роутинга
+            // Определяем, какой раздел открыть, исходя из URL в строке браузера
+            const currentPath = window.location.pathname;
+            const startPage = PATH_TO_PAGE[currentPath] || 'dashboard';
+
+            // Перезаписываем текущее состояние истории, чтобы браузер запомнил "точку входа"
+            history.replaceState({ page: startPage }, '', currentPath);
+
+            // Вызываем switchPage с флагом false (не добавлять новую запись в историю, так как мы только зашли)
+            switchPage(startPage, false);
+
+            // Загрузка данных)
+            loadTasks();
+            loadProjects();
         });
 
 
@@ -2846,7 +2726,6 @@
 
             currentClassifyMode = mode;
             convertingInboxId = classifyingInboxId;
-            closeInboxClassifyModal();
             openCreateForClassify(classifySelectedType, item.title);
         }
 
@@ -3079,6 +2958,8 @@
                         inboxItems = inboxItems.filter(i => String(i.id) !== String(convertingInboxId));
                         renderInboxList();
                     }
+                    if (currentClassifyMode === 'convert')
+                        closeInboxClassifyModal();
                     convertingInboxId = null;
                 } else {
                     // ОБЫЧНОЕ СОЗДАНИЕ
