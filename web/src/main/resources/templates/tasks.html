@@ -77,6 +77,7 @@
         .modal-overlay.nested {
             z-index: 60;
         }
+
         .modal-box-project-edit {
             background: white;
             border-radius: 1.5rem;
@@ -598,6 +599,15 @@
             align-items: center;
         }
 
+        .inbox-content-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         /* ── Undo-тост инбокса ──────────────────────────────── */
         .inbox-undo-toast {
             position: fixed;
@@ -616,6 +626,14 @@
             font-size: 0.9rem;
             white-space: nowrap;
             animation: toastIn 0.2s ease-out;
+        }
+
+        .inbox-undo-text {
+            max-width: min(90vw, 700px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
         }
 
         @keyframes toastIn {
@@ -818,6 +836,8 @@
             font-size: 0.85rem;
             color: #475569;
             word-break: break-word;
+            max-height: min(30vh, 220px);
+            overflow-y: auto;
         }
 
         .classify-source .label {
@@ -828,6 +848,15 @@
             margin-bottom: 0.15rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+        }
+
+        .delete-confirm-content {
+            display: inline-block;
+            vertical-align: top;
+            max-height: min(25vh, 180px);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         /* ── Стили для выбора режима (Story 20.3) ── */
@@ -1110,8 +1139,8 @@
     <!-- Inline-поле ввода для инбокса -->
     <div id="inboxInputBar" class="inbox-inline-input hidden">
         <div class="inbox-input-box">
-            <input type="text" id="inboxInputField" placeholder="Быстрая запись в инбокс…"
-                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;" />
+            <textarea id="inboxInputField" placeholder="Запишите мысль" rows="1"
+                style="flex:1;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:0.5rem 0.75rem;font-size:0.9rem;outline:none;resize:none;max-height:50vh;overflow-y:auto;"></textarea>
         </div>
     </div>
 
@@ -1241,7 +1270,7 @@
             <h2 class="text-lg font-bold text-slate-800 mb-2">⚠️ Подтвердите действие</h2>
             <p class="text-slate-600 mb-6">
                 Удалить <span id="deleteConfirmType"></span>
-                "<span class="font-semibold text-slate-800" id="deleteConfirmName"></span>"?
+                "<span class="font-semibold text-slate-800 delete-confirm-content" id="deleteConfirmName"></span>"?
             </p>
             <div class="flex justify-end gap-2">
                 <button class="btn-ghost" id="deleteCancel">Отмена</button>
@@ -1258,8 +1287,8 @@
             <h2 class="text-lg font-bold text-slate-800 mb-4">✏️ Редактировать запись</h2>
             <div class="flex flex-col gap-3">
                 <div>
-                    <label class="text-sm font-medium text-slate-600 mb-1 block">Название *</label>
-                    <input type="text" id="inboxEditTitle" placeholder="Название записи" />
+                    <label class="text-sm font-medium text-slate-600 mb-1 block">Контент *</label>
+                    <textarea id="inboxEditTitle" rows="1" placeholder="Запишите мысль" style="resize:none;max-height:50vh;overflow-y:auto;"></textarea>
                 </div>
             </div>
             <div class="flex justify-between mt-5">
@@ -1267,6 +1296,17 @@
                     <button class="btn-ghost" id="inboxEditCancel">Отмена</button>
                     <button class="btn-primary" id="inboxEditSave">Сохранить</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="inboxContentViewModal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-slate-800 mb-2">📝 Контент записи</h2>
+            <div id="inboxContentViewText" class="text-slate-700 whitespace-pre-wrap max-h-[50vh] overflow-y-auto border border-slate-200 rounded-lg p-3"></div>
+            <div class="flex justify-end gap-2 mt-5">
+                <button class="btn-ghost" id="inboxContentViewClose">Закрыть</button>
+                <button class="btn-primary" id="inboxContentViewClassify">Действия</button>
             </div>
         </div>
     </div>
@@ -1389,7 +1429,7 @@
 
     <!-- Универсальный Undo-тост: удаление записи -->
     <div id="undoToast" class="inbox-undo-toast hidden">
-        <span id="undoToastMessage">Элемент удалён</span>
+        <span id="undoToastMessage" class="inbox-undo-text">Элемент удалён</span>
         <button id="undoBtn" class="inbox-undo-btn">Отменить</button>
     </div>
 
@@ -1402,9 +1442,20 @@
 
     <script>
 
-        if (window.location.pathname.endsWith('/tasks') || window.location.pathname.endsWith('/tasks/')) {
-            window.location.replace('/projects');
-        }
+        const PATH_TO_PAGE = {
+            '/planning': 'dashboard',
+            '/tasks': 'dashboard',
+            '/inbox': 'inbox',
+            '/projects': 'projects',
+            '/routines': 'routines'
+        };
+
+        const PAGE_TO_PATH = {
+            'dashboard': '/planning',
+            'inbox': '/inbox',
+            'projects': '/projects',
+            'routines': '/routines'
+        };
 
         const API_URL = '/api/tasks';
         const INBOX_API_URL = '/api/inbox';
@@ -1536,7 +1587,7 @@
                 container.querySelectorAll('.task-check').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        togglePlanning(btn.dataset.completeId, btn);
+                        togglePlanningAndRefresh(btn.dataset.completeId, btn);
                     });
                 });
                 // Клик по названию — открыть редактирование
@@ -1751,6 +1802,25 @@
             return 'задач';
         }
 
+        async function sendFlowPhaseUpdate(phase) {
+            const btn = document.getElementById('toPlanningBtn');
+            if (btn.dataset.updating === 'true') return; // Защита от двойного клика
+
+            btn.dataset.updating = 'true';
+
+            // Отправляем запрос (fire-and-forget для UI, но логируем ошибки)
+            fetch('/api/flow/phase', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phase: phase })
+            })
+                .then(() => console.log(`Flow phase updated to ${phase}`))
+                .catch(err => console.error('Failed to update flow phase', err))
+                .finally(() => {
+                    btn.dataset.updating = 'false';
+                });
+        }
+
         // ── Load projects ─────────────────────────────────────
         async function loadProjects() {
             try {
@@ -1881,6 +1951,7 @@
             if (saveBtn) saveBtn.disabled = true;   // кнопка заблокирована, пока не выбран проект
 
             document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('createModal').classList.add('nested');
             document.getElementById('createSave').disabled = true;
             setTimeout(() => document.getElementById('createTitle').focus(), 50);
 
@@ -1907,6 +1978,7 @@
 
         function closeCreateModal() {
             document.getElementById('createModal').classList.add('hidden');
+            document.getElementById('createModal').classList.remove('nested');
         }
 
         document.getElementById('createProject').addEventListener('change', function () {
@@ -1986,6 +2058,8 @@
                     });
                 }
                 closeCreateModal();
+                if (editingProjectId !== null)
+                    updateProjectsTasks(editingProjectId);
                 await loadTasks();
                 await loadProjects();
                 checkSprintButtonVisibility();
@@ -2097,36 +2171,40 @@
             setTimeout(() => document.getElementById('projectEditName').focus(), 50);
 
             try {
+                await updateProjectsTasks(editingProjectId);
+            } catch {
+                tasksContainer.innerHTML = '<div class="project-tasks-error"><i class="fas fa-exclamation-triangle mr-1"></i> Не удалось загрузить задачи. Попробуйте позже.</div>';
+            }
+        }
+
+        async function updateProjectsTasks(projectId) {
+            try {
                 const res = await fetch(`${PROJECTS_API_URL}/${projectId}/tasks`);
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 const projectTasks = await res.json();
-
-                const activeTasks = projectTasks.filter(t => t.status !== 2 && t.status !== 3);
-                if (!activeTasks.length) {
-                    tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
-                } else {
-                    tasksContainer.innerHTML = activeTasks.map(task => {
-                        const statusText = task.status === 4 ? 'Заблокирована' : 'Активна';
-                        const statusClass = task.status === 4 ? 'active' : 'active';
-                        return `
-                                                    <div class="project-task-item">
-                                                        <span class="font-medium text-slate-700">${escHtml(task.title)}</span>
-                                                        <span class="project-task-status ${statusClass}">${statusText}</span>
-                                                    </div>
-                                                `;
-                    }).join('');
-                    tasksContainer.innerHTML = activeTasks.map(task => `
-                        <div class="project-task-item-large" data-task-id="${task.id}">
-                            <i class="fas fa-circle"></i>
-                            <span>${escHtml(task.title)}</span>
-                        </div>
-                    `).join('');
-                }
+                renderEditProjectTasks(projectTasks);
             } catch (error) {
                 console.error('Ошибка загрузки задач проекта:', error);
-                tasksContainer.innerHTML = '<div class="project-tasks-error"><i class="fas fa-exclamation-triangle mr-1"></i> Не удалось загрузить задачи. Попробуйте позже.</div>';
+            }
+        }
+
+        function renderEditProjectTasks(projectTasks) {
+            const activeTasks = projectTasks.filter(t => t.status !== 2 && t.status !== 3);
+            const tasksContainer = document.getElementById('projectTaskListContainer');
+            if (!activeTasks.length) {
+                tasksContainer.innerHTML = '<div class="project-tasks-list-empty-large">В этом проекте пока нет задач</div>';
+            } else {
+                tasksContainer.innerHTML = activeTasks.map(task => `
+                     <div class="project-task-item-large" data-task-id="${task.id}">
+                        <i class="fas fa-circle"></i>
+                         <span>${escHtml(task.title)}</span>
+                          </div>
+                `).join('');
+                tasksContainer.querySelectorAll('.project-task-item-large').forEach(el => {
+                    el.addEventListener('click', () => openEditModal(el.dataset.taskId, allTasks));
+                });
             }
         }
 
@@ -2263,9 +2341,11 @@
                 }
             });
 
-            fetch(`${API_URL}/${editingTaskId}`, { method: 'DELETE' })
+            await fetch(`${API_URL}/${editingTaskId}`, { method: 'DELETE' })
                 .catch(err => console.error('Failed to delete task on server', err));
 
+            if (editingProjectId !== null)
+                updateProjectsTasks(editingProjectId);
             editingTaskId = null;
         }
 
@@ -2295,6 +2375,7 @@
                 console.error(e);
             }
             closeDeleteConfirmModal();
+
             deleteType = null;
             deleteEntityId = null;
         });
@@ -2317,7 +2398,7 @@
 
             const label = getEntityLabel(entityType);
             document.getElementById('undoToastMessage').textContent =
-                `${label} «${escHtml(title)}» удалена`;
+                `${label} «${title}» удалена`;
 
             const toast = document.getElementById('undoToast');
             toast.classList.remove('hidden');
@@ -2397,7 +2478,8 @@
                     } catch (recreateErr) {
                         console.warn('Failed to recreate task on server', recreateErr);
                     }
-
+                    if (editingProjectId !== null)
+                        updateProjectsTasks(editingProjectId);
                     if (currentPage === 'dashboard') renderPlanning();
                     await loadProjects();
                     return;
@@ -2446,17 +2528,11 @@
             }
         }
 
-        //ЗАГЛУШКА ДЛЯ КНОПКИ "+ЗАДАЧА" В МОДАЛКЕ ПРОЕКТА
-        document.getElementById('projectAddTaskBtn').addEventListener('click', () => {
-            // Открываем createModal с уже выбранным проектом
-            openCreateModal();
-            // TODO: автоматически выбрать текущий проект в селекте
+        document.getElementById('projectAddTaskBtn').addEventListener('click', async () => {
+            await openCreateModal();
             const projectSelect = document.getElementById('createProject');
-            if (editingProjectId && projectSelect) {
-                projectSelect.value = editingProjectId;
-                // триггернем обновление информации о проекте
-                projectSelect.dispatchEvent(new Event('change'));
-            }
+            fillProjectSelect(projectSelect, editingProjectId);
+            updateCreateModalSaveButton();
         });
 
         // ── Edit Task ──────────────────────────────────────────
@@ -2507,6 +2583,8 @@
                 })
             });
             closeEditModal();
+            if (editingProjectId !== null)
+                updateProjectsTasks(editingProjectId);
             await loadTasks();
         });
 
@@ -2561,36 +2639,38 @@
         // ── Navigation ─────────────────────────────────────────
         let currentPage = 'dashboard';
 
-        function switchPage(page) {
+        function switchPage(page, pushState = true) {
             currentPage = page;
 
+            // 1. Визуальное переключение блоков
             document.getElementById('pageDashboard').classList.toggle('hidden', page !== 'dashboard');
             document.getElementById('pageInbox').classList.toggle('hidden', page !== 'inbox');
             document.getElementById('pageProjects').classList.toggle('hidden', page !== 'projects');
             document.getElementById('pageRoutines').classList.toggle('hidden', page !== 'routines');
 
+            // 2. Подсветка кнопок в меню
             document.querySelectorAll('.nav-pill button[data-page]').forEach(btn => {
                 btn.classList.toggle('active-page', btn.dataset.page === page);
             });
 
+            // 3. Управление видимостью кнопок
             document.querySelectorAll('[data-fab="inbox"]').forEach(fab => {
-                const allowedPages = (fab.dataset.page || 'tasks,inbox,projects,routines').split(',');
-                fab.classList.toggle('hidden', !allowedPages.includes(page) || page === 'dashboard');
+                fab.classList.toggle('hidden', page === 'dashboard');
             });
 
-            // Кнопка "К планированию!" — видна только в инбоксе
-            if (page !== 'inbox') {
-                document.getElementById('toPlanningBtn').classList.add('hidden');
+            // 4.Обновление URL в браузере
+            if (pushState) {
+                const newPath = PAGE_TO_PATH[page] || '/planning';
+                history.pushState({ page: page }, '', newPath);
             }
 
+            // 5. Загрузка данных
             closeInboxInput();
             if (page === 'inbox') inboxLoad();
             if (page === 'projects') loadProjects();
             if (page === 'routines') loadRoutines();
             if (page === 'dashboard') {
-                // Обновить список задач для текущего проекта
                 renderPlanningTasks();
-                // Пересчитать, должна ли появиться кнопка "Начать спринт!"
                 checkSprintButtonVisibility();
                 const toPlanningBtn = document.getElementById('toPlanningBtn');
                 if (toPlanningBtn) toPlanningBtn.classList.add('hidden');
@@ -2602,6 +2682,18 @@
         document.getElementById('navInbox').addEventListener('click', () => switchPage('inbox'));
         document.getElementById('navProjects').addEventListener('click', () => switchPage('projects'));
         document.getElementById('navRoutines').addEventListener('click', () => switchPage('routines'));
+
+        // Обработка кнопки назад в браузере
+        window.onpopstate = function (event) {
+            if (event.state && event.state.page) {
+                // Переключаем страницу, но НЕ добавляем новую запись в историю (false)
+                switchPage(event.state.page, false);
+            } else {
+                // Если состояния нет, смотрим на текущий URL
+                const page = PATH_TO_PAGE[window.location.pathname] || 'dashboard';
+                switchPage(page, false);
+            }
+        };
 
         // ── Инбокс (с обновлением классификации) ───────────────
         let inboxItems = [];
@@ -2639,7 +2731,10 @@
             }
         }
 
-        document.getElementById('toPlanningBtn').addEventListener('click', () => switchPage('dashboard'));
+        document.getElementById('toPlanningBtn').addEventListener('click', () => {
+            sendFlowPhaseUpdate('planning');
+            switchPage('dashboard')
+        });
 
         async function updateToPlanningBtn() {
             let status = null;
@@ -2669,7 +2764,7 @@
                                                     <div class="task-list-item" data-inbox-id="${escHtml(String(item.id))}">
                                                         <div class="flex items-start justify-between gap-3">
                                                             <div class="flex-1 min-w-0">
-                                                                <div class="font-semibold text-slate-800 truncate mb-1">${escHtml(item.title)}</div>
+                                                                <div class="font-semibold text-slate-800 mb-1 inbox-content-preview">${escHtml(item.title)}</div>
                                                             </div>
                                                             <i class="fas fa-pencil-alt text-slate-300 text-sm mt-1 shrink-0"></i>
                                                         </div>
@@ -2678,7 +2773,7 @@
 
             // Клик по всей карточке открывает модалку классификации
             container.querySelectorAll('.task-list-item').forEach(el => {
-                el.addEventListener('click', () => openInboxClassifyModal(el.dataset.inboxId));
+                el.addEventListener('click', () => openInboxContentViewModal(el.dataset.inboxId));
             });
         }
 
@@ -2694,13 +2789,34 @@
         window.inboxCreate = inboxCreate;
         window.inboxLoad = inboxLoad;
 
+        function openInboxContentViewModal(itemId) {
+            const item = inboxItems.find(i => String(i.id) === String(itemId));
+            if (!item) return;
+            classifyingInboxId = itemId;
+            document.getElementById('inboxContentViewText').textContent = item.title;
+            document.getElementById('inboxContentViewModal').classList.remove('hidden');
+        }
+
+        function closeInboxContentViewModal() {
+            document.getElementById('inboxContentViewModal').classList.add('hidden');
+        }
+
+        document.getElementById('inboxContentViewModal').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeInboxContentViewModal();
+        });
+        document.getElementById('inboxContentViewClose').addEventListener('click', closeInboxContentViewModal);
+        document.getElementById('inboxContentViewClassify').addEventListener('click', () => {
+            closeInboxContentViewModal();
+            if (classifyingInboxId) openInboxClassifyModal(classifyingInboxId);
+        });
+
         // ── Inbox Classify Modal ───────────────────────────────
         function openInboxClassifyModal(itemId) {
             const item = inboxItems.find(i => String(i.id) === String(itemId));
             if (!item) return;
             classifyingInboxId = itemId;
             document.getElementById('inboxClassifySourceText').textContent = item.title;
-
+            document.getElementById('inboxContentViewText').textContent = item.title;
             document.getElementById('classifyStep1').classList.remove('hidden');
             document.getElementById('classifyStep2').classList.add('hidden');
             document.getElementById('inboxClassifyModal').classList.remove('hidden');
@@ -2769,6 +2885,21 @@
                 document.getElementById('classifyStep2').classList.add('hidden');
                 document.getElementById('classifyStep1').classList.remove('hidden');
             });
+
+            // Логика роутинга
+            // Определяем, какой раздел открыть, исходя из URL в строке браузера
+            const currentPath = window.location.pathname;
+            const startPage = PATH_TO_PAGE[currentPath] || 'dashboard';
+
+            // Перезаписываем текущее состояние истории, чтобы браузер запомнил "точку входа"
+            history.replaceState({ page: startPage }, '', currentPath);
+
+            // Вызываем switchPage с флагом false (не добавлять новую запись в историю, так как мы только зашли)
+            switchPage(startPage, false);
+
+            // Загрузка данных)
+            loadTasks();
+            loadProjects();
         });
 
 
@@ -2792,18 +2923,40 @@
             convertingInboxId = null;
         }
 
+        function autoGrowInboxTextarea(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, window.innerHeight * 0.5) + 'px';
+        }
+
         // ── Inbox Edit Modal (оставлена для редактирования) ───
         function openInboxEditModal(itemId) {
             const item = inboxItems.find(i => String(i.id) === String(itemId));
             if (!item) return;
             editingInboxId = itemId;
-            document.getElementById('inboxEditTitle').value = item.title;
+            const editField = document.getElementById('inboxEditTitle');
+            editField.value = item.title;
             document.getElementById('inboxEditModal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('inboxEditTitle').focus(), 50);
+            requestAnimationFrame(() => {
+                autoGrowInboxTextarea(editField);
+                document.getElementById('inboxEditSave').disabled = !editField.value.trim();
+                editField.focus();
+            });
         }
 
         function closeInboxEditModal() { document.getElementById('inboxEditModal').classList.add('hidden'); }
         document.getElementById('inboxEditCancel').addEventListener('click', closeInboxEditModal);
+        document.getElementById('inboxEditTitle').addEventListener('input', (e) => {
+            autoGrowInboxTextarea(e.target);
+            document.getElementById('inboxEditSave').disabled = !e.target.value.trim();
+        });
+        document.getElementById('inboxEditTitle').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!e.target.value.trim()) return;
+                document.getElementById('inboxEditSave').click();
+            }
+        });
         document.getElementById('inboxEditModal').addEventListener('click', e => {
             if (e.target === e.currentTarget) closeInboxEditModal();
         });
@@ -2844,7 +2997,7 @@
             showUndoToast({
                 entityId: idToDelete,
                 entityType: 'inbox',
-                title: item.title,
+                title: truncateToastText(item.title, 60),
                 data: itemCopy,
                 index: itemIndex,
                 arrayRef: inboxItems,
@@ -2856,6 +3009,13 @@
 
             fetch(`${INBOX_API_URL}/${idToDelete}`, { method: 'DELETE' })
                 .catch(err => console.error('Failed to delete inbox item on server', err));
+        }
+
+        function truncateToastText(text, maxChars = 80) {
+            const chars = Array.from((text || '').trim());
+            if (!chars.length) return '';
+            if (chars.length <= maxChars) return chars.join('');
+            return chars.slice(0, maxChars).join('') + '...';
         }
 
         function clearAllData() {
